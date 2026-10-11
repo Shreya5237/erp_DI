@@ -57,13 +57,6 @@ INSERT INTO employees (id, name, email, phone, role_id, role_title, team_id, tea
 ('EMP-118', 'Shreya Kulkarni', 'shreya.kulkarni@digitalinertia.com', '+91 98204 11980', 'ROLE-AD', 'Administration Lead', 'TEAM-OPS', 'Financial & Business Ops', 'non_technical', TRUE, FALSE, 5, 0, '2024-07-01')
 ON CONFLICT (id) DO NOTHING;
 
--- 4. USERS (Default CEO and Employee Logins for ERP System)
--- BCrypt password for 'password123': $2a$10$w8TlhjHhA4f2i31m0kQo5eI6Y21uNfR8w2w2iV2EaHh4VlDk/u7.W
-INSERT INTO users (id, email, password_hash, full_name, role, employee_id) VALUES
-('USR-001', 'laven@digitalinertia.com', '$2a$10$w8TlhjHhA4f2i31m0kQo5eI6Y21uNfR8w2w2iV2EaHh4VlDk/u7.W', 'Laven Lokesh', 'ROLE_CEO', NULL),
-('USR-101', 'arjun.sharma@digitalinertia.com', '$2a$10$w8TlhjHhA4f2i31m0kQo5eI6Y21uNfR8w2w2iV2EaHh4VlDk/u7.W', 'Arjun Sharma', 'ROLE_POC', 'EMP-101'),
-('USR-102', 'priya.nair@digitalinertia.com', '$2a$10$w8TlhjHhA4f2i31m0kQo5eI6Y21uNfR8w2w2iV2EaHh4VlDk/u7.W', 'Priya Nair', 'ROLE_POC', 'EMP-102')
-ON CONFLICT (id) DO NOTHING;
 
 -- 5. INTERN INTAKE BATCHES
 INSERT INTO intern_batches (id, code, start_date, end_date, total_interns) VALUES
@@ -178,9 +171,18 @@ INSERT INTO alert_threshold_settings (id, task_overdue_days, intern_missed_updat
 VALUES (1, 1, 2, 15, 4, 6.0)
 ON CONFLICT (id) DO NOTHING;
 
--- 11. AUDIT LOGS
-INSERT INTO audit_logs (action, module, details, performed_by) VALUES
-('Database Initialized', 'System', 'Provisioned PostgreSQL 18 enterprise schema with multi-domain tables', 'Laven Lokesh (CEO)'),
-('Roles Provisioned', 'Admin', 'Configured 10 technical and 8 non-technical corporate tracks', 'Laven Lokesh (CEO)'),
-('Batch Intake Synchronized', 'People', 'Imported Batch Apr-A (14 interns) and Batch Apr-B (10 interns)', 'Meera Joshi (HR)'),
-('Thresholds Applied', 'Admin', 'Set task overdue tolerance (1d), intern inactivity (2d), project lag (15%)', 'Laven Lokesh (CEO)');
+-- 11. AUDIT LOGS (Idempotent: Inserts only if matching log entry is not already present)
+INSERT INTO audit_logs (action, module, details, performed_by)
+SELECT v.action, v.module, v.details, v.performed_by
+FROM (VALUES
+    ('Database Initialized', 'System', 'Provisioned PostgreSQL 18 enterprise schema with multi-domain tables', 'Laven Lokesh (CEO)'),
+    ('Roles Provisioned', 'Admin', 'Configured 10 technical and 8 non-technical corporate tracks', 'Laven Lokesh (CEO)'),
+    ('Batch Intake Synchronized', 'People', 'Imported Batch Apr-A (14 interns) and Batch Apr-B (10 interns)', 'Meera Joshi (HR)'),
+    ('Thresholds Applied', 'Admin', 'Set task overdue tolerance (1d), intern inactivity (2d), project lag (15%)', 'Laven Lokesh (CEO)')
+) AS v(action, module, details, performed_by)
+WHERE NOT EXISTS (
+    SELECT 1 FROM audit_logs a
+    WHERE a.action = v.action
+      AND a.module = v.module
+      AND a.details = v.details
+);

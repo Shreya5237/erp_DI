@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 20000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate # Strictly validate schema against Flyway managed structure
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration # Production strictly restricted to core migrations; dev-seeds excluded
+    table: flyway_schema_history
+    clean-disabled: true # Never allow drop tables in production
+
+logging:
+  level:
+    com.digitalinertia.erp: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

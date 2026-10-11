@@ -23,7 +23,7 @@ spring:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 0
-    locations: classpath:db/migration
+    locations: classpath:db/migration,classpath:db/dev-seeds
     table: flyway_schema_history
     clean-disabled: true # Never allow Flyway clean to drop tables
 
