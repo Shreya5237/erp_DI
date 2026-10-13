@@ -36,7 +36,7 @@ public class InternController {
     }
 
     @PatchMapping("/{id}/decision")
-    @PreAuthorize("hasAnyRole('ROLE_CEO', 'ROLE_POC')")
+    @PreAuthorize("hasAnyRole('CEO', 'POC', 'ROLE_CEO', 'ROLE_POC')")
     public ResponseEntity<ApiResponse<InternEntity>> updateDecision(
             @PathVariable String id,
             @RequestParam InternDecision decision) {

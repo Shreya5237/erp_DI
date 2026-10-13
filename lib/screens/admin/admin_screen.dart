@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/hierarchy.dart';
@@ -55,14 +55,14 @@ class AdminScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
         leading: onBack != null
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF212529)),
                 onPressed: onBack,
               )
             : null,
         title: const Text(
           'Admin & Settings',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: Color(0xFF212529),
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -86,11 +86,11 @@ class AdminScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: const [
-                      Icon(Icons.tune_rounded, size: 20, color: Color(0xFF0F172A)),
+                      Icon(Icons.tune_rounded, size: 20, color: Color(0xFF212529)),
                       SizedBox(width: 8),
                       Text(
                         'Configurable Threshold Alerts',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                       ),
                     ],
                   ),
@@ -172,7 +172,7 @@ class AdminScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'Technical Roles',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                       ),
                       TextButton.icon(
                         icon: const Icon(Icons.add, size: 16),
@@ -190,7 +190,7 @@ class AdminScreen extends StatelessWidget {
                         label: Text(r.name, style: const TextStyle(fontSize: 12)),
                         deleteIcon: const Icon(Icons.close, size: 14),
                         onDeleted: () => erp.removeRole(r.id),
-                        backgroundColor: const Color(0xFFF8FAFC),
+                        backgroundColor: const Color(0xFFF5F6F7),
                         side: const BorderSide(color: Color(0xFFE2E8F0)),
                       );
                     }).toList(),
@@ -216,7 +216,7 @@ class AdminScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'Non-Technical Roles',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                       ),
                       TextButton.icon(
                         icon: const Icon(Icons.add, size: 16),
@@ -234,7 +234,7 @@ class AdminScreen extends StatelessWidget {
                         label: Text(r.name, style: const TextStyle(fontSize: 12)),
                         deleteIcon: const Icon(Icons.close, size: 14),
                         onDeleted: () => erp.removeRole(r.id),
-                        backgroundColor: const Color(0xFFF8FAFC),
+                        backgroundColor: const Color(0xFFF5F6F7),
                         side: const BorderSide(color: Color(0xFFE2E8F0)),
                       );
                     }).toList(),
@@ -257,7 +257,7 @@ class AdminScreen extends StatelessWidget {
                 children: [
                   const Text(
                     'Perspective Testing',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -273,12 +273,12 @@ class AdminScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: isSelected ? Colors.white : const Color(0xFF0F172A),
+                                  color: isSelected ? Colors.white : const Color(0xFF212529),
                                 ),
                               ),
                             ),
                             selected: isSelected,
-                            selectedColor: const Color(0xFF0F172A),
+                            selectedColor: const Color(0xFF212529),
                             onSelected: (_) => erp.setRole(role),
                           ),
                         ),
@@ -330,11 +330,11 @@ class AdminScreen extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF212529)),
             ),
             Text(
               valueStr,
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
             ),
           ],
         ),
@@ -343,7 +343,7 @@ class AdminScreen extends StatelessWidget {
           min: min,
           max: max,
           divisions: divisions,
-          activeColor: const Color(0xFF0F172A),
+          activeColor: const Color(0xFF212529),
           onChanged: onChanged,
         ),
       ],

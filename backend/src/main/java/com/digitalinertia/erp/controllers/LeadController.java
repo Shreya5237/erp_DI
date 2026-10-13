@@ -33,7 +33,7 @@ public class LeadController {
     }
 
     @PatchMapping("/{id}/stage")
-    @PreAuthorize("hasAnyRole('ROLE_CEO', 'ROLE_POC')")
+    @PreAuthorize("hasAnyRole('CEO', 'POC', 'SALES', 'ROLE_CEO', 'ROLE_POC', 'ROLE_SALES')")
     public ResponseEntity<ApiResponse<LeadEntity>> updateStage(
             @PathVariable String id,
             @RequestParam LeadStage stage) {

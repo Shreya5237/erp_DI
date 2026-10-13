@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/hierarchy.dart';
 import '../../models/task.dart';
 import '../../providers/erp_provider.dart';
-import '../../widgets/filter_bottom_sheet.dart';
+import '../../widgets/compact_filter_bar.dart';
 import '../tasks/task_detail_dialog.dart';
 
 /// Screen 5: Intern Management Screen matching Screen 5 in screenshot
@@ -51,7 +51,10 @@ class _InternListScreenState extends State<InternListScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 480),
+                constraints: BoxConstraints(
+                  maxWidth: 480,
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                ),
                 padding: const EdgeInsets.all(22),
                 child: SingleChildScrollView(
                   child: Column(
@@ -63,7 +66,7 @@ class _InternListScreenState extends State<InternListScreen> {
                         children: [
                           const Text(
                             'Register Intern',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, size: 20),
@@ -120,7 +123,7 @@ class _InternListScreenState extends State<InternListScreen> {
                             );
                             Navigator.of(ctx).pop();
                           },
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F172A)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF212529)),
                           child: const Text('Confirm Registration', style: TextStyle(fontWeight: FontWeight.w600)),
                         ),
                       ),
@@ -178,14 +181,14 @@ class _InternListScreenState extends State<InternListScreen> {
         scrolledUnderElevation: 0,
         leading: widget.onBack != null
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF212529)),
                 onPressed: widget.onBack,
               )
             : null,
         title: const Text(
           'Intern Management',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: Color(0xFF212529),
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -199,7 +202,7 @@ class _InternListScreenState extends State<InternListScreen> {
                 width: 32,
                 height: 32,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF0F172A),
+                  color: Color(0xFF212529),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.add, color: Colors.white, size: 20),
@@ -211,13 +214,13 @@ class _InternListScreenState extends State<InternListScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bar matching Screen 5
+          // Search Bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Container(
-              height: 44,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: const Color(0xFFF5F6F7),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
@@ -228,27 +231,19 @@ class _InternListScreenState extends State<InternListScreen> {
                   erp.setInternSearchQuery(val);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search intern...',
+                  hintText: 'Search intern by name, college, domain...',
                   hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                  prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF94A3B8)),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_searchController.text.isNotEmpty)
-                        IconButton(
+                  prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF94A3B8)),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
                           icon: const Icon(Icons.clear, size: 16, color: Color(0xFF94A3B8)),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {});
                             erp.setInternSearchQuery('');
                           },
-                        ),
-                      IconButton(
-                        icon: const Icon(Icons.tune_rounded, size: 18, color: Color(0xFF0F172A)),
-                        onPressed: () => FilterBottomSheet.show(context, isForInterns: true),
-                      ),
-                    ],
-                  ),
+                        )
+                      : null,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -256,68 +251,86 @@ class _InternListScreenState extends State<InternListScreen> {
             ),
           ),
 
-          // Category Tabs: [All] [Technical] [Non-Technical] matching Screen 5
+          // Space-Saving Compact Filter Dropdown Bar
+          CompactFilterBar(
+            hasActiveFilters: activeCategory != null ||
+                (erp.internDomainFilter != null && erp.internDomainFilter != 'All Tracks') ||
+                activeScope != 'All Tasks' ||
+                _searchController.text.isNotEmpty,
+            onReset: () {
+              _searchController.clear();
+              erp.setInternSearchQuery('');
+              erp.setInternCategoryFilter(null);
+              erp.setInternDomainFilter(null);
+              erp.setInternTaskScope('All Tasks');
+              setState(() {});
+            },
+            items: [
+              FilterDropdownItem<String>(
+                label: 'Category',
+                icon: Icons.badge_outlined,
+                value: activeCategory == null
+                    ? 'All Categories'
+                    : (activeCategory == RoleCategory.technical ? 'Technical' : 'Non-Technical'),
+                options: const [
+                  FilterOption<String>(label: 'All Categories', value: 'All Categories'),
+                  FilterOption<String>(label: 'Technical Tracks', value: 'Technical', icon: Icons.terminal_rounded),
+                  FilterOption<String>(label: 'Non-Technical Tracks', value: 'Non-Technical', icon: Icons.business_center_rounded),
+                ],
+                onChanged: (val) {
+                  if (val == 'Technical') {
+                    erp.setInternCategoryFilter(RoleCategory.technical);
+                  } else if (val == 'Non-Technical') {
+                    erp.setInternCategoryFilter(RoleCategory.nonTechnical);
+                  } else {
+                    erp.setInternCategoryFilter(null);
+                  }
+                },
+              ),
+              FilterDropdownItem<String>(
+                label: 'Track',
+                icon: Icons.layers_rounded,
+                value: erp.internDomainFilter ?? 'All Tracks',
+                options: erp.availableInternDomains.map((d) => FilterOption<String>(label: d, value: d)).toList(),
+                onChanged: (val) {
+                  erp.setInternDomainFilter(val == 'All Tracks' ? null : val);
+                },
+              ),
+              FilterDropdownItem<String>(
+                label: 'Scope',
+                icon: Icons.filter_list_rounded,
+                value: activeScope,
+                options: const [
+                  FilterOption<String>(label: 'All Tasks', value: 'All Tasks'),
+                  FilterOption<String>(label: 'My Tasks', value: 'My Tasks', icon: Icons.person_outline),
+                  FilterOption<String>(label: 'Team Tasks', value: 'Team Tasks', icon: Icons.group_outlined),
+                ],
+                onChanged: (val) {
+                  if (val != null) erp.setInternTaskScope(val);
+                },
+              ),
+            ],
+          ),
+
+          // Quick Category Pills Row
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
             child: Row(
               children: [
-                _buildCategoryPill('All', activeCategory == null, () {
+                _buildCategoryPill('All (${erp.allInterns.length})', activeCategory == null, () {
                   erp.setInternCategoryFilter(null);
                 }),
                 const SizedBox(width: 8),
-                _buildCategoryPill('Technical', activeCategory == RoleCategory.technical, () {
+                _buildCategoryPill('Technical (${erp.allInterns.where((i) => i.category == RoleCategory.technical).length})', activeCategory == RoleCategory.technical, () {
                   erp.setInternCategoryFilter(RoleCategory.technical);
                 }),
                 const SizedBox(width: 8),
-                _buildCategoryPill('Non-Technical', activeCategory == RoleCategory.nonTechnical, () {
+                _buildCategoryPill('Non-Technical (${erp.allInterns.where((i) => i.category == RoleCategory.nonTechnical).length})', activeCategory == RoleCategory.nonTechnical, () {
                   erp.setInternCategoryFilter(RoleCategory.nonTechnical);
                 }),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Filter Dropdowns Bar: [Domain v] [Priority v] [Role v] matching Screen 5
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _buildDropdownChip(
-                  'Domain',
-                  erp.internDomainFilter,
-                  onTap: () => FilterBottomSheet.show(context, isForInterns: true),
-                ),
-                const SizedBox(width: 8),
-                _buildDropdownChip(
-                  'Priority',
-                  null,
-                  onTap: () => FilterBottomSheet.show(context, isForInterns: true),
-                ),
-                const SizedBox(width: 8),
-                _buildDropdownChip(
-                  'DI Roles',
-                  null,
-                  onTap: () => FilterBottomSheet.show(context, isForInterns: true),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Sub-tabs: [My Tasks] [Team Tasks] [All Tasks] matching Screen 5
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _buildScopeChip('My Tasks', activeScope == 'My Tasks'),
-                const SizedBox(width: 8),
-                _buildScopeChip('Team Tasks', activeScope == 'Team Tasks'),
-                const SizedBox(width: 8),
-                _buildScopeChip('All Tasks', activeScope == 'All Tasks'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
 
           // Intern task cards matching Screen 5
           Expanded(
@@ -358,13 +371,13 @@ class _InternListScreenState extends State<InternListScreen> {
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
+                                color: const Color(0xFFF5F6F7),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
                                 isOverdue ? Icons.south_rounded : Icons.school_outlined,
                                 size: 18,
-                                color: const Color(0xFF0F172A),
+                                color: const Color(0xFF212529),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -378,7 +391,7 @@ class _InternListScreenState extends State<InternListScreen> {
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F172A),
+                                      color: Color(0xFF212529),
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -405,10 +418,10 @@ class _InternListScreenState extends State<InternListScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
                                 color: isOverdue
-                                    ? const Color(0xFF0F172A) // Black pill for overdue as in screenshot!
+                                    ? const Color(0xFF212529) // Black pill for overdue as in screenshot!
                                     : (task.status == TaskStatus.inProgress
                                         ? const Color(0xFFF1F5F9)
-                                        : const Color(0xFFF8FAFC)),
+                                        : const Color(0xFFF5F6F7)),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -450,67 +463,13 @@ class _InternListScreenState extends State<InternListScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          color: isSelected ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdownChip(String label, String? selectedValue, {VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: selectedValue != null ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: selectedValue != null ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              selectedValue ?? label,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: selectedValue != null ? Colors.white : const Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.keyboard_arrow_down,
-              size: 14,
-              color: selectedValue != null ? Colors.white : const Color(0xFF64748B),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScopeChip(String label, bool isSelected) {
-    return GestureDetector(
-      onTap: () => context.read<ErpProvider>().setInternTaskScope(label),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected ? Colors.white : const Color(0xFF475569),
           ),

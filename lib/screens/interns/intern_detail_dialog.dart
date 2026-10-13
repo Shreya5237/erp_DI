@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
+import '../../models/hierarchy.dart';
 import '../../models/intern.dart';
 import '../../models/task.dart';
 import '../../providers/erp_provider.dart';
@@ -54,7 +55,10 @@ class _InternDetailDialogState extends State<InternDetailDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 540),
+        constraints: BoxConstraints(
+          maxWidth: 540,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -289,6 +293,32 @@ class _InternDetailDialogState extends State<InternDetailDialog> {
                   );
                 }).toList(),
               ),
+              const SizedBox(height: 12),
+              if (intern.status != InternStatus.hired && intern.finalDecision != InternFinalDecision.hired) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 16, color: Colors.white),
+                    label: const Text('Convert to Permanent Employee', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF212529),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () {
+                      erp.convertInternToEmployee(
+                        intern.id,
+                        role: '${intern.domain} Developer',
+                        department: intern.category == RoleCategory.technical ? 'Technology and Engineering' : 'Sales and Business Development',
+                      );
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('🎉 Congratulations! ${intern.name} successfully appointed as employee!')),
+                      );
+                    },
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
 
               // Assigned Tasks
@@ -355,7 +385,7 @@ class _InternDetailDialogState extends State<InternDetailDialog> {
                             backgroundColor: AppColors.primaryDark,
                             minimumSize: const Size(double.infinity, 40),
                           ),
-                          child: const Text('Assign to Intern', style: TextStyle(fontSize: 13)),
+                          child: const Text('Assign to Intern', style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ],

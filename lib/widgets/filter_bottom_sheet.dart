@@ -73,176 +73,181 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     ];
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Bar
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Filters',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Bar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Filters',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF212529),
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 20, color: Color(0xFF0F172A)),
-                  onPressed: () => Navigator.of(context).pop(),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20, color: Color(0xFF212529)),
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
 
-            // Domain (All, Technical, Non-Technical)
-            const Text(
-              'Domain',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildPill('All', _selectedCategory == null, () {
-                  setState(() => _selectedCategory = null);
-                }),
-                const SizedBox(width: 8),
-                _buildPill('Technical', _selectedCategory == RoleCategory.technical, () {
-                  setState(() => _selectedCategory = RoleCategory.technical);
-                }),
-                const SizedBox(width: 8),
-                _buildPill('Non-Technical', _selectedCategory == RoleCategory.nonTechnical, () {
-                  setState(() => _selectedCategory = RoleCategory.nonTechnical);
-                }),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Role Dropdown
-            const Text(
-              'Role',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
-            ),
-            const SizedBox(height: 6),
-            _buildDropdown(
-              value: _selectedRole,
-              hint: 'Select role',
-              items: roles.map((r) => r.name).toList(),
-              onChanged: (val) => setState(() => _selectedRole = val),
-            ),
-            const SizedBox(height: 16),
-
-            // Team Dropdown
-            const Text(
-              'Team',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
-            ),
-            const SizedBox(height: 6),
-            _buildDropdown(
-              value: _selectedTeam,
-              hint: 'Select team',
-              items: teams,
-              onChanged: (val) => setState(() => _selectedTeam = val),
-            ),
-            const SizedBox(height: 16),
-
-            // Status (All, Active, Inactive)
-            const Text(
-              'Status',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _buildPill('All', _selectedStatus == 'All', () {
-                  setState(() => _selectedStatus = 'All');
-                }),
-                const SizedBox(width: 8),
-                _buildPill('Active', _selectedStatus == 'Active', () {
-                  setState(() => _selectedStatus = 'Active');
-                }),
-                const SizedBox(width: 8),
-                _buildPill('Inactive', _selectedStatus == 'Inactive', () {
-                  setState(() => _selectedStatus = 'Inactive');
-                }),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Batch (for interns)
-            if (widget.isForInterns) ...[
+              // Domain (All, Technical, Non-Technical)
               const Text(
-                'Batch (for interns)',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                'Domain',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildPill('All', _selectedCategory == null, () {
+                    setState(() => _selectedCategory = null);
+                  }),
+                  const SizedBox(width: 8),
+                  _buildPill('Technical', _selectedCategory == RoleCategory.technical, () {
+                    setState(() => _selectedCategory = RoleCategory.technical);
+                  }),
+                  const SizedBox(width: 8),
+                  _buildPill('Non-Technical', _selectedCategory == RoleCategory.nonTechnical, () {
+                    setState(() => _selectedCategory = RoleCategory.nonTechnical);
+                  }),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Role Dropdown
+              const Text(
+                'Role',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
               ),
               const SizedBox(height: 6),
               _buildDropdown(
-                value: _selectedBatch,
-                hint: 'Select batch',
-                items: erp.allBatches.map((b) => b.code).toList(),
-                onChanged: (val) => setState(() => _selectedBatch = val),
+                value: _selectedRole,
+                hint: 'Select role',
+                items: roles.map((r) => r.name).toList(),
+                onChanged: (val) => setState(() => _selectedRole = val),
               ),
-              const SizedBox(height: 20),
-            ],
+              const SizedBox(height: 16),
 
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      erp.resetFilters();
-                      Navigator.of(context).pop();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    child: const Text(
-                      'Reset',
-                      style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w600),
-                    ),
-                  ),
+              // Team Dropdown
+              const Text(
+                'Team',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
+              ),
+              const SizedBox(height: 6),
+              _buildDropdown(
+                value: _selectedTeam,
+                hint: 'Select team',
+                items: teams,
+                onChanged: (val) => setState(() => _selectedTeam = val),
+              ),
+              const SizedBox(height: 16),
+
+              // Status (All, Active, Inactive)
+              const Text(
+                'Status',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildPill('All', _selectedStatus == 'All', () {
+                    setState(() => _selectedStatus = 'All');
+                  }),
+                  const SizedBox(width: 8),
+                  _buildPill('Active', _selectedStatus == 'Active', () {
+                    setState(() => _selectedStatus = 'Active');
+                  }),
+                  const SizedBox(width: 8),
+                  _buildPill('Inactive', _selectedStatus == 'Inactive', () {
+                    setState(() => _selectedStatus = 'Inactive');
+                  }),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Batch (for interns)
+              if (widget.isForInterns) ...[
+                const Text(
+                  'Batch (for interns)',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (widget.isForInterns) {
-                        erp.setInternCategoryFilter(_selectedCategory);
-                        erp.setInternDomainFilter(_selectedRole);
-                        erp.setInternBatchFilter(_selectedBatch);
-                      } else {
-                        erp.setEmployeeCategoryFilter(_selectedCategory);
-                        erp.setEmployeeRoleFilter(_selectedRole);
-                        erp.setEmployeeTeamFilter(_selectedTeam);
-                        erp.setEmployeeActiveFilter(
-                          _selectedStatus == 'All'
-                              ? null
-                              : (_selectedStatus == 'Active'),
-                        );
-                      }
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Apply', style: TextStyle(fontWeight: FontWeight.w600)),
-                  ),
+                const SizedBox(height: 6),
+                _buildDropdown(
+                  value: _selectedBatch,
+                  hint: 'Select batch',
+                  items: erp.allBatches.map((b) => b.code).toList(),
+                  onChanged: (val) => setState(() => _selectedBatch = val),
                 ),
+                const SizedBox(height: 20),
               ],
-            ),
-          ],
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        erp.resetFilters();
+                        Navigator.of(context).pop();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      child: const Text(
+                        'Reset',
+                        style: TextStyle(color: Color(0xFF212529), fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (widget.isForInterns) {
+                          erp.setInternCategoryFilter(_selectedCategory);
+                          erp.setInternDomainFilter(_selectedRole);
+                          erp.setInternBatchFilter(_selectedBatch);
+                        } else {
+                          erp.setEmployeeCategoryFilter(_selectedCategory);
+                          erp.setEmployeeRoleFilter(_selectedRole);
+                          erp.setEmployeeTeamFilter(_selectedTeam);
+                          erp.setEmployeeActiveFilter(
+                            _selectedStatus == 'All'
+                                ? null
+                                : (_selectedStatus == 'Active'),
+                          );
+                        }
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF212529),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Apply', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -254,7 +259,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          color: isSelected ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
@@ -278,7 +283,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: const Color(0xFFF5F6F7),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -290,7 +295,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           items: items.map((item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item, style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A))),
+              child: Text(item, style: const TextStyle(fontSize: 13, color: Color(0xFF212529))),
             );
           }).toList(),
           onChanged: onChanged,

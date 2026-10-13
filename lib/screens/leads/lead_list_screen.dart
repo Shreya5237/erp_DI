@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/lead.dart';
 import '../../providers/erp_provider.dart';
-import '../../widgets/filter_bottom_sheet.dart';
+import '../../widgets/compact_filter_bar.dart';
 import 'lead_detail_dialog.dart';
 
 /// Screen 7: Lead Management Screen matching Screen 7 in screenshot
@@ -49,7 +50,10 @@ class _LeadListScreenState extends State<LeadListScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 480),
+                constraints: BoxConstraints(
+                  maxWidth: 480,
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                ),
                 padding: const EdgeInsets.all(22),
                 child: SingleChildScrollView(
                   child: Column(
@@ -61,7 +65,7 @@ class _LeadListScreenState extends State<LeadListScreen> {
                         children: [
                           const Text(
                             'Add Client Lead',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, size: 20),
@@ -116,7 +120,7 @@ class _LeadListScreenState extends State<LeadListScreen> {
                             );
                             Navigator.of(ctx).pop();
                           },
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F172A)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF212529)),
                           child: const Text('Save CRM Lead', style: TextStyle(fontWeight: FontWeight.w600)),
                         ),
                       ),
@@ -136,6 +140,10 @@ class _LeadListScreenState extends State<LeadListScreen> {
     final erp = context.watch<ErpProvider>();
     final leads = erp.filteredLeads;
     final activeStage = erp.leadStageFilter;
+    final activeDomain = erp.leadDomainFilter ?? 'All Domains';
+    final hasActiveFilters = activeStage != 'All' ||
+        (erp.leadDomainFilter != null && erp.leadDomainFilter != 'All Domains') ||
+        _searchController.text.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -145,14 +153,14 @@ class _LeadListScreenState extends State<LeadListScreen> {
         scrolledUnderElevation: 0,
         leading: widget.onBack != null
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF212529)),
                 onPressed: widget.onBack,
               )
             : null,
         title: const Text(
           'Lead Management',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: Color(0xFF212529),
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -166,7 +174,7 @@ class _LeadListScreenState extends State<LeadListScreen> {
                 width: 32,
                 height: 32,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF0F172A),
+                  color: Color(0xFF212529),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.add, color: Colors.white, size: 20),
@@ -178,13 +186,13 @@ class _LeadListScreenState extends State<LeadListScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bar matching Screen 7
+          // Search Bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Container(
-              height: 44,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: const Color(0xFFF5F6F7),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
@@ -195,27 +203,19 @@ class _LeadListScreenState extends State<LeadListScreen> {
                   erp.setLeadSearchQuery(val);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search lead...',
+                  hintText: 'Search lead by company, client, domain...',
                   hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                  prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF94A3B8)),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_searchController.text.isNotEmpty)
-                        IconButton(
+                  prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF94A3B8)),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
                           icon: const Icon(Icons.clear, size: 16, color: Color(0xFF94A3B8)),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {});
                             erp.setLeadSearchQuery('');
                           },
-                        ),
-                      IconButton(
-                        icon: const Icon(Icons.tune_rounded, size: 18, color: Color(0xFF0F172A)),
-                        onPressed: () => FilterBottomSheet.show(context),
-                      ),
-                    ],
-                  ),
+                        )
+                      : null,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -223,29 +223,69 @@ class _LeadListScreenState extends State<LeadListScreen> {
             ),
           ),
 
-          // Stage Chips: [All] [New] [Contacted] [Proposal] [Qualified] [Won] matching Screen 7
+          // Space-Saving Compact Filter Dropdown Bar
+          CompactFilterBar(
+            hasActiveFilters: hasActiveFilters,
+            onReset: () {
+              _searchController.clear();
+              erp.setLeadSearchQuery('');
+              erp.setLeadStageFilter('All');
+              erp.setLeadDomainFilter(null);
+              setState(() {});
+            },
+            items: [
+              FilterDropdownItem<String>(
+                label: 'Stage',
+                icon: Icons.tune_rounded,
+                value: activeStage,
+                options: const [
+                  FilterOption<String>(label: 'All Stages', value: 'All'),
+                  FilterOption<String>(label: 'New Lead', value: 'New', color: Color(0xFF2563EB)),
+                  FilterOption<String>(label: 'Contacted', value: 'Contacted', color: Color(0xFF7C3AED)),
+                  FilterOption<String>(label: 'Proposal Sent', value: 'Proposal', color: Color(0xFFD97706)),
+                  FilterOption<String>(label: 'Qualified', value: 'Qualified', color: Color(0xFF0D9488)),
+                  FilterOption<String>(label: 'Deal Won', value: 'Won', color: Color(0xFF16A34A)),
+                  FilterOption<String>(label: 'Lost', value: 'Lost', color: Color(0xFFDC2626)),
+                ],
+                onChanged: (val) {
+                  if (val != null) erp.setLeadStageFilter(val);
+                },
+              ),
+              FilterDropdownItem<String>(
+                label: 'Domain / Industry',
+                icon: Icons.domain_rounded,
+                value: activeDomain,
+                options: erp.availableLeadDomains.map((d) => FilterOption<String>(label: d, value: d)).toList(),
+                onChanged: (val) {
+                  erp.setLeadDomainFilter(val == 'All Domains' ? null : val);
+                },
+              ),
+            ],
+          ),
+
+          // Quick Stage Chips Row
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               child: Row(
                 children: [
-                  _buildStageChip('All', activeStage == 'All'),
-                  const SizedBox(width: 8),
-                  _buildStageChip('New', activeStage == 'New'),
-                  const SizedBox(width: 8),
-                  _buildStageChip('Contacted', activeStage == 'Contacted'),
-                  const SizedBox(width: 8),
-                  _buildStageChip('Proposal', activeStage == 'Proposal'),
-                  const SizedBox(width: 8),
-                  _buildStageChip('Qualified', activeStage == 'Qualified'),
-                  const SizedBox(width: 8),
-                  _buildStageChip('Won', activeStage == 'Won'),
+                  _buildStageChip('All (${erp.allLeads.length})', activeStage == 'All', () => erp.setLeadStageFilter('All')),
+                  const SizedBox(width: 6),
+                  _buildStageChip('New (${erp.allLeads.where((l) => l.status == LeadStatus.newLead).length})', activeStage == 'New', () => erp.setLeadStageFilter('New')),
+                  const SizedBox(width: 6),
+                  _buildStageChip('Contacted (${erp.allLeads.where((l) => l.status == LeadStatus.contactEstablished).length})', activeStage == 'Contacted', () => erp.setLeadStageFilter('Contacted')),
+                  const SizedBox(width: 6),
+                  _buildStageChip('Proposal (${erp.allLeads.where((l) => l.status == LeadStatus.proposalPrepared || l.status == LeadStatus.proposalSent).length})', activeStage == 'Proposal', () => erp.setLeadStageFilter('Proposal')),
+                  const SizedBox(width: 6),
+                  _buildStageChip('Qualified (${erp.allLeads.where((l) => l.status == LeadStatus.requirementsCollected).length})', activeStage == 'Qualified', () => erp.setLeadStageFilter('Qualified')),
+                  const SizedBox(width: 6),
+                  _buildStageChip('Won (${erp.allLeads.where((l) => l.status == LeadStatus.won).length})', activeStage == 'Won', () => erp.setLeadStageFilter('Won')),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 14),
 
           // Leads list matching Screen 7
           Expanded(
@@ -284,13 +324,13 @@ class _LeadListScreenState extends State<LeadListScreen> {
                               width: 38,
                               height: 38,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
+                                color: const Color(0xFFF5F6F7),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(
                                 Icons.call_outlined,
                                 size: 18,
-                                color: Color(0xFF0F172A),
+                                color: Color(0xFF212529),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -304,7 +344,7 @@ class _LeadListScreenState extends State<LeadListScreen> {
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F172A),
+                                      color: Color(0xFF212529),
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -366,19 +406,19 @@ class _LeadListScreenState extends State<LeadListScreen> {
     );
   }
 
-  Widget _buildStageChip(String label, bool isSelected) {
+  Widget _buildStageChip(String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => context.read<ErpProvider>().setLeadStageFilter(label),
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          color: isSelected ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected ? Colors.white : const Color(0xFF475569),
           ),

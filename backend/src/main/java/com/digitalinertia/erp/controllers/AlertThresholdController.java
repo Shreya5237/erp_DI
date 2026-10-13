@@ -23,7 +23,7 @@ public class AlertThresholdController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('ROLE_CEO')")
+    @PreAuthorize("hasAnyRole('CEO', 'ROLE_CEO')")
     public ResponseEntity<ApiResponse<AlertThresholdSettingsEntity>> updateSettings(
             @RequestBody AlertThresholdSettingsEntity settings) {
         return ResponseEntity.ok(ApiResponse.success(service.updateSettings(settings), "Alert thresholds updated successfully"));

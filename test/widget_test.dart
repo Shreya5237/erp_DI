@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:digital_inertia_erp/main.dart';
 
 void main() {
@@ -8,5 +9,6 @@ void main() {
 
     // Verify that the title appears
     expect(find.text('DIGITAL INERTIA'), findsOneWidget);
+    expect(GoogleFonts.instrumentSans().fontFamily, contains('InstrumentSans'));
   });
 }

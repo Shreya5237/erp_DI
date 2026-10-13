@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/project.dart';
 import '../../providers/erp_provider.dart';
-import '../../widgets/filter_bottom_sheet.dart';
+import '../../widgets/compact_filter_bar.dart';
 import 'project_detail_dialog.dart';
 
 /// Screen 8: Project Management Screen matching Screen 8 in screenshot
@@ -56,7 +57,10 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 500),
+                constraints: BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                ),
                 padding: const EdgeInsets.all(22),
                 child: SingleChildScrollView(
                   child: Column(
@@ -68,7 +72,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                         children: [
                           const Text(
                             'Create Project',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, size: 20),
@@ -116,7 +120,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                       // Team Lead Selector
                       const Text(
                         'Assign Team Lead',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                       ),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
@@ -156,7 +160,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                         children: [
                           Text(
                             'Team Members (${selectedMembers.length})',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                           ),
                           PopupMenuButton<String>(
                             tooltip: 'Add Member',
@@ -196,7 +200,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                           return Chip(
                             labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                             visualDensity: VisualDensity.compact,
-                            backgroundColor: isLead ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            backgroundColor: isLead ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
                             label: Text(
                               isLead ? '$m (Lead)' : m,
                               style: TextStyle(
@@ -234,7 +238,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                             );
                             Navigator.of(ctx).pop();
                           },
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F172A)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF212529)),
                           child: const Text('Start Project', style: TextStyle(fontWeight: FontWeight.w600)),
                         ),
                       ),
@@ -254,6 +258,10 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     final erp = context.watch<ErpProvider>();
     final projects = erp.filteredProjects;
     final activeStatus = erp.projectStatusFilter;
+    final activeDomain = erp.projectDomainFilter ?? 'All Domains';
+    final hasActiveFilters = activeStatus != 'All' ||
+        (erp.projectDomainFilter != null && erp.projectDomainFilter != 'All Domains') ||
+        _searchController.text.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -263,14 +271,14 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
         scrolledUnderElevation: 0,
         leading: widget.onBack != null
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF212529)),
                 onPressed: widget.onBack,
               )
             : null,
         title: const Text(
           'Project Management',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: Color(0xFF212529),
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -284,7 +292,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                 width: 32,
                 height: 32,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF0F172A),
+                  color: Color(0xFF212529),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.add, color: Colors.white, size: 20),
@@ -296,13 +304,13 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bar matching Screen 8
+          // Search Bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: Container(
-              height: 44,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: const Color(0xFFF5F6F7),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
@@ -313,27 +321,19 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                   erp.setProjectSearchQuery(val);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search project...',
+                  hintText: 'Search project by name, client, domain...',
                   hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                  prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF94A3B8)),
-                  suffixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_searchController.text.isNotEmpty)
-                        IconButton(
+                  prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF94A3B8)),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
                           icon: const Icon(Icons.clear, size: 16, color: Color(0xFF94A3B8)),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {});
                             erp.setProjectSearchQuery('');
                           },
-                        ),
-                      IconButton(
-                        icon: const Icon(Icons.tune_rounded, size: 18, color: Color(0xFF0F172A)),
-                        onPressed: () => FilterBottomSheet.show(context),
-                      ),
-                    ],
-                  ),
+                        )
+                      : null,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -341,27 +341,65 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
             ),
           ),
 
-          // Filter Chips: [All] [Planning] [In Progress] [On Hold] matching Screen 8
+          // Space-Saving Compact Filter Dropdown Bar
+          CompactFilterBar(
+            hasActiveFilters: hasActiveFilters,
+            onReset: () {
+              _searchController.clear();
+              erp.setProjectSearchQuery('');
+              erp.setProjectStatusFilter('All');
+              erp.setProjectDomainFilter(null);
+              setState(() {});
+            },
+            items: [
+              FilterDropdownItem<String>(
+                label: 'Status',
+                icon: Icons.tune_rounded,
+                value: activeStatus,
+                options: const [
+                  FilterOption<String>(label: 'All Statuses', value: 'All'),
+                  FilterOption<String>(label: 'Planning', value: 'Planning', color: Color(0xFFD97706)),
+                  FilterOption<String>(label: 'In Progress', value: 'In Progress', color: Color(0xFF2563EB)),
+                  FilterOption<String>(label: 'On Hold', value: 'On Hold', color: Color(0xFFDC2626)),
+                  FilterOption<String>(label: 'Completed', value: 'Completed', color: Color(0xFF16A34A)),
+                ],
+                onChanged: (val) {
+                  if (val != null) erp.setProjectStatusFilter(val);
+                },
+              ),
+              FilterDropdownItem<String>(
+                label: 'Domain',
+                icon: Icons.layers_rounded,
+                value: activeDomain,
+                options: erp.availableProjectDomains.map((d) => FilterOption<String>(label: d, value: d)).toList(),
+                onChanged: (val) {
+                  erp.setProjectDomainFilter(val == 'All Domains' ? null : val);
+                },
+              ),
+            ],
+          ),
+
+          // Quick Status Chips Row
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               child: Row(
                 children: [
-                  _buildStatusChip('All', activeStatus == 'All'),
-                  const SizedBox(width: 8),
-                  _buildStatusChip('Planning', activeStatus == 'Planning'),
-                  const SizedBox(width: 8),
-                  _buildStatusChip('In Progress', activeStatus == 'In Progress'),
-                  const SizedBox(width: 8),
-                  _buildStatusChip('On Hold', activeStatus == 'On Hold'),
-                  const SizedBox(width: 8),
-                  _buildStatusChip('Completed', activeStatus == 'Completed'),
+                  _buildStatusChip('All (${erp.allProjects.length})', activeStatus == 'All', () => erp.setProjectStatusFilter('All')),
+                  const SizedBox(width: 6),
+                  _buildStatusChip('Planning (${erp.allProjects.where((p) => p.status == ProjectStatus.planning).length})', activeStatus == 'Planning', () => erp.setProjectStatusFilter('Planning')),
+                  const SizedBox(width: 6),
+                  _buildStatusChip('In Progress (${erp.allProjects.where((p) => p.status == ProjectStatus.inProgress).length})', activeStatus == 'In Progress', () => erp.setProjectStatusFilter('In Progress')),
+                  const SizedBox(width: 6),
+                  _buildStatusChip('On Hold (${erp.allProjects.where((p) => p.status == ProjectStatus.onHold).length})', activeStatus == 'On Hold', () => erp.setProjectStatusFilter('On Hold')),
+                  const SizedBox(width: 6),
+                  _buildStatusChip('Completed (${erp.allProjects.where((p) => p.status == ProjectStatus.completed).length})', activeStatus == 'Completed', () => erp.setProjectStatusFilter('Completed')),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 14),
 
           // Project cards matching Screen 8
           Expanded(
@@ -412,13 +450,13 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                                     width: 38,
                                     height: 38,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF8FAFC),
+                                      color: const Color(0xFFF5F6F7),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: const Icon(
                                       Icons.layers_outlined,
                                       size: 18,
-                                      color: Color(0xFF0F172A),
+                                      color: Color(0xFF212529),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -431,7 +469,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                                           style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF0F172A),
+                                            color: Color(0xFF212529),
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -450,7 +488,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F172A),
+                                      color: Color(0xFF212529),
                                     ),
                                   ),
                                 ],
@@ -462,7 +500,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                                 child: LinearProgressIndicator(
                                   value: proj.progress,
                                   backgroundColor: const Color(0xFFF1F5F9),
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF212529)),
                                   minHeight: 5,
                                 ),
                               ),
@@ -478,19 +516,19 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     );
   }
 
-  Widget _buildStatusChip(String label, bool isSelected) {
+  Widget _buildStatusChip(String label, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => context.read<ErpProvider>().setProjectStatusFilter(label),
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          color: isSelected ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12.5,
+            fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected ? Colors.white : const Color(0xFF475569),
           ),

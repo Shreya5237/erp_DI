@@ -1,17 +1,77 @@
 import 'hierarchy.dart';
 
+/// 14 Internship & Recruitment lifecycle statuses defined in the ERP PRD
+enum InternStatus {
+  applied('Applied'),
+  interviewScheduled('Interview Scheduled'),
+  selected('Selected'),
+  internshipActive('Internship Active'),
+  taskAssigned('Task Assigned'),
+  underEvaluation('Under Evaluation'),
+  goodPerformance('Good Performance'),
+  needsImprovement('Needs Improvement'),
+  notInterested('Not Interested'),
+  recommendedForHiring('Recommended for Hiring'),
+  hired('Hired'),
+  internshipExtended('Internship Extended'),
+  completed('Completed'),
+  closed('Not Selected / Closed');
+
+  final String label;
+  const InternStatus(this.label);
+}
+
 /// Final hiring/internship outcome status
 enum InternFinalDecision {
   pending('Pending Review'),
   retain('Retained'),
   reject('Rejected'),
-  notInterested('Not Interested');
+  notInterested('Not Interested'),
+  hired('Hired as Employee'),
+  extended('Internship Extended');
 
   final String label;
   const InternFinalDecision(this.label);
 }
 
-/// Model representing an intern
+/// Evaluation scores on the 5 PRD criteria
+class InternEvaluationRubric {
+  final double taskQuality; // 1.0 - 5.0
+  final double consistency; // 1.0 - 5.0
+  final double interest; // 1.0 - 5.0
+  final double learningProgress; // 1.0 - 5.0
+  final double communication; // 1.0 - 5.0
+
+  const InternEvaluationRubric({
+    this.taskQuality = 4.0,
+    this.consistency = 4.0,
+    this.interest = 4.5,
+    this.learningProgress = 4.0,
+    this.communication = 4.0,
+  });
+
+  double get averageScore =>
+      (taskQuality + consistency + interest + learningProgress + communication) / 5.0;
+
+  Map<String, dynamic> toJson() => {
+    'taskQuality': taskQuality,
+    'consistency': consistency,
+    'interest': interest,
+    'learningProgress': learningProgress,
+    'communication': communication,
+  };
+
+  factory InternEvaluationRubric.fromJson(Map<String, dynamic> json) =>
+      InternEvaluationRubric(
+        taskQuality: (json['taskQuality'] as num?)?.toDouble() ?? 4.0,
+        consistency: (json['consistency'] as num?)?.toDouble() ?? 4.0,
+        interest: (json['interest'] as num?)?.toDouble() ?? 4.5,
+        learningProgress: (json['learningProgress'] as num?)?.toDouble() ?? 4.0,
+        communication: (json['communication'] as num?)?.toDouble() ?? 4.0,
+      );
+}
+
+/// Model representing an intern in the Friday batch recruitment & evaluation cycle
 class Intern {
   final String id;
   final String name;
@@ -19,7 +79,7 @@ class Intern {
   final String phone;
   final String college;
   final RoleCategory category;
-  final String domain; // "Backend", "Frontend", "Mobile App", etc.
+  final String domain;
   final String team;
   final String batchId;
   final String batchName;
@@ -27,13 +87,15 @@ class Intern {
   final DateTime selectionDate;
   final String? assignedPocId;
   final String? assignedPocName;
-  final double performanceRating; // e.g. 4.2 / 5.0
+  final InternStatus status;
+  final InternEvaluationRubric evaluationRubric;
   final String latestFeedback;
   final InternFinalDecision finalDecision;
+  final String? closeReason; // recorded reason if closed/extended
   final bool isActive;
   final int completedTasks;
   final int totalTasks;
-  final int missedUpdatesDays; // Number of consecutive missed daily standup updates
+  final int missedUpdatesDays;
   final DateTime? lastActiveDate;
 
   Intern({
@@ -51,15 +113,37 @@ class Intern {
     required this.selectionDate,
     this.assignedPocId,
     this.assignedPocName,
-    this.performanceRating = 4.0,
-    this.latestFeedback = 'Orientation completed.',
+    this.status = InternStatus.internshipActive,
+    double? performanceRating,
+    InternEvaluationRubric? evaluationRubric,
+    this.latestFeedback = '1-week observation period active.',
     this.finalDecision = InternFinalDecision.pending,
+    this.closeReason,
     this.isActive = true,
     this.completedTasks = 0,
     this.totalTasks = 0,
     this.missedUpdatesDays = 0,
     this.lastActiveDate,
-  });
+  }) : evaluationRubric = evaluationRubric ??
+            (performanceRating != null
+                ? InternEvaluationRubric(
+                    taskQuality: performanceRating,
+                    consistency: performanceRating,
+                    interest: performanceRating,
+                    learningProgress: performanceRating,
+                    communication: performanceRating,
+                  )
+                : const InternEvaluationRubric());
+
+  double get performanceRating => evaluationRubric.averageScore;
+
+  bool get isUnderOneWeekEvaluation =>
+      status == InternStatus.underEvaluation || status == InternStatus.internshipActive;
+
+  bool get isRecommendedForHire =>
+      status == InternStatus.recommendedForHiring ||
+      finalDecision == InternFinalDecision.hired ||
+      performanceRating >= 4.2;
 
   Intern copyWith({
     String? id,
@@ -76,9 +160,12 @@ class Intern {
     DateTime? selectionDate,
     String? assignedPocId,
     String? assignedPocName,
+    InternStatus? status,
+    InternEvaluationRubric? evaluationRubric,
     double? performanceRating,
     String? latestFeedback,
     InternFinalDecision? finalDecision,
+    String? closeReason,
     bool? isActive,
     int? completedTasks,
     int? totalTasks,
@@ -100,9 +187,20 @@ class Intern {
       selectionDate: selectionDate ?? this.selectionDate,
       assignedPocId: assignedPocId ?? this.assignedPocId,
       assignedPocName: assignedPocName ?? this.assignedPocName,
-      performanceRating: performanceRating ?? this.performanceRating,
+      status: status ?? this.status,
+      evaluationRubric: evaluationRubric ??
+          (performanceRating != null
+              ? InternEvaluationRubric(
+                  taskQuality: performanceRating,
+                  consistency: performanceRating,
+                  interest: performanceRating,
+                  learningProgress: performanceRating,
+                  communication: performanceRating,
+                )
+              : this.evaluationRubric),
       latestFeedback: latestFeedback ?? this.latestFeedback,
       finalDecision: finalDecision ?? this.finalDecision,
+      closeReason: closeReason ?? this.closeReason,
       isActive: isActive ?? this.isActive,
       completedTasks: completedTasks ?? this.completedTasks,
       totalTasks: totalTasks ?? this.totalTasks,
@@ -126,9 +224,12 @@ class Intern {
     'selectionDate': selectionDate.toIso8601String(),
     'assignedPocId': assignedPocId,
     'assignedPocName': assignedPocName,
+    'status': status.name,
+    'evaluationRubric': evaluationRubric.toJson(),
     'performanceRating': performanceRating,
     'latestFeedback': latestFeedback,
     'finalDecision': finalDecision.name,
+    'closeReason': closeReason,
     'isActive': isActive,
     'completedTasks': completedTasks,
     'totalTasks': totalTasks,
@@ -154,12 +255,25 @@ class Intern {
     selectionDate: DateTime.parse(json['selectionDate'] as String),
     assignedPocId: json['assignedPocId'] as String?,
     assignedPocName: json['assignedPocName'] as String?,
-    performanceRating: (json['performanceRating'] as num?)?.toDouble() ?? 4.0,
+    status: InternStatus.values.firstWhere(
+      (s) => s.name == json['status'],
+      orElse: () => InternStatus.internshipActive,
+    ),
+    evaluationRubric: json['evaluationRubric'] != null
+        ? InternEvaluationRubric.fromJson(json['evaluationRubric'] as Map<String, dynamic>)
+        : InternEvaluationRubric(
+            taskQuality: (json['performanceRating'] as num?)?.toDouble() ?? 4.0,
+            consistency: (json['performanceRating'] as num?)?.toDouble() ?? 4.0,
+            interest: (json['performanceRating'] as num?)?.toDouble() ?? 4.5,
+            learningProgress: (json['performanceRating'] as num?)?.toDouble() ?? 4.0,
+            communication: (json['performanceRating'] as num?)?.toDouble() ?? 4.0,
+          ),
     latestFeedback: json['latestFeedback'] as String? ?? '',
     finalDecision: InternFinalDecision.values.firstWhere(
       (e) => e.name == json['finalDecision'],
       orElse: () => InternFinalDecision.pending,
     ),
+    closeReason: json['closeReason'] as String?,
     isActive: json['isActive'] as bool? ?? true,
     completedTasks: json['completedTasks'] as int? ?? 0,
     totalTasks: json['totalTasks'] as int? ?? 0,
@@ -170,25 +284,40 @@ class Intern {
   );
 }
 
-/// Represents a weekly intake batch
+/// Represents a weekly intake Friday batch (50-70 candidates, ~25 selected)
 class InternBatch {
   final String id;
-  final String code; // e.g. "Batch 2026-W41"
+  final String code; // e.g. "Friday Batch W41"
   final String title;
-  final DateTime startDate;
-  final int interviewedCount;
-  final int selectedCount;
-  final int activeCount;
+  final DateTime interviewDate;
+  final int candidatesInterviewed; // 50 - 70
+  final int internsSelected; // ~25
+  final int activeEvaluationCount;
+  final int convertedToEmployees;
   final String status;
 
   InternBatch({
     required this.id,
     required this.code,
     required this.title,
-    required this.startDate,
-    required this.interviewedCount,
-    required this.selectedCount,
-    required this.activeCount,
-    this.status = 'Active',
-  });
+    DateTime? interviewDate,
+    DateTime? startDate,
+    int? candidatesInterviewed,
+    int? interviewedCount,
+    int? internsSelected,
+    int? selectedCount,
+    int? activeEvaluationCount,
+    int? activeCount,
+    this.convertedToEmployees = 0,
+    this.status = '1-Week Observation Active',
+  })  : interviewDate = interviewDate ?? startDate ?? DateTime.now(),
+        candidatesInterviewed = candidatesInterviewed ?? interviewedCount ?? 60,
+        internsSelected = internsSelected ?? selectedCount ?? 25,
+        activeEvaluationCount = activeEvaluationCount ?? activeCount ?? 25;
+
+  // Backward compatibility alias
+  DateTime get startDate => interviewDate;
+  int get interviewedCount => candidatesInterviewed;
+  int get selectedCount => internsSelected;
+  int get activeCount => activeEvaluationCount;
 }

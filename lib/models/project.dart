@@ -53,14 +53,16 @@ class ProjectMilestone {
   );
 }
 
-/// Model representing a client project
+/// Model representing a client project adhering to Sections 5 & 6 of ERP PRD
 class Project {
   final String id;
   final String name;
   final String clientName;
-  final String domain; // "Mobile App", "Web Platform", "AI / ML", "Cloud Infra"
+  final String domain; // "Mobile App", "Web Platform", "Digital Marketing", "AI & Automation"
   final String team;
+  final List<String> assignedDepartments; // Multi-dept: Tech & Marketing cross-collaboration
   final String description;
+  final String deliverablesScope;
   final double budget;
   final String ownerEmployeeId;
   final String ownerEmployeeName;
@@ -73,6 +75,8 @@ class Project {
   final DateTime deadline;
   final List<String> activeBlockers;
   final String? sourceLeadId;
+  final bool hasResourceConflict;
+  final String? resourceConflictNotes;
 
   Project({
     required this.id,
@@ -80,7 +84,9 @@ class Project {
     required this.clientName,
     this.domain = 'Mobile App',
     this.team = 'Core Engineering',
+    this.assignedDepartments = const ['Technology and Engineering'],
     required this.description,
+    this.deliverablesScope = 'Full frontend, backend API, UI design & SEO launch package',
     required this.budget,
     required this.ownerEmployeeId,
     required this.ownerEmployeeName,
@@ -93,10 +99,12 @@ class Project {
     required this.deadline,
     this.activeBlockers = const [],
     this.sourceLeadId,
+    this.hasResourceConflict = false,
+    this.resourceConflictNotes,
   });
 
   bool get hasBlockers => activeBlockers.isNotEmpty;
-  
+
   /// Behind progress percentage (0 - 100)
   int get behindSchedulePercent {
     final diff = ((plannedProgress - progress) * 100).round();
@@ -114,7 +122,9 @@ class Project {
     String? clientName,
     String? domain,
     String? team,
+    List<String>? assignedDepartments,
     String? description,
+    String? deliverablesScope,
     double? budget,
     String? ownerEmployeeId,
     String? ownerEmployeeName,
@@ -127,6 +137,8 @@ class Project {
     DateTime? deadline,
     List<String>? activeBlockers,
     String? sourceLeadId,
+    bool? hasResourceConflict,
+    String? resourceConflictNotes,
   }) {
     return Project(
       id: id ?? this.id,
@@ -134,7 +146,9 @@ class Project {
       clientName: clientName ?? this.clientName,
       domain: domain ?? this.domain,
       team: team ?? this.team,
+      assignedDepartments: assignedDepartments ?? this.assignedDepartments,
       description: description ?? this.description,
+      deliverablesScope: deliverablesScope ?? this.deliverablesScope,
       budget: budget ?? this.budget,
       ownerEmployeeId: ownerEmployeeId ?? this.ownerEmployeeId,
       ownerEmployeeName: ownerEmployeeName ?? this.ownerEmployeeName,
@@ -147,6 +161,8 @@ class Project {
       deadline: deadline ?? this.deadline,
       activeBlockers: activeBlockers ?? this.activeBlockers,
       sourceLeadId: sourceLeadId ?? this.sourceLeadId,
+      hasResourceConflict: hasResourceConflict ?? this.hasResourceConflict,
+      resourceConflictNotes: resourceConflictNotes ?? this.resourceConflictNotes,
     );
   }
 
@@ -156,7 +172,9 @@ class Project {
     'clientName': clientName,
     'domain': domain,
     'team': team,
+    'assignedDepartments': assignedDepartments,
     'description': description,
+    'deliverablesScope': deliverablesScope,
     'budget': budget,
     'ownerEmployeeId': ownerEmployeeId,
     'ownerEmployeeName': ownerEmployeeName,
@@ -169,6 +187,8 @@ class Project {
     'deadline': deadline.toIso8601String(),
     'activeBlockers': activeBlockers,
     'sourceLeadId': sourceLeadId,
+    'hasResourceConflict': hasResourceConflict,
+    'resourceConflictNotes': resourceConflictNotes,
   };
 
   factory Project.fromJson(Map<String, dynamic> json) => Project(
@@ -177,7 +197,9 @@ class Project {
     clientName: json['clientName'] as String,
     domain: json['domain'] as String? ?? 'Mobile App',
     team: json['team'] as String? ?? 'Core Engineering',
+    assignedDepartments: List<String>.from(json['assignedDepartments'] ?? ['Technology and Engineering']),
     description: json['description'] as String,
+    deliverablesScope: json['deliverablesScope'] as String? ?? 'Full scope deliverables',
     budget: (json['budget'] as num).toDouble(),
     ownerEmployeeId: json['ownerEmployeeId'] as String,
     ownerEmployeeName: json['ownerEmployeeName'] as String,
@@ -196,5 +218,7 @@ class Project {
     deadline: DateTime.parse(json['deadline'] as String),
     activeBlockers: List<String>.from(json['activeBlockers'] ?? []),
     sourceLeadId: json['sourceLeadId'] as String?,
+    hasResourceConflict: json['hasResourceConflict'] as bool? ?? false,
+    resourceConflictNotes: json['resourceConflictNotes'] as String?,
   );
 }

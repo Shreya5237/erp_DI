@@ -42,7 +42,10 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: BoxConstraints(
+          maxWidth: 520,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -333,7 +336,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryDark,
                     ),
-                    child: const Text('Submit to POC / CEO'),
+                    child: const Text('Submit to POC / CEO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

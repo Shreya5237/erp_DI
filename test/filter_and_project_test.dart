@@ -105,5 +105,91 @@ void main() {
       expect(updated.teamMemberNames, contains('Karthik R'));
       expect(updated.teamMemberNames, contains('Bhavya Shah (Intern)'));
     });
+
+    test('Employee department filter works properly and groups hierarchically', () {
+      final erp = ErpProvider();
+
+      expect(erp.availableEmployeeDepartments.isNotEmpty, isTrue);
+      expect(erp.availableEmployeeDepartments, contains('All Departments'));
+      expect(erp.availableEmployeeDepartments, contains('Technical'));
+
+      // Filter by Technical
+      erp.setEmployeeDepartmentFilter('Technical');
+      expect(erp.filteredEmployees.isNotEmpty, isTrue);
+      expect(erp.filteredEmployees.every((e) => e.department.toLowerCase().contains('technical')), isTrue);
+
+      // Hierarchical grouping: Department leads and POCs are first
+      final hierarchical = erp.employeesByDepartmentHierarchical;
+      expect(hierarchical.containsKey('Technical'), isTrue);
+      final engTeam = hierarchical['Technical']!;
+      expect(engTeam.isNotEmpty, isTrue);
+
+      // Reset department filter
+      erp.setEmployeeDepartmentFilter(null);
+      expect(erp.filteredEmployees.length, equals(erp.allEmployees.length));
+    });
+
+    test('Task department grouping and default Ongoing & Overdue status works properly', () {
+      final erp = ErpProvider();
+
+      // By default, task status filter is 'Ongoing & Overdue'
+      expect(erp.taskStatusFilter, equals('Ongoing & Overdue'));
+      for (final task in erp.filteredTasks) {
+        expect(task.isOngoing || task.isOverdue, isTrue);
+      }
+
+      // Tasks by department grouping
+      final tasksByDept = erp.tasksByDepartment;
+      expect(tasksByDept.isNotEmpty, isTrue);
+      for (final entry in tasksByDept.entries) {
+        expect(entry.value.isNotEmpty, isTrue);
+        expect(entry.value.every((t) => t.effectiveDepartment == entry.key), isTrue);
+      }
+
+      // Filter tasks by specific status
+      erp.setTaskStatusFilter('Upcoming');
+      for (final task in erp.filteredTasks) {
+        expect(task.isUpcoming, isTrue);
+      }
+
+      erp.setTaskStatusFilter('Completed');
+      for (final task in erp.filteredTasks) {
+        expect(task.isCompleted, isTrue);
+      }
+
+      // Task department filter
+      erp.setTaskDepartmentFilter('Engineering');
+      for (final task in erp.filteredTasks) {
+        expect(task.effectiveDepartment.toLowerCase().contains('engineering'), isTrue);
+      }
+
+      // Reset
+      erp.resetFilters();
+      expect(erp.taskStatusFilter, equals('Ongoing & Overdue'));
+      expect(erp.taskDepartmentFilter, isNull);
+    });
+
+    test('Lead and Project domain filtering works properly', () {
+      final erp = ErpProvider();
+
+      // Lead domain filter
+      expect(erp.availableLeadDomains, contains('All Domains'));
+      erp.setLeadDomainFilter('IT Consulting');
+      for (final lead in erp.filteredLeads) {
+        expect(lead.domain.toLowerCase().contains('it consulting'), isTrue);
+      }
+
+      // Project domain filter
+      expect(erp.availableProjectDomains, contains('All Domains'));
+      erp.setProjectDomainFilter('Mobile App');
+      for (final project in erp.filteredProjects) {
+        expect(project.domain.toLowerCase().contains('mobile app'), isTrue);
+      }
+
+      // Reset
+      erp.resetFilters();
+      expect(erp.leadDomainFilter, isNull);
+      expect(erp.projectDomainFilter, isNull);
+    });
   });
 }

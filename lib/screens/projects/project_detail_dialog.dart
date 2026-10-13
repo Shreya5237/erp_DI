@@ -41,7 +41,10 @@ class _ProjectDetailDialogState extends State<ProjectDetailDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 540),
+        constraints: BoxConstraints(
+          maxWidth: 540,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -164,7 +167,7 @@ class _ProjectDetailDialogState extends State<ProjectDetailDialog> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0F172A),
+                            color: const Color(0xFF212529),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -398,7 +401,7 @@ class _ProjectDetailDialogState extends State<ProjectDetailDialog> {
                         children: [
                           const Text(
                             'Edit Project Team',
-                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, size: 20),
@@ -411,7 +414,7 @@ class _ProjectDetailDialogState extends State<ProjectDetailDialog> {
                       // Reassign Team Lead
                       const Text(
                         'Project Team Lead',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                       ),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
@@ -451,7 +454,7 @@ class _ProjectDetailDialogState extends State<ProjectDetailDialog> {
                         children: [
                           Text(
                             'Assigned Members (${currentMembers.length})',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                           ),
                           PopupMenuButton<String>(
                             tooltip: 'Add Member',
@@ -490,7 +493,7 @@ class _ProjectDetailDialogState extends State<ProjectDetailDialog> {
                           return Chip(
                             labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                             visualDensity: VisualDensity.compact,
-                            backgroundColor: isLead ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            backgroundColor: isLead ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
                             label: Text(
                               isLead ? '$m (Lead)' : m,
                               style: TextStyle(
@@ -522,7 +525,7 @@ class _ProjectDetailDialogState extends State<ProjectDetailDialog> {
                             );
                             Navigator.of(ctx).pop();
                           },
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F172A)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF212529)),
                           child: const Text('Save Team Changes', style: TextStyle(fontWeight: FontWeight.w600)),
                         ),
                       ),

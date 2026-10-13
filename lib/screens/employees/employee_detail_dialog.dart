@@ -5,6 +5,7 @@ import '../../models/employee.dart';
 import '../../providers/erp_provider.dart';
 import '../tasks/task_detail_dialog.dart';
 import '../interns/intern_detail_dialog.dart';
+import '../employee/pages/employee_calendar_page.dart';
 
 /// Employee Inspector with Workload and Mentorship Assignment
 class EmployeeDetailDialog extends StatelessWidget {
@@ -27,7 +28,10 @@ class EmployeeDetailDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: BoxConstraints(
+          maxWidth: 520,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(22),
           child: Column(
@@ -133,6 +137,10 @@ class EmployeeDetailDialog extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
+                    _buildMeta('Department', emp.subDepartmentName != null && emp.subDepartmentName!.isNotEmpty
+                        ? '${emp.department} (${emp.subDepartmentName})'
+                        : emp.department),
+                    const Divider(height: 12, color: AppColors.borderLight),
                     _buildMeta('Email', emp.email),
                     const Divider(height: 12, color: AppColors.borderLight),
                     _buildMeta('Phone', emp.phone),
@@ -199,7 +207,37 @@ class EmployeeDetailDialog extends StatelessWidget {
                         );
                       },
                     )),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
+
+              // View Employee Calendar Action
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.calendar_month_rounded, size: 18, color: Colors.white),
+                  label: Text(
+                    'View ${emp.name}\'s Calendar',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF212529),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EmployeeCalendarPage(
+                          employee: emp,
+                          showAppBar: true,
+                          allowEmployeeSwitching: true,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
 
               // Deactivate / Reactivate Toggle Action
               SizedBox(

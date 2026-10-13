@@ -40,7 +40,7 @@ public class TaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ROLE_CEO', 'ROLE_POC')")
+    @PreAuthorize("hasAnyRole('CEO', 'POC', 'ROLE_CEO', 'ROLE_POC')")
     public ResponseEntity<ApiResponse<TaskEntity>> create(@RequestBody TaskEntity task) {
         return ResponseEntity.ok(ApiResponse.success(taskService.create(task), "Task created successfully"));
     }

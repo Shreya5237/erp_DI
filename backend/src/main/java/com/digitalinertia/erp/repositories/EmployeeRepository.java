@@ -14,6 +14,9 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, String
     List<EmployeeEntity> findByActiveTrue();
     List<EmployeeEntity> findByCategory(RoleCategory category);
     List<EmployeeEntity> findByTeamId(String teamId);
+    List<EmployeeEntity> findByDepartmentId(String departmentId);
+    List<EmployeeEntity> findBySubDepartmentId(String subDepartmentId);
     List<EmployeeEntity> findByPocTrue();
     long countByActiveTrue();
+    long countByDepartmentId(String departmentId);
 }

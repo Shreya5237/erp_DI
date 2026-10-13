@@ -27,7 +27,17 @@ public class UserPrincipal implements UserDetails {
         this.role = user.getRole();
         this.employeeId = user.getEmployeeId();
         this.active = user.isActive();
-        this.authorities = Collections.singletonList(new SimpleGrantedAuthority(user.getRole()));
+        java.util.List<GrantedAuthority> authList = new java.util.ArrayList<>();
+        if (user.getRole() != null && !user.getRole().isBlank()) {
+            authList.add(new SimpleGrantedAuthority(user.getRole()));
+            if (user.getRole().startsWith("ROLE_")) {
+                authList.add(new SimpleGrantedAuthority(user.getRole().substring(5)));
+                authList.add(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
+            } else {
+                authList.add(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
+            }
+        }
+        this.authorities = Collections.unmodifiableList(authList);
     }
 
     public String getId() { return id; }

@@ -30,6 +30,7 @@ public class LeadEntity {
     private String phone;
 
     @Column(nullable = false, length = 30)
+    @org.hibernate.annotations.ColumnTransformer(write = "?::lead_stage_enum")
     private LeadStage stage = LeadStage.new_lead;
 
     @Column(name = "deal_value", nullable = false, precision = 12, scale = 2)

@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 /// Donut chart for Tasks Overview matching Screen 2
@@ -35,10 +35,10 @@ class TasksDonutChart extends StatelessWidget {
                 size: const Size(110, 110),
                 painter: _DonutChartPainter(
                   slices: [
-                    _Slice(completed, const Color(0xFF1E293B)), // Dark slate
+                    _Slice(completed, const Color(0xFF2B3035)), // Dark slate
                     _Slice(inProgress, const Color(0xFF64748B)), // Slate
                     _Slice(todo, const Color(0xFF94A3B8)), // Muted slate
-                    _Slice(overdue, const Color(0xFF0F172A)), // Black
+                    _Slice(overdue, const Color(0xFF212529)), // Black
                     _Slice(needsRework, const Color(0xFFCBD5E1)), // Light slate
                   ],
                   total: total > 0 ? total : 1,
@@ -52,7 +52,7 @@ class TasksDonutChart extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: Color(0xFF212529),
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -76,13 +76,13 @@ class TasksDonutChart extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegendRow('Completed', completed, const Color(0xFF1E293B)),
+              _buildLegendRow('Completed', completed, const Color(0xFF2B3035)),
               const SizedBox(height: 5),
               _buildLegendRow('In Progress', inProgress, const Color(0xFF64748B)),
               const SizedBox(height: 5),
               _buildLegendRow('To Do', todo, const Color(0xFF94A3B8)),
               const SizedBox(height: 5),
-              _buildLegendRow('Overdue', overdue, const Color(0xFF0F172A)),
+              _buildLegendRow('Overdue', overdue, const Color(0xFF212529)),
               const SizedBox(height: 5),
               _buildLegendRow('Needs Rework', needsRework, const Color(0xFFCBD5E1)),
             ],
@@ -119,7 +119,7 @@ class TasksDonutChart extends StatelessWidget {
           style: const TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
+            color: Color(0xFF212529),
           ),
         ),
       ],

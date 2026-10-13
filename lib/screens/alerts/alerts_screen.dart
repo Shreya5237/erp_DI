@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/erp_provider.dart';
 
@@ -30,13 +30,13 @@ class _AlertsScreenState extends State<AlertsScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0F172A)),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF212529)),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Alerts',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: Color(0xFF212529),
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -121,10 +121,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
+                                color: const Color(0xFFF5F6F7),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(icon, size: 22, color: const Color(0xFF0F172A)),
+                              child: Icon(icon, size: 22, color: const Color(0xFF212529)),
                             ),
                             const SizedBox(width: 14),
                             // Text content
@@ -137,7 +137,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F172A),
+                                      color: Color(0xFF212529),
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -177,7 +177,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          color: isSelected ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
