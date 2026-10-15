@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/sales_call.dart';
 import '../../../models/meeting.dart';
@@ -175,13 +176,13 @@ class SalesFollowUpsPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isOverdue ? const Color(0xFF2B3035) : const Color(0xFF2B3035),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isOverdue
               ? const Color(0xFFEF4444).withValues(alpha: 0.6)
-              : Colors.white.withValues(alpha: 0.08),
-          width: isOverdue ? 1.5 : 1,
+              : const Color(0xFFE9ECEF),
+          width: isOverdue ? 1.5 : 1.2,
         ),
       ),
       child: Column(
@@ -197,12 +198,21 @@ class SalesFollowUpsPage extends StatelessWidget {
                   children: [
                     Text(
                       call.customerName,
-                      style: const TextStyle(color: Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF212529),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${call.companyName} • ${call.phone}',
-                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF6C757D),
+                        fontSize: 11.5,
+                      ),
                     ),
                   ],
                 ),
@@ -210,13 +220,18 @@ class SalesFollowUpsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: priorityColor.withValues(alpha: 0.2),
+                  color: priorityColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: priorityColor.withValues(alpha: 0.4)),
+                  border: Border.all(color: priorityColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '${call.priority} Priority',
-                  style: TextStyle(color: priorityColor, fontSize: 10, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: priorityColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -229,7 +244,7 @@ class SalesFollowUpsPage extends StatelessWidget {
               Icon(
                 Icons.calendar_today_rounded,
                 size: 13,
-                color: isOverdue ? const Color(0xFFF87171) : const Color(0xFF60A5FA),
+                color: isOverdue ? const Color(0xFFEF4444) : const Color(0xFF6C757D),
               ),
               const SizedBox(width: 5),
               Text(
@@ -237,9 +252,10 @@ class SalesFollowUpsPage extends StatelessWidget {
                     ? '${call.nextFollowUpDate!.day}/${call.nextFollowUpDate!.month}/${call.nextFollowUpDate!.year} at ${call.nextFollowUpDate!.hour}:${call.nextFollowUpDate!.minute.toString().padLeft(2, '0')}'
                     : 'Unscheduled',
                 style: TextStyle(
-                  color: isOverdue ? const Color(0xFFF87171) : const Color(0xFF64748B),
+                  fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                  color: isOverdue ? const Color(0xFFEF4444) : const Color(0xFF495057),
                   fontSize: 11.5,
-                  fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w600,
                 ),
               ),
               if (isOverdue) ...[
@@ -247,12 +263,17 @@ class SalesFollowUpsPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withValues(alpha: 0.25),
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     '${call.daysOverdue}d overdue',
-                    style: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 9.5, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      color: const Color(0xFFEF4444),
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -260,7 +281,12 @@ class SalesFollowUpsPage extends StatelessWidget {
                 const Spacer(),
                 Text(
                   '₹${_formatCurrency(call.dealValue!)} Deal',
-                  style: const TextStyle(color: Color(0xFF34D399), fontSize: 11, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF10B981),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ],
             ],
@@ -272,12 +298,17 @@ class SalesFollowUpsPage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF212529),
+                color: const Color(0xFFF8F9FA),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
               ),
               child: Text(
                 call.notes,
-                style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                style: TextStyle(
+                  fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                  color: const Color(0xFF495057),
+                  fontSize: 11,
+                ),
               ),
             ),
           ],
@@ -292,15 +323,26 @@ class SalesFollowUpsPage extends StatelessWidget {
                   erp.markFollowUpCompleted(call.id);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      backgroundColor: const Color(0xFF10B981),
-                      content: Text('Follow-up with ${call.customerName} marked as completed!'),
+                      backgroundColor: const Color(0xFF212529),
+                      content: Text(
+                        'Follow-up with ${call.customerName} marked as completed!',
+                        style: TextStyle(fontFamily: GoogleFonts.instrumentSans().fontFamily),
+                      ),
                     ),
                   );
                 },
                 icon: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
-                label: const Text('Complete', style: TextStyle(color: Colors.white, fontSize: 11)),
+                label: Text(
+                  'Complete',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF059669),
+                  backgroundColor: const Color(0xFF212529),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   elevation: 0,
@@ -311,10 +353,19 @@ class SalesFollowUpsPage extends StatelessWidget {
               // Reschedule Action
               OutlinedButton.icon(
                 onPressed: () => _rescheduleCall(context, call, erp),
-                icon: const Icon(Icons.edit_calendar_rounded, size: 14, color: Color(0xFF60A5FA)),
-                label: const Text('Reschedule', style: TextStyle(color: Color(0xFF60A5FA), fontSize: 11)),
+                icon: const Icon(Icons.edit_calendar_rounded, size: 14, color: Color(0xFF212529)),
+                label: Text(
+                  'Reschedule',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF212529),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF3B82F6)),
+                  side: const BorderSide(color: Color(0xFFE9ECEF)),
+                  backgroundColor: const Color(0xFFF1F3F5),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
@@ -325,7 +376,7 @@ class SalesFollowUpsPage extends StatelessWidget {
               if (call.leadId != null)
                 IconButton(
                   tooltip: 'View Linked Deal',
-                  icon: const Icon(Icons.launch_rounded, color: Colors.white60, size: 18),
+                  icon: const Icon(Icons.launch_rounded, color: Color(0xFF6C757D), size: 18),
                   onPressed: () {
                     final lead = erp.allLeads.firstWhere((l) => l.id == call.leadId, orElse: () => erp.allLeads.first);
                     DealDetailSheet.show(context, lead);
@@ -335,7 +386,7 @@ class SalesFollowUpsPage extends StatelessWidget {
               // Phone call quick trigger
               IconButton(
                 tooltip: 'Call Customer',
-                icon: const Icon(Icons.phone_in_talk_rounded, color: Color(0xFF34D399), size: 18),
+                icon: const Icon(Icons.phone_in_talk_rounded, color: Color(0xFF212529), size: 18),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -378,8 +429,11 @@ class SalesFollowUpsPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B82F6),
-            content: Text('Follow-up rescheduled to ${finalDate.day}/${finalDate.month}/${finalDate.year}'),
+            backgroundColor: const Color(0xFF212529),
+            content: Text(
+              'Follow-up rescheduled to ${finalDate.day}/${finalDate.month}/${finalDate.year}',
+              style: TextStyle(fontFamily: GoogleFonts.instrumentSans().fontFamily),
+            ),
           ),
         );
       }
@@ -393,7 +447,7 @@ class SalesFollowUpsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,16 +457,22 @@ class SalesFollowUpsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  color: const Color(0xFFF1F3F5),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE9ECEF)),
                 ),
-                child: const Icon(Icons.video_call_rounded, color: Color(0xFF34D399), size: 16),
+                child: const Icon(Icons.video_call_rounded, color: Color(0xFF212529), size: 16),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   mtg.title,
-                  style: const TextStyle(color: Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF212529),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -420,17 +480,30 @@ class SalesFollowUpsPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${mtg.startTime} - ${mtg.endTime} • ${mtg.locationOrLink}',
-            style: const TextStyle(color: Color(0xFF60A5FA), fontSize: 11.5, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+              color: const Color(0xFF495057),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             mtg.agenda,
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+            style: TextStyle(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+              color: const Color(0xFF6C757D),
+              fontSize: 11,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Participants: ${mtg.participantNames.join(", ")}',
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 10.5),
+            style: TextStyle(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+              color: const Color(0xFF868E96),
+              fontSize: 10.5,
+            ),
           ),
         ],
       ),

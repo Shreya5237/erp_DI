@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/sales_call.dart';
 import '../../../providers/erp_provider.dart';
@@ -31,7 +32,7 @@ class _LogCallDialogState extends State<LogCallDialog> {
   late final TextEditingController _dealValueController;
 
   CallOutcome _selectedOutcome = CallOutcome.followUpRequired;
-  String _selectedPriority = 'Medium';
+  final String _selectedPriority = 'Medium';
   DateTime? _selectedFollowUpDate;
   TimeOfDay _selectedFollowUpTime = const TimeOfDay(hour: 15, minute: 0);
 
@@ -151,281 +152,245 @@ class _LogCallDialogState extends State<LogCallDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 500,
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
+        constraints: const BoxConstraints(maxWidth: 420),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           child: Form(
             key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF212529).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header: 'Log a new call' + Close 'X' Button (Image 1)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Log a new call',
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF212529),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
                       ),
-                      child: const Icon(Icons.phone_in_talk_rounded, color: Color(0xFF212529), size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Record Sales Call',
-                            style: TextStyle(color: Color(0xFF212529), fontSize: 17, fontWeight: FontWeight.w700),
+                      InkWell(
+                        onTap: () => Navigator.of(context).pop(),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F3F5),
+                            shape: BoxShape.circle,
                           ),
-                          Text(
-                            'Log outcome, notes & next action',
-                            style: TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
-                          ),
-                        ],
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.close_rounded, color: Color(0xFF495057), size: 18),
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Customer & Company fields
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _customerController,
-                                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                                decoration: _buildInputDecoration('Lead / Contact Name', Icons.person_outline_rounded),
-                                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _companyController,
-                                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                                decoration: _buildInputDecoration('Company Name', Icons.business_rounded),
-                                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
 
-                        // Phone & Deal Value
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _phoneController,
-                                keyboardType: TextInputType.phone,
-                                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                                decoration: _buildInputDecoration('Phone Number', Icons.phone_outlined),
-                                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _dealValueController,
-                                keyboardType: TextInputType.number,
-                                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                                decoration: _buildInputDecoration('Estimated Deal (₹)', Icons.currency_rupee_rounded),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Call Outcome Selector
-                        const Text(
-                          'Call Outcome',
-                          style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: CallOutcome.values.map((outcome) {
-                            final isSelected = _selectedOutcome == outcome;
-                            return ChoiceChip(
-                              label: Text(outcome.label),
-                              selected: isSelected,
-                              onSelected: (_) => setState(() => _selectedOutcome = outcome),
-                              labelStyle: TextStyle(
-                                color: isSelected ? Colors.white : const Color(0xFF64748B),
-                                fontSize: 11.5,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                              ),
-                              backgroundColor: const Color(0xFFF5F6F7),
-                              selectedColor: outcome.color.withValues(alpha: 0.8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                side: BorderSide(
-                                  color: isSelected ? outcome.color : Colors.white10,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Next follow-up date (if follow-up or interested)
-                        if (_selectedOutcome == CallOutcome.followUpRequired ||
-                            _selectedOutcome == CallOutcome.interested) ...[
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: Text(
-                                  'Schedule Next Follow-up',
-                                  style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              DropdownButton<String>(
-                                value: _selectedPriority,
-                                dropdownColor: Colors.white,
-                                style: const TextStyle(color: Color(0xFF212529), fontSize: 12),
-                                underline: const SizedBox(),
-                                items: ['Urgent', 'High', 'Medium', 'Low'].map((p) {
-                                  return DropdownMenuItem(value: p, child: Text('$p Priority'));
-                                }).toList(),
-                                onChanged: (val) {
-                                  if (val != null) setState(() => _selectedPriority = val);
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          InkWell(
-                            onTap: _pickFollowUpDate,
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF5F6F7),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.event_rounded, color: Color(0xFF212529), size: 18),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      _selectedFollowUpDate != null
-                                          ? '${_selectedFollowUpDate!.day}/${_selectedFollowUpDate!.month}/${_selectedFollowUpDate!.year} at ${_selectedFollowUpTime.format(context)}'
-                                          : 'Select Date & Time',
-                                      style: const TextStyle(color: Color(0xFF212529), fontSize: 12.5),
-                                    ),
-                                  ),
-                                  const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B), size: 18),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Notes field
-                        const Text(
-                          'Call Notes & Client Feedback',
-                          style: TextStyle(color: Color(0xFF64748B), fontSize: 12.5, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _notesController,
-                          maxLines: 3,
-                          style: const TextStyle(color: Color(0xFF212529), fontSize: 12.5),
-                          decoration: InputDecoration(
-                            hintText: 'e.g. Discussed cloud pricing, decision maker requested proposal by Thursday...',
-                            hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11.5),
-                            filled: true,
-                            fillColor: const Color(0xFFF5F6F7),
-                            contentPadding: const EdgeInsets.all(12),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: Color(0xFF212529)),
-                            ),
-                          ),
-                        ),
-                      ],
+                  // Field 1: Lead or customer (Image 1)
+                  Text(
+                    'Lead or customer',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-
-                // Action buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _customerController,
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: _submit,
-                      icon: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
-                      label: const Text('Save Call Log', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF212529),
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    decoration: InputDecoration(
+                      hintText: 'Enter a name',
+                      hintStyle: GoogleFonts.instrumentSans(
+                        color: const Color(0xFFADB5BD),
+                        fontSize: 13.5,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF5F6F7),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF212529), width: 1.2),
+                      ),
+                    ),
+                    validator: (val) => val == null || val.trim().isEmpty ? 'Please enter a name' : null,
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Field 2: Outcome Dropdown (Image 1)
+                  Text(
+                    'Outcome',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F6F7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<CallOutcome>(
+                        value: _selectedOutcome,
+                        isExpanded: true,
+                        dropdownColor: Colors.white,
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF212529)),
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF212529),
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        items: CallOutcome.values.map((outcome) {
+                          return DropdownMenuItem<CallOutcome>(
+                            value: outcome,
+                            child: Text(outcome.label),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => _selectedOutcome = val);
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Field 3: Notes (Image 1)
+                  Text(
+                    'Notes',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _notesController,
+                    maxLines: 4,
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Add call notes...',
+                      hintStyle: GoogleFonts.instrumentSans(
+                        color: const Color(0xFFADB5BD),
+                        fontSize: 13.5,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF5F6F7),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFF212529), width: 1.2),
+                      ),
+                    ),
+                  ),
+
+                  // Supplementary schedule if follow-up required
+                  if (_selectedOutcome == CallOutcome.followUpRequired ||
+                      _selectedOutcome == CallOutcome.interested) ...[
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: _pickFollowUpDate,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F6F7),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today_outlined, color: Color(0xFF212529), size: 16),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                _selectedFollowUpDate != null
+                                    ? 'Follow-up: ${_selectedFollowUpDate!.day}/${_selectedFollowUpDate!.month}/${_selectedFollowUpDate!.year} at ${_selectedFollowUpTime.format(context)}'
+                                    : 'Schedule next follow-up',
+                                style: GoogleFonts.instrumentSans(
+                                  color: const Color(0xFF212529),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF868E96), size: 12),
+                          ],
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ],
+
+                  const SizedBox(height: 24),
+
+                  // Button: Full Width 'Save call' (Image 1)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF212529),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Save call',
+                        style: GoogleFonts.instrumentSans(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
-      prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 16),
-      filled: true,
-      fillColor: const Color(0xFFF5F6F7),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF212529)),
       ),
     );
   }

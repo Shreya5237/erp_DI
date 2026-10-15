@@ -1,11 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/erp_provider.dart';
 import '../models/user_role.dart';
 import '../widgets/app_drawer.dart';
-import 'dashboard/ceo_dashboard_screen.dart';
-import 'dashboard/technical_dashboard_view.dart';
-import 'dashboard/sales_dashboard_view.dart';
+import '../widgets/common_home_screen.dart';
 import 'employees/employee_list_screen.dart';
 import 'interns/intern_list_screen.dart';
 import 'tasks/task_list_screen.dart';
@@ -17,6 +16,7 @@ import 'meetings/meetings_screen.dart';
 import 'departments/department_hub_screen.dart';
 import 'alerts/alerts_screen.dart';
 import 'admin/admin_screen.dart';
+import 'ceo/ceo_executive_shell.dart';
 
 /// Main Navigation Container providing role-based dynamic bottom navigation,
 /// 1-tap persona switching, and complete modular access.
@@ -92,25 +92,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final erp = context.watch<ErpProvider>();
+
+    if (erp.currentRole == UserRole.ceo || erp.currentRole == UserRole.gm) {
+      return const CeoExecutiveShellScreen();
+    }
+
     final alertCount = erp.thresholdAlerts.length;
 
     Widget bodyWidget;
     switch (_currentIndex) {
       case 0:
-        // Role-based home dashboard view
-        if (erp.currentRole == UserRole.sales) {
-          bodyWidget = SalesDashboardView(
-            onOpenPipeline: () => setState(() => _currentIndex = 4),
-          );
-        } else if (erp.currentRole == UserRole.employee || erp.currentRole == UserRole.deptLead) {
-          bodyWidget = TechnicalDashboardView(
-            onOpenWidget: () => setState(() => _currentIndex = 10),
-          );
-        } else {
-          bodyWidget = CeoDashboardScreen(
-            onNavigateTab: (tabIdx) => _onDrawerSelect(tabIdx),
-          );
-        }
+        bodyWidget = RoleHomeScreen(
+          onNavigateModule: (tabIdx) => _onDrawerSelect(tabIdx),
+          onOpenNotifications: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AlertsScreen()),
+            );
+          },
+        );
         break;
       case 1:
         bodyWidget = Column(
@@ -177,7 +176,45 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         );
         break;
       default:
-        bodyWidget = const CeoDashboardScreen();
+        bodyWidget = RoleHomeScreen(
+          onNavigateModule: (tabIdx) => _onDrawerSelect(tabIdx),
+          onOpenNotifications: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AlertsScreen()),
+            );
+          },
+        );
+    }
+
+    final isDesktop = MediaQuery.of(context).size.width >= 960;
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F6F7),
+        body: Row(
+          children: [
+            AppDrawer(
+              currentIndex: _currentIndex,
+              onSelectTab: _onDrawerSelect,
+              onOpenAdmin: () => setState(() => _currentIndex = 6),
+              onOpenAlerts: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AlertsScreen()),
+                );
+              },
+              isDrawer: false,
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  _buildDesktopHeader(context, erp, alertCount),
+                  Expanded(child: bodyWidget),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return Scaffold(
@@ -517,5 +554,158 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildDesktopHeader(BuildContext context, ErpProvider erp, int alertCount) {
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Color(0xFFE9ECEF))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Text(
+                _getModuleTitle(_currentIndex),
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF212529),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: erp.isLiveMode ? const Color(0xFFEBFBEE) : const Color(0xFFFFF9DB),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  erp.isLiveMode ? 'LIVE API' : 'DEMO MODE',
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: erp.isLiveMode ? const Color(0xFF2F9E44) : const Color(0xFFF59F00),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              // 1-Tap Persona Switcher
+              PopupMenuButton<UserRole>(
+                tooltip: 'Switch Persona',
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F6F7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE9ECEF)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        erp.currentRole.label.split(' / ').first,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF212529),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_drop_down, size: 16, color: Color(0xFF212529)),
+                    ],
+                  ),
+                ),
+                onSelected: (role) {
+                  erp.setRole(role);
+                  setState(() => _currentIndex = 0);
+                },
+                itemBuilder: (ctx) => [
+                  const PopupMenuItem(value: UserRole.ceo, child: Text('CEO')),
+                  const PopupMenuItem(value: UserRole.technical, child: Text('Technical Lead / Eng')),
+                  const PopupMenuItem(value: UserRole.sales, child: Text('Sales & BD')),
+                  const PopupMenuItem(value: UserRole.finance, child: Text('Finance & Accounts')),
+                  const PopupMenuItem(value: UserRole.hr, child: Text('People & HR')),
+                  const PopupMenuItem(value: UserRole.intern, child: Text('Intern / Trainee')),
+                ],
+              ),
+              const SizedBox(width: 12),
+              // Notifications Bell
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF212529), size: 22),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const AlertsScreen()),
+                      );
+                    },
+                  ),
+                  if (alertCount > 0)
+                    Positioned(
+                      right: 10,
+                      top: 10,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE03131),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              // User Avatar
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: const Color(0xFF212529),
+                child: Text(
+                  erp.currentUserName.isNotEmpty ? erp.currentUserName[0].toUpperCase() : 'D',
+                  style: GoogleFonts.instrumentSans(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getModuleTitle(int index) {
+    switch (index) {
+      case 0:
+        return 'Executive Home';
+      case 1:
+        return 'Employees Directory';
+      case 2:
+        return 'Interns & Recruitment';
+      case 3:
+        return 'Tasks & Agile Workspace';
+      case 4:
+        return 'Sales & 12-Stage Pipeline';
+      case 5:
+        return 'Projects Portfolio';
+      case 6:
+        return 'Administration & Security';
+      case 7:
+        return 'Executive Approvals Hub';
+      case 8:
+        return 'Calendar & Meetings';
+      case 9:
+        return 'Departments Hub';
+      case 10:
+        return 'Task Widget Studio';
+      default:
+        return 'Executive Workspace';
+    }
   }
 }

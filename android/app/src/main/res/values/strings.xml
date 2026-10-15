@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Digital Inertia ERP</string>
+    <string name="widget_name">Digital Inertia ERP - Executive Widget</string>
+    <string name="widget_description">Live executive overview with active projects, tasks, approvals, and alerts.</string>
+</resources>

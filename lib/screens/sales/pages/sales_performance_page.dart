@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/erp_provider.dart';
 
@@ -297,7 +298,7 @@ class SalesPerformancePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,25 +306,36 @@ class SalesPerformancePage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.bar_chart_rounded, color: Color(0xFFA78BFA), size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.bar_chart_rounded, color: Color(0xFF212529), size: 18),
+                  const SizedBox(width: 8),
                   Text(
                     'Weekly Call Comparison',
-                    style: TextStyle(color: Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      color: const Color(0xFF212529),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
+                  color: const Color(0xFFF1F3F5),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFE9ECEF)),
                 ),
                 child: Text(
                   'Highest: Wk $highestWeek',
-                  style: const TextStyle(color: Color(0xFFA78BFA), fontSize: 10.5, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF212529),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -342,7 +354,8 @@ class SalesPerformancePage extends StatelessWidget {
                   Text(
                     '$count',
                     style: TextStyle(
-                      color: isHighest ? const Color(0xFFA78BFA) : Colors.white,
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      color: isHighest ? const Color(0xFF212529) : const Color(0xFF6C757D),
                       fontSize: 12,
                       fontWeight: isHighest ? FontWeight.w800 : FontWeight.w600,
                     ),
@@ -353,14 +366,14 @@ class SalesPerformancePage extends StatelessWidget {
                     height: 60,
                     alignment: Alignment.bottomCenter,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
+                      color: const Color(0xFFF1F3F5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Container(
                       width: 34,
                       height: 60 * barRatio,
                       decoration: BoxDecoration(
-                        color: isHighest ? const Color(0xFF8B5CF6) : const Color(0xFF2563EB),
+                        color: isHighest ? const Color(0xFF212529) : const Color(0xFFADB5BD),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -369,9 +382,10 @@ class SalesPerformancePage extends StatelessWidget {
                   Text(
                     'Wk $wk',
                     style: TextStyle(
-                      color: isHighest ? const Color(0xFFA78BFA) : const Color(0xFF64748B),
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      color: isHighest ? const Color(0xFF212529) : const Color(0xFF6C757D),
                       fontSize: 11,
-                      fontWeight: isHighest ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isHighest ? FontWeight.w800 : FontWeight.w600,
                     ),
                   ),
                 ],

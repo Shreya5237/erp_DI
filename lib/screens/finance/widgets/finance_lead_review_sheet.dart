@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/lead.dart';
 import '../../../providers/erp_provider.dart';
 
 /// Modal bottom sheet for Finance review and commercial signoff on sales deals
+/// Charcoal #212529, soft gray #F5F6F7, and white #FFFFFF.
 class FinanceLeadReviewSheet extends StatefulWidget {
   final Lead lead;
 
@@ -62,7 +64,7 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.90,
       decoration: const BoxDecoration(
-        color: Color(0xFF212529),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -73,7 +75,7 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
             width: 44,
             height: 5,
             decoration: BoxDecoration(
-              color: const Color(0xFF334155),
+              color: const Color(0xFFE9ECEF),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -86,27 +88,28 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                    color: const Color(0xFFF1F3F5),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.attach_money_rounded, color: Color(0xFFA78BFA), size: 20),
+                  child: const Icon(Icons.rate_review_outlined, color: Color(0xFF212529), size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Deal Financial Feasibility Review',
-                        style: TextStyle(
-                          color: Color(0xFF212529),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF212529),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       Text(
                         '${widget.lead.companyName} • ${widget.lead.id}',
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                        style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11.5),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -114,13 +117,13 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
+                  icon: const Icon(Icons.close_rounded, color: Color(0xFF212529), size: 20),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
           ),
-          const Divider(color: Colors.white, height: 1),
+          const Divider(color: Color(0xFFE9ECEF), height: 1),
 
           // Content body
           Expanded(
@@ -131,11 +134,11 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                 children: [
                   // Client / Deal Overview Card
                   Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      color: const Color(0xFFF8F9FA),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE9ECEF)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,17 +148,17 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                           children: [
                             Text(
                               widget.lead.clientName,
-                              style: const TextStyle(color: Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
+                              style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0284C7).withValues(alpha: 0.2),
+                                color: const Color(0xFFE9ECEF),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 widget.lead.status.label,
-                                style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 10, fontWeight: FontWeight.w700),
+                                style: GoogleFonts.instrumentSans(color: const Color(0xFF495057), fontSize: 10.5, fontWeight: FontWeight.w700),
                               ),
                             ),
                           ],
@@ -163,23 +166,23 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            const Icon(Icons.person_outline_rounded, color: Color(0xFF64748B), size: 14),
+                            const Icon(Icons.person_outline_rounded, color: Color(0xFF868E96), size: 14),
                             const SizedBox(width: 4),
                             Text(
                               'Sales Lead: ${widget.lead.assignedEmployeeName}',
-                              style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                              style: GoogleFonts.instrumentSans(color: const Color(0xFF6C757D), fontSize: 11.5),
                             ),
                             const Spacer(),
                             Text(
-                              'Target Value: ₹${widget.lead.dealValue.toStringAsFixed(0)}',
-                              style: const TextStyle(color: Color(0xFF10B981), fontSize: 12, fontWeight: FontWeight.w700),
+                              'Target: ₹${widget.lead.dealValue.toStringAsFixed(0)}',
+                              style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w800),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Requirements Scope: ${widget.lead.requirementsScope}',
-                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5, height: 1.3),
+                          style: GoogleFonts.instrumentSans(color: const Color(0xFF6C757D), fontSize: 11.5, height: 1.3),
                         ),
                       ],
                     ),
@@ -187,11 +190,16 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                   const SizedBox(height: 18),
 
                   // Financial Cost & Price Inputs
-                  const Text(
+                  Text(
                     'Financial Model & Commitment',
-                    style: TextStyle(color: Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.w700),
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
                   Row(
                     children: [
@@ -200,19 +208,19 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Estimated Cost (₹)', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                            Text('Estimated Cost (₹)', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11)),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _costController,
                               keyboardType: TextInputType.number,
-                              style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
+                              style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 13),
                               onChanged: (_) => setState(() {}),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: const Color(0xFF2B3035),
+                                fillColor: const Color(0xFFF8F9FA),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
                               ),
                             ),
                           ],
@@ -224,19 +232,19 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Quoted Price (₹)', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                            Text('Quoted Price (₹)', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11)),
                             const SizedBox(height: 6),
                             TextFormField(
                               controller: _priceController,
                               keyboardType: TextInputType.number,
-                              style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
+                              style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 13),
                               onChanged: (_) => setState(() {}),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: const Color(0xFF2B3035),
+                                fillColor: const Color(0xFFF8F9FA),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
                               ),
                             ),
                           ],
@@ -248,17 +256,11 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
 
                   // Calculated Margin Badge
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isMarginHealthy
-                          ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                          : const Color(0xFFEF4444).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isMarginHealthy
-                            ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                            : const Color(0xFFEF4444).withValues(alpha: 0.3),
-                      ),
+                      color: const Color(0xFFF8F9FA),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE9ECEF)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -266,15 +268,15 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                         Row(
                           children: [
                             Icon(
-                              isMarginHealthy ? Icons.check_circle_rounded : Icons.warning_rounded,
-                              color: isMarginHealthy ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                              isMarginHealthy ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                              color: const Color(0xFF212529),
                               size: 18,
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              isMarginHealthy ? 'Healthy Profit Margin' : 'Sub-Target Margin Alert (<30%)',
-                              style: TextStyle(
-                                color: isMarginHealthy ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                              isMarginHealthy ? 'Healthy Profit Margin' : 'Sub-Target Margin (<30%)',
+                              style: GoogleFonts.instrumentSans(
+                                color: const Color(0xFF212529),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -283,8 +285,8 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                         ),
                         Text(
                           '${margin.toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            color: isMarginHealthy ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                          style: GoogleFonts.instrumentSans(
+                            color: const Color(0xFF212529),
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
@@ -295,70 +297,69 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
                   const SizedBox(height: 16),
 
                   // Payment Terms
-                  const Text('Payment Milestone Terms', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                  Text('Payment Milestone Terms', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11)),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _termsController,
-                    style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
+                    style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'e.g. 30% Advance, 40% Milestone 2, 30% Delivery',
-                      hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                      hintStyle: GoogleFonts.instrumentSans(color: const Color(0xFFADB5BD), fontSize: 12),
                       filled: true,
-                      fillColor: const Color(0xFF2B3035),
+                      fillColor: const Color(0xFFF8F9FA),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
                     ),
                   ),
                   const SizedBox(height: 14),
 
                   // Review Notes
-                  const Text('Financial Review & Feasibility Notes *', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                  Text('Financial Review & Feasibility Notes *', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11)),
                   const SizedBox(height: 6),
                   TextFormField(
                     controller: _notesController,
                     maxLines: 3,
-                    style: const TextStyle(color: Colors.white, fontSize: 12.5),
+                    style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12.5),
                     decoration: InputDecoration(
                       hintText: 'Record financial evaluation comments, risk exposure, and budget conditions...',
-                      hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                      hintStyle: GoogleFonts.instrumentSans(color: const Color(0xFFADB5BD), fontSize: 12),
                       filled: true,
-                      fillColor: const Color(0xFF2B3035),
+                      fillColor: const Color(0xFFF8F9FA),
                       contentPadding: const EdgeInsets.all(12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF334155))),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // Actions row: Approve / Return / Clarify
+                  // Actions row: Approve / Return
                   Row(
                     children: [
-                      // Return / Reject button
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => _handleDecision(isApproved: false),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFEF4444),
-                            side: const BorderSide(color: Color(0xFFEF4444)),
+                            foregroundColor: const Color(0xFF212529),
+                            side: const BorderSide(color: Color(0xFFCED4DA)),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
-                          child: const Text('Return / Clarify', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
+                          child: Text('Return / Clarify', style: GoogleFonts.instrumentSans(fontSize: 12.5, fontWeight: FontWeight.w700)),
                         ),
                       ),
                       const SizedBox(width: 12),
-
-                      // Approve button
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => _handleDecision(isApproved: true),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
+                            backgroundColor: const Color(0xFF212529),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
-                          child: const Text('Approve Financials', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700)),
+                          child: Text('Approve Financials', style: GoogleFonts.instrumentSans(fontSize: 12.5, fontWeight: FontWeight.w700)),
                         ),
                       ),
                     ],
@@ -414,11 +415,12 @@ class _FinanceLeadReviewSheetState extends State<FinanceLeadReviewSheet> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: isApproved ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+        backgroundColor: const Color(0xFF212529),
         content: Text(
           isApproved
               ? 'Financials approved for ${widget.lead.companyName}'
               : 'Deal returned to Sales with revision notes',
+          style: GoogleFonts.instrumentSans(),
         ),
       ),
     );

@@ -1,19 +1,18 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../providers/erp_provider.dart';
 import '../../../models/task.dart';
 import '../widgets/create_task_dialog.dart';
+import '../widgets/employee_task_detail_modal.dart';
 
 /// Screen 4: Tasks & Schedule (Daily Work Planner)
-/// Adhering strictly to finalized concept:
-/// - View tasks assigned by managers
-/// - View task descriptions, priorities, and deadlines
-/// - Mark tasks as completed and update progress
-/// - See today's tasks, tomorrow's tasks, and next 7 days
-/// - Create personal tasks and reminders
-/// - Sort tasks by deadline, priority, or status
-/// - Automatically reflects completion in the dashboard's progress indicators
+/// Time-sequenced list of all assigned tasks categorized by status:
+/// - Ongoing
+/// - Upcoming
+/// - Completed
+/// Tapping any task card opens the detailed card overlay modal
 class EmployeeTasksPage extends StatefulWidget {
   const EmployeeTasksPage({super.key});
 
@@ -22,7 +21,7 @@ class EmployeeTasksPage extends StatefulWidget {
 }
 
 class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
-  String _activeTab = 'All'; // 'Today', 'Tomorrow', 'Next 7 Days', 'Overdue', 'All'
+  String _activeTab = 'All'; // 'All', 'Ongoing', 'Upcoming', 'Completed', 'Overdue'
   String _sortBy = 'Deadline'; // 'Deadline', 'Priority', 'Status'
   String _searchQuery = '';
 
@@ -31,21 +30,14 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
     final erp = context.watch<ErpProvider>();
     final myTasks = erp.myEmployeeTasks;
 
-    // Filter tasks based on activeTab
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final nextSevenDays = today.add(const Duration(days: 7));
-
+    // Filter tasks based on status category
     List<CompanyTask> filtered = myTasks.where((t) {
-      final tDate = DateTime(t.dueDate.year, t.dueDate.month, t.dueDate.day);
-
-      if (_activeTab == 'Today') {
-        return tDate.isAtSameMomentAs(today);
-      } else if (_activeTab == 'Tomorrow') {
-        return tDate.isAtSameMomentAs(tomorrow);
-      } else if (_activeTab == 'Next 7 Days') {
-        return !tDate.isBefore(today) && !tDate.isAfter(nextSevenDays);
+      if (_activeTab == 'Ongoing') {
+        return !t.isCompleted && (t.status == TaskStatus.inProgress || t.status == TaskStatus.todo);
+      } else if (_activeTab == 'Upcoming') {
+        return !t.isCompleted && t.dueDate.isAfter(DateTime.now());
+      } else if (_activeTab == 'Completed') {
+        return t.isCompleted;
       } else if (_activeTab == 'Overdue') {
         return t.isOverdue;
       }
@@ -79,49 +71,46 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F7),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (_) => const CreateTaskDialog(),
+          );
+        },
+        backgroundColor: const Color(0xFF212529),
+        icon: const Icon(Icons.add_task_rounded, color: Colors.white, size: 18),
+        label: const Text(
+          'Add Task',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+        ),
+      ),
       body: Column(
         children: [
-          // Header & Add Task Row
+          // Search & Filter Bar
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Top Header: Daily Work Planner
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Work Planner',
-                          style: TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF212529),
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        Text(
-                          'Manager assignments & personal tasks',
-                          style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                        ),
-                      ],
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => const CreateTaskDialog(),
-                        );
-                      },
-                      icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                      label: const Text('Add Task', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF212529),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    Text(
+                      'Daily Work Planner',
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF212529),
+                        letterSpacing: -0.3,
                       ),
+                    ),
+                    Text(
+                      'Today: ${DateFormat('MMM d').format(DateTime.now())} • Tomorrow: ${DateFormat('MMM d').format(DateTime.now().add(const Duration(days: 1)))}',
+                      style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -176,18 +165,18 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
                 ),
                 const SizedBox(height: 10),
 
-                // Timeline Filter Tabs: Today, Tomorrow, Next 7 Days, Overdue, All
+                // Status & Timeline Filter Tabs: All, Ongoing, Upcoming, Completed, Overdue
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
                       _buildTimelineTab('All', myTasks.length),
                       const SizedBox(width: 6),
-                      _buildTimelineTab('Today', myTasks.where((t) => t.isDueToday).length),
+                      _buildTimelineTab('Ongoing', myTasks.where((t) => !t.isCompleted && (t.status == TaskStatus.inProgress || t.status == TaskStatus.todo)).length),
                       const SizedBox(width: 6),
-                      _buildTimelineTab('Tomorrow', myTasks.where((t) => t.isDueTomorrow).length),
+                      _buildTimelineTab('Upcoming', myTasks.where((t) => !t.isCompleted && t.dueDate.isAfter(DateTime.now())).length),
                       const SizedBox(width: 6),
-                      _buildTimelineTab('Next 7 Days', myTasks.where((t) => !t.dueDate.isBefore(today) && !t.dueDate.isAfter(nextSevenDays)).length),
+                      _buildTimelineTab('Completed', myTasks.where((t) => t.isCompleted).length),
                       const SizedBox(width: 6),
                       _buildTimelineTab('Overdue', myTasks.where((t) => t.isOverdue).length),
                     ],
@@ -214,7 +203,7 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 80),
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 10),
                     itemBuilder: (ctx, idx) {
@@ -240,17 +229,23 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
         decoration: BoxDecoration(
           color: isSelected
               ? (isOverdueTab ? const Color(0xFFEF4444) : const Color(0xFF212529))
-              : (isOverdueTab && count > 0 ? const Color(0xFFFEF2F2) : const Color(0xFFF1F5F9)),
+              : (isOverdueTab && count > 0 ? const Color(0xFFFFF5F5) : const Color(0xFFF1F3F5)),
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? (isOverdueTab ? const Color(0xFFEF4444) : const Color(0xFF212529))
+                : const Color(0xFFE9ECEF),
+          ),
         ),
         child: Text(
           '$label ($count)',
           style: TextStyle(
+            fontFamily: GoogleFonts.instrumentSans().fontFamily,
             fontSize: 11.5,
-            fontWeight: FontWeight.w700,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
             color: isSelected
                 ? Colors.white
-                : (isOverdueTab && count > 0 ? const Color(0xFFDC2626) : const Color(0xFF475569)),
+                : (isOverdueTab && count > 0 ? const Color(0xFFE03131) : const Color(0xFF6C757D)),
           ),
         ),
       ),
@@ -261,8 +256,11 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
     final dateFormat = DateFormat('EEE, MMM d');
     final isManagerAssigned = !task.isPersonalTask;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
+    return InkWell(
+      onTap: () => EmployeeTaskDetailModal.show(context, task),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -412,6 +410,7 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -420,26 +419,38 @@ class _EmployeeTasksPageState extends State<EmployeeTasksPage> {
     Color fg;
     switch (priority) {
       case TaskPriority.urgent:
-        bg = const Color(0xFFFEF2F2);
-        fg = const Color(0xFFEF4444);
+        bg = const Color(0xFFFFF5F5);
+        fg = const Color(0xFFE03131);
         break;
       case TaskPriority.high:
-        bg = const Color(0xFFFEF3C7);
-        fg = const Color(0xFFD97706);
+        bg = const Color(0xFFFFF9DB);
+        fg = const Color(0xFFF59F00);
         break;
       case TaskPriority.medium:
-        bg = const Color(0xFFE0F2FE);
-        fg = const Color(0xFF0284C7);
+        bg = const Color(0xFFF1F3F5);
+        fg = const Color(0xFF495057);
         break;
       case TaskPriority.low:
-        bg = const Color(0xFFF1F5F9);
-        fg = const Color(0xFF64748B);
+        bg = const Color(0xFFF8F9FA);
+        fg = const Color(0xFF6C757D);
         break;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
-      child: Text(priority.label, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: fg)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
+      ),
+      child: Text(
+        priority.label,
+        style: TextStyle(
+          fontFamily: GoogleFonts.instrumentSans().fontFamily,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: fg,
+        ),
+      ),
     );
   }
 }

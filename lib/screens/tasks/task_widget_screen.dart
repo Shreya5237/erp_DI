@@ -496,6 +496,76 @@ class _TaskWidgetScreenState extends State<TaskWidgetScreen> with SingleTickerPr
           ),
           const SizedBox(height: 16),
 
+          // Action card: Add widget directly to launcher home screen
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF334155)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.add_to_home_screen_rounded, color: Color(0xFF10B981), size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Add Widget to Home Screen',
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Prompts your Android emulator launcher to pin the Digital Inertia ERP widget.',
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 11.5,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await NativeHomeWidgetService.syncToNativeWidgets(erp);
+                    final pinned = await NativeHomeWidgetService.requestPinWidget();
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(pinned
+                            ? 'Prompting home screen launcher to add widget...'
+                            : 'Launcher did not support automatic pin. Long-press home screen -> Widgets to add manually.'),
+                        backgroundColor: const Color(0xFF10B981),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: const Text('Pin Widget'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // Serialized JSON Payload Inspector
           Container(
             padding: const EdgeInsets.all(16),

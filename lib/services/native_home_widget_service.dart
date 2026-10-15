@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:home_widget/home_widget.dart';
+import '../models/project.dart';
 import '../models/task.dart';
 import '../providers/erp_provider.dart';
 import '../widgets/home_screen_weekly_tasks_widget.dart';
@@ -104,7 +107,7 @@ class WeeklyWidgetData {
 /// Bridges Flutter ERP state with native Android AppWidgets and iOS WidgetKit
 class NativeHomeWidgetService {
   static const String appGroupId = 'group.com.digitalinertia.erp';
-  static const String androidWidgetProvider = 'DigitalInertiaWeeklyTasksWidget';
+  static const String androidWidgetProvider = 'DiErpAppWidgetProvider';
   static const String sharedPreferencesKey = 'di_weekly_tasks_payload';
 
   /// Generates the structured weekly tasks payload from the active ERP provider
@@ -134,23 +137,87 @@ class NativeHomeWidgetService {
     );
   }
 
-  /// Syncs weekly task payload for native launcher widget consumption
+  /// Syncs executive ERP metrics and top priority tasks to the native launcher widget
   static Future<bool> syncToNativeWidgets(ErpProvider erp) async {
     try {
       final data = buildWeeklyWidgetData(erp);
       final jsonPayload = data.toJsonString();
 
-      // In production with 'home_widget' or platform channels:
-      // await HomeWidget.saveWidgetData<String>(sharedPreferencesKey, jsonPayload);
-      // await HomeWidget.updateWidget(name: androidWidgetProvider, iOSWidget: 'WeeklyTasksWidget');
+      // 1. Calculate executive counts
+      final activeProjects = erp.allProjects.where((p) => p.status == ProjectStatus.inProgress).length;
+      final pendingTasks = erp.allTasks.where((t) => !t.isCompleted).length;
+      final pendingApprovals = erp.pendingApprovals.length;
+      final alertsCount = erp.thresholdAlerts.isNotEmpty ? erp.thresholdAlerts.length : erp.unreadEmployeeAlertsCount;
+
+      // 2. Pick top 2 priority tasks
+      final prioritized = erp.currentWeekTasksPrioritized;
+      String task1Title = 'Review Q4 Plant Automation Plan';
+      String task1Badge = 'Due Today';
+      String task2Title = 'Approve Vendor Invoice #4128';
+      String task2Badge = 'High Priority';
+
+      if (prioritized.isNotEmpty) {
+        final t1 = prioritized[0];
+        final info1 = TaskDeadlineInfo.calculate(t1);
+        task1Title = t1.title;
+        task1Badge = info1.label;
+      }
+      if (prioritized.length > 1) {
+        final t2 = prioritized[1];
+        final info2 = TaskDeadlineInfo.calculate(t2);
+        task2Title = t2.title;
+        task2Badge = info2.label;
+      }
+
+      final formattedTime = DateFormat('hh:mm a').format(DateTime.now());
+
+      // 3. Save atomic widget fields for Android RemoteViews
+      await HomeWidget.saveWidgetData<String>('user_name', erp.currentUserName);
+      await HomeWidget.saveWidgetData<String>('active_projects', activeProjects.toString());
+      await HomeWidget.saveWidgetData<String>('pending_tasks', pendingTasks.toString());
+      await HomeWidget.saveWidgetData<String>('pending_approvals', pendingApprovals.toString());
+      await HomeWidget.saveWidgetData<String>('critical_alerts', alertsCount.toString());
+      await HomeWidget.saveWidgetData<String>('task_1_title', task1Title);
+      await HomeWidget.saveWidgetData<String>('task_1_badge', task1Badge);
+      await HomeWidget.saveWidgetData<String>('task_2_title', task2Title);
+      await HomeWidget.saveWidgetData<String>('task_2_badge', task2Badge);
+      await HomeWidget.saveWidgetData<String>('last_updated', formattedTime);
+      await HomeWidget.saveWidgetData<String>(sharedPreferencesKey, jsonPayload);
+
+      // 4. Trigger native widget update
+      await HomeWidget.updateWidget(
+        name: androidWidgetProvider,
+        androidName: androidWidgetProvider,
+      );
 
       if (kDebugMode) {
-        debugPrint('[NativeHomeWidgetService] Synced weekly tasks ($jsonPayload bytes): ${data.totalWeeklyTasks} tasks (${data.completedTasks} completed) at ${data.lastSyncedAt}');
+        debugPrint('[NativeHomeWidgetService] Successfully updated home screen widget at $formattedTime');
+      }
+      return true;
+    } on MissingPluginException {
+      if (kDebugMode) {
+        debugPrint('[NativeHomeWidgetService] Platform channel not available in current environment');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[NativeHomeWidgetService] Error syncing to native widget: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Requests the Android launcher to pin the widget to the home screen (Android API 26+)
+  static Future<bool> requestPinWidget() async {
+    try {
+      await HomeWidget.requestPinWidget(
+        name: androidWidgetProvider,
+        androidName: androidWidgetProvider,
+      );
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NativeHomeWidgetService] Error pinning widget: $e');
       }
       return false;
     }

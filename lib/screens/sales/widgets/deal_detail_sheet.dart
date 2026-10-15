@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/lead.dart';
 import '../../../models/sales_call.dart';
@@ -78,12 +79,13 @@ class DealDetailSheet extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                              color: const Color(0xFFF1F3F5),
                               borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFE9ECEF)),
                             ),
                             child: Text(
                               currentLead.id,
-                              style: const TextStyle(color: Color(0xFF60A5FA), fontSize: 10, fontWeight: FontWeight.w700),
+                              style: const TextStyle(color: Color(0xFF495057), fontSize: 10, fontWeight: FontWeight.w700),
                             ),
                           ),
                         ],
@@ -91,7 +93,7 @@ class DealDetailSheet extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         '${currentLead.clientName} • ${currentLead.domain}',
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                        style: const TextStyle(color: Color(0xFF6C757D), fontSize: 12),
                       ),
                     ],
                   ),
@@ -99,14 +101,13 @@ class DealDetailSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                    color: const Color(0xFF212529),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     '₹${_formatCurrency(currentLead.dealValue)}',
                     style: const TextStyle(
-                      color: Color(0xFF34D399),
+                      color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
                     ),
@@ -115,7 +116,7 @@ class DealDetailSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(color: Color(0xFFE2E8F0), height: 16),
+          const Divider(color: Color(0xFFE9ECEF), height: 16),
 
           // Scrollable content
           Expanded(
@@ -133,7 +134,6 @@ class DealDetailSheet extends StatelessWidget {
                       child: _buildContactButton(
                         icon: Icons.phone_rounded,
                         label: 'Call Client',
-                        color: const Color(0xFF3B82F6),
                         onTap: () {
                           showDialog(
                             context: context,
@@ -152,7 +152,6 @@ class DealDetailSheet extends StatelessWidget {
                       child: _buildContactButton(
                         icon: Icons.calendar_today_rounded,
                         label: 'Schedule Follow-up',
-                        color: const Color(0xFFF59E0B),
                         onTap: () => _showScheduleDialog(context, currentLead),
                       ),
                     ),
@@ -192,32 +191,29 @@ class DealDetailSheet extends StatelessWidget {
 
   Widget _buildStageBanner(Lead lead) {
     Color stageColor;
+    Color stageBg;
     switch (lead.status) {
       case LeadStatus.won:
         stageColor = const Color(0xFF10B981);
+        stageBg = const Color(0xFFECFDF5);
         break;
       case LeadStatus.lost:
         stageColor = const Color(0xFFEF4444);
-        break;
-      case LeadStatus.internalApproval:
-      case LeadStatus.feasibilityAssessment:
-        stageColor = const Color(0xFF8B5CF6);
-        break;
-      case LeadStatus.proposalPrepared:
-      case LeadStatus.proposalSent:
-      case LeadStatus.negotiation:
-        stageColor = const Color(0xFFF59E0B);
+        stageBg = const Color(0xFFFEF2F2);
         break;
       default:
-        stageColor = const Color(0xFF3B82F6);
+        stageColor = const Color(0xFF212529);
+        stageBg = const Color(0xFFF1F3F5);
     }
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: stageColor.withValues(alpha: 0.12),
+        color: stageBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: stageColor.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: stageColor == const Color(0xFF212529) ? const Color(0xFFE9ECEF) : stageColor.withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -229,11 +225,20 @@ class DealDetailSheet extends StatelessWidget {
               children: [
                 Text(
                   'Pipeline Stage: ${lead.status.label}',
-                  style: TextStyle(color: stageColor, fontSize: 12.5, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: stageColor,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 Text(
                   'Approval Status: ${lead.internalApprovalStage}',
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF6C757D),
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -246,7 +251,6 @@ class DealDetailSheet extends StatelessWidget {
   Widget _buildContactButton({
     required IconData icon,
     required String label,
-    required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -255,16 +259,24 @@ class DealDetailSheet extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.15),
+          color: const Color(0xFFF1F3F5),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(color: const Color(0xFFE9ECEF)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 16),
+            Icon(icon, color: const Color(0xFF212529), size: 16),
             const SizedBox(width: 8),
-            Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                color: const Color(0xFF212529),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -275,31 +287,42 @@ class DealDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF212529),
+        color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_user_outlined, color: Color(0xFF8B5CF6), size: 16),
+              const Icon(Icons.verified_user_outlined, color: Color(0xFF212529), size: 16),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Department Feasibility Checks',
-                style: TextStyle(color: Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                  color: const Color(0xFF212529),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: const Color(0xFFF1F3F5),
                   borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFFE9ECEF)),
                 ),
                 child: Text(
                   lead.internalApprovalStage,
-                  style: const TextStyle(color: Color(0xFFA78BFA), fontSize: 10, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF212529),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -310,9 +333,16 @@ class DealDetailSheet extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(
+              SizedBox(
                 width: 90,
-                child: Text('HR Review:', style: TextStyle(color: Color(0xFF64748B), fontSize: 11.5)),
+                child: Text(
+                  'HR Review:',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF6C757D),
+                    fontSize: 11.5,
+                  ),
+                ),
               ),
               Expanded(
                 child: Column(
@@ -320,11 +350,20 @@ class DealDetailSheet extends StatelessWidget {
                   children: [
                     Text(
                       '${lead.hrFeasibility.status.label} (${lead.hrFeasibility.estimatedEffortHours}h effort)',
-                      style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF212529),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       lead.hrFeasibility.resourceAvailabilityNotes,
-                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 10.5),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF6C757D),
+                        fontSize: 10.5,
+                      ),
                     ),
                   ],
                 ),
@@ -337,9 +376,16 @@ class DealDetailSheet extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(
+              SizedBox(
                 width: 90,
-                child: Text('Finance Check:', style: TextStyle(color: Color(0xFF64748B), fontSize: 11.5)),
+                child: Text(
+                  'Finance Check:',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF6C757D),
+                    fontSize: 11.5,
+                  ),
+                ),
               ),
               Expanded(
                 child: Column(
@@ -347,11 +393,20 @@ class DealDetailSheet extends StatelessWidget {
                   children: [
                     Text(
                       '${lead.financeFeasibility.status.label} (${lead.financeFeasibility.expectedMarginPercent}% margin)',
-                      style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF212529),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       lead.financeFeasibility.budgetFeasibilityNotes,
-                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 10.5),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF6C757D),
+                        fontSize: 10.5,
+                      ),
                     ),
                   ],
                 ),
@@ -367,16 +422,21 @@ class DealDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF212529),
+        color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Requirements & Contact Info',
-            style: TextStyle(color: Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+              color: const Color(0xFF212529),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 10),
           _buildInfoRow('Contact Phone', lead.phone),
@@ -388,17 +448,42 @@ class DealDetailSheet extends StatelessWidget {
             '${lead.nextFollowUpDate.day}/${lead.nextFollowUpDate.month}/${lead.nextFollowUpDate.year}',
           ),
           const SizedBox(height: 8),
-          const Text('Requirements Scope:', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+          Text(
+            'Requirements Scope:',
+            style: TextStyle(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+              color: const Color(0xFF6C757D),
+              fontSize: 11,
+            ),
+          ),
           const SizedBox(height: 2),
           Text(
             lead.requirementsScope,
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
+            style: TextStyle(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+              color: const Color(0xFF212529),
+              fontSize: 11.5,
+            ),
           ),
           if (lead.notes.isNotEmpty) ...[
             const SizedBox(height: 8),
-            const Text('Notes:', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+            Text(
+              'Notes:',
+              style: TextStyle(
+                fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                color: const Color(0xFF6C757D),
+                fontSize: 11,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(lead.notes, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5)),
+            Text(
+              lead.notes,
+              style: TextStyle(
+                fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                color: const Color(0xFF212529),
+                fontSize: 11.5,
+              ),
+            ),
           ],
         ],
       ),
@@ -412,12 +497,24 @@ class DealDetailSheet extends StatelessWidget {
         children: [
           SizedBox(
             width: 110,
-            child: Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                color: const Color(0xFF6C757D),
+                fontSize: 11.5,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                color: const Color(0xFF212529),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -430,14 +527,14 @@ class DealDetailSheet extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFF212529),
+        color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.circle, size: 8, color: Color(0xFF60A5FA)),
+          const Icon(Icons.circle, size: 8, color: Color(0xFF212529)),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -448,17 +545,30 @@ class DealDetailSheet extends StatelessWidget {
                   children: [
                     Text(
                       action.action,
-                      style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF212529),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       '${action.timestamp.day}/${action.timestamp.month} ${action.timestamp.hour}:${action.timestamp.minute.toString().padLeft(2, '0')}',
-                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 10),
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        color: const Color(0xFF868E96),
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),
                 Text(
                   '${action.authorName} (${action.authorRole}): ${action.comments}',
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF495057),
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
@@ -472,9 +582,14 @@ class DealDetailSheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           'Workflow Actions',
-          style: TextStyle(color: Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontFamily: GoogleFonts.instrumentSans().fontFamily,
+            color: const Color(0xFF212529),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 10),
         Row(
@@ -484,10 +599,18 @@ class DealDetailSheet extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () => _confirmForwardToManager(context, lead),
                 icon: const Icon(Icons.supervisor_account_rounded, size: 16),
-                label: const Text('Forward to Manager', style: TextStyle(fontSize: 11.5)),
+                label: Text(
+                  'Forward to Manager',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
+                  backgroundColor: const Color(0xFF212529),
                   foregroundColor: Colors.white,
+                  elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -498,11 +621,21 @@ class DealDetailSheet extends StatelessWidget {
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () => _confirmForwardToHrFinance(context, lead),
-                icon: const Icon(Icons.hub_rounded, size: 16),
-                label: const Text('Forward HR/Finance', style: TextStyle(fontSize: 11.5)),
+                icon: const Icon(Icons.hub_rounded, size: 16, color: Color(0xFF212529)),
+                label: Text(
+                  'Forward HR/Finance',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF212529),
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C3AED),
-                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFFF1F3F5),
+                  foregroundColor: const Color(0xFF212529),
+                  elevation: 0,
+                  side: const BorderSide(color: Color(0xFFE9ECEF)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -515,10 +648,17 @@ class DealDetailSheet extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: () => _showStageUpdateDialog(context, lead),
           icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-          label: const Text('Move Pipeline Stage', style: TextStyle(fontSize: 12)),
+          label: Text(
+            'Move Pipeline Stage',
+            style: TextStyle(
+              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF60A5FA),
-            side: const BorderSide(color: Color(0xFF3B82F6)),
+            foregroundColor: const Color(0xFF212529),
+            side: const BorderSide(color: Color(0xFF212529)),
             padding: const EdgeInsets.symmetric(vertical: 11),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),

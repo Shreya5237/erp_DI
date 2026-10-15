@@ -180,7 +180,7 @@ class SalesNotificationsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFF64748B),
+                color: const Color(0xFFCED4DA),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -189,18 +189,18 @@ class SalesNotificationsSheet extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                const Icon(Icons.notifications_active_rounded, color: Color(0xFF60A5FA), size: 20),
+                const Icon(Icons.notifications_active_rounded, color: Color(0xFF212529), size: 20),
                 const SizedBox(width: 10),
                 const Text(
                   'Sales Alerts & Notifications',
-                  style: TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w800),
                 ),
                 const Spacer(),
                 if (unreadCount > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444),
+                      color: const Color(0xFF212529),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -211,7 +211,7 @@ class SalesNotificationsSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(color: Color(0xFFE2E8F0), height: 16),
+          const Divider(color: Color(0xFFE9ECEF), height: 16),
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -225,12 +225,13 @@ class SalesNotificationsSheet extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: notif.isUnread ? const Color(0xFF212529) : const Color(0xFF2B3035),
+                      color: notif.isUnread ? const Color(0xFFF8F9FA) : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: notif.isUnread
-                            ? notif.color.withValues(alpha: 0.4)
-                            : Colors.white.withValues(alpha: 0.06),
+                            ? const Color(0xFF212529)
+                            : const Color(0xFFE9ECEF),
+                        width: notif.isUnread ? 1.4 : 1.0,
                       ),
                     ),
                     child: Row(
@@ -239,10 +240,10 @@ class SalesNotificationsSheet extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: notif.color.withValues(alpha: 0.15),
+                            color: const Color(0xFFF1F3F5),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(notif.icon, color: notif.color, size: 18),
+                          child: Icon(notif.icon, color: const Color(0xFF212529), size: 18),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -258,20 +259,20 @@ class SalesNotificationsSheet extends StatelessWidget {
                                       style: TextStyle(
                                         color: const Color(0xFF212529),
                                         fontSize: 13,
-                                        fontWeight: notif.isUnread ? FontWeight.w700 : FontWeight.w500,
+                                        fontWeight: notif.isUnread ? FontWeight.w800 : FontWeight.w600,
                                       ),
                                     ),
                                   ),
                                   Text(
                                     notif.timeAgo,
-                                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 10.5),
+                                    style: const TextStyle(color: Color(0xFF868E96), fontSize: 10.5),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 notif.message,
-                                style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5, height: 1.3),
+                                style: const TextStyle(color: Color(0xFF495057), fontSize: 11.5, height: 1.3),
                               ),
                             ],
                           ),

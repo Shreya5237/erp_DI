@@ -156,36 +156,45 @@ class HrDashboardPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white30, width: 1.5),
-                    ),
-                    child: const Center(
-                      child: Text('MJ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Meera Joshi',
-                        style: TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w800),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white30, width: 1.5),
                       ),
-                      Text(
-                        'Head of HR & People Operations • EMP-111',
-                        style: TextStyle(color: Color(0xFFDDD6FE), fontSize: 11),
+                      child: const Center(
+                        child: Text('MJ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Meera Joshi',
+                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Head of HR & People Operations • EMP-111',
+                            style: TextStyle(color: Color(0xFFDDD6FE), fontSize: 11),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -277,28 +286,36 @@ class HrDashboardPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.event_busy_rounded, color: Color(0xFFF59E0B), size: 16),
                     ),
-                    child: const Icon(Icons.event_busy_rounded, color: Color(0xFFF59E0B), size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Pending Leave Approvals (${leaves.length})',
-                    style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Pending Leave Approvals (${leaves.length})',
+                        style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const HrLeaveManagementPage()));
                 },
                 child: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('Review All', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.bold)),
                     SizedBox(width: 2),
@@ -398,26 +415,34 @@ class HrDashboardPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.group_add_rounded, color: Color(0xFFA78BFA), size: 16),
                     ),
-                    child: const Icon(Icons.group_add_rounded, color: Color(0xFFA78BFA), size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Team Staffing Requests (${requests.length})',
-                    style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Team Staffing Requests (${requests.length})',
+                        style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: onNavigateToStaffing,
                 child: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('Manage', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.bold)),
                     SizedBox(width: 2),
@@ -503,28 +528,36 @@ class HrDashboardPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.handshake_rounded, color: Color(0xFFF87171), size: 16),
                     ),
-                    child: const Icon(Icons.handshake_rounded, color: Color(0xFFF87171), size: 16),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Projects Needing Attention (${projects.length})',
-                    style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Projects Needing Attention (${projects.length})',
+                        style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const HrPipelineCoordinationPage()));
                 },
                 child: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('Pipeline Sync', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.bold)),
                     SizedBox(width: 2),
@@ -803,13 +836,19 @@ class HrDashboardPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Trainees Needing Attention (${attentionTrainees.length})',
-                style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'Trainees Needing Attention (${attentionTrainees.length})',
+                  style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: onNavigateToTrainees,
                 child: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('View All', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.bold)),
                     SizedBox(width: 2),

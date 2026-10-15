@@ -110,6 +110,19 @@ CREATE TABLE IF NOT EXISTS employees (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Table: users (Authentication and Role-Based Authorization)
+CREATE TABLE IF NOT EXISTS users (
+    id VARCHAR(32) PRIMARY KEY,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    role VARCHAR(32) NOT NULL DEFAULT 'ROLE_TECH',
+    employee_id VARCHAR(32) REFERENCES employees(id) ON DELETE SET NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Table: intern_batches (Intake Batches)
 CREATE TABLE IF NOT EXISTS intern_batches (
     id VARCHAR(32) PRIMARY KEY,

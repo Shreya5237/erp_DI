@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/erp_provider.dart';
 import '../pages/finance_budgets_page.dart';
@@ -7,15 +8,15 @@ import '../pages/finance_leads_pipeline_page.dart';
 
 /// Notification type enum covering all 9 required Finance alerts
 enum FinanceNotificationType {
-  meetingReminder('Meeting Reminder', Icons.access_time_filled_rounded, Color(0xFF38BDF8)),
-  leaveBalance('Leave Balance', Icons.beach_access_rounded, Color(0xFF10B981)),
-  resourceRequest('Resource Request', Icons.inventory_2_rounded, Color(0xFFF59E0B)),
-  pendingApproval('Pending Approval', Icons.hourglass_top_rounded, Color(0xFFF97316)),
-  budgetThreshold('Budget Threshold', Icons.warning_amber_rounded, Color(0xFFEAB308)),
-  budgetExceeded('Budget Exceeded', Icons.report_problem_rounded, Color(0xFFEF4444)),
-  leadsPipeline('Leads Pipeline', Icons.trending_up_rounded, Color(0xFF8B5CF6)),
-  approvalDecision('Approval Decision', Icons.verified_rounded, Color(0xFF06B6D4)),
-  taskDeadline('Task Deadline', Icons.alarm_on_rounded, Color(0xFFEC4899));
+  meetingReminder('Meeting Reminder', Icons.access_time_filled_rounded, Color(0xFF212529)),
+  leaveBalance('Leave Balance', Icons.calendar_month_outlined, Color(0xFF212529)),
+  resourceRequest('Resource Request', Icons.inventory_2_rounded, Color(0xFF212529)),
+  pendingApproval('Pending Approval', Icons.hourglass_top_rounded, Color(0xFF212529)),
+  budgetThreshold('Budget Threshold', Icons.warning_amber_rounded, Color(0xFF212529)),
+  budgetExceeded('Budget Exceeded', Icons.report_problem_rounded, Color(0xFF212529)),
+  leadsPipeline('Leads Pipeline', Icons.trending_up_rounded, Color(0xFF212529)),
+  approvalDecision('Approval Decision', Icons.verified_rounded, Color(0xFF212529)),
+  taskDeadline('Task Deadline', Icons.alarm_on_rounded, Color(0xFF212529));
 
   final String label;
   final IconData icon;
@@ -92,13 +93,13 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
           },
         ),
 
-      // 2. Budget Threshold Warning
+      // 2. Budget Threshold Warning (85%+)
       if (thresholdCount > 0)
         FinanceNotificationItem(
           id: 'ALERT-THR-01',
           type: FinanceNotificationType.budgetThreshold,
           title: 'Threshold Warning: 86.7% Utilized',
-          message: 'Digital Inertia ERP Core (PRJ-306) has reached 86.7% budget consumption (₹65,000 of ₹75,000 spent). Monitor Q4 sprint allocations.',
+          message: 'Digital Inertia ERP Core (PRJ-306) has utilized ₹65,000 of ₹75,000. Spending pace indicates limit breach within 14 days.',
           timeAgo: '45m ago',
           isUrgent: true,
           onTap: () {
@@ -107,12 +108,12 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
           },
         ),
 
-      // 3. Pending Approvals Reminder
+      // 3. Pending Approvals Queue
       FinanceNotificationItem(
-        id: 'ALERT-APP-01',
+        id: 'ALERT-REQ-01',
         type: FinanceNotificationType.pendingApproval,
-        title: '$pendingRequestsCount Resource Requests Awaiting Review',
-        message: 'Departmental requests from Engineering (AWS GPU Cluster) and Mobile team require budget verification and sign-off.',
+        title: 'Action Required: Pending Resource Approvals',
+        message: 'There are $pendingRequestsCount departmental resource procurement requests waiting for Siddharth Roy\'s finance allocation signoff.',
         timeAgo: '1h ago',
         isUrgent: true,
         onTap: () {
@@ -149,7 +150,7 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
         },
       ),
 
-      // 6. Meeting Reminder (Scheduled 15m before)
+      // 6. Meeting Reminder
       FinanceNotificationItem(
         id: 'ALERT-MTG-01',
         type: FinanceNotificationType.meetingReminder,
@@ -207,7 +208,7 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
-        color: Color(0xFF212529),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -218,7 +219,7 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
             width: 44,
             height: 5,
             decoration: BoxDecoration(
-              color: const Color(0xFF334155),
+              color: const Color(0xFFE9ECEF),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -231,27 +232,28 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                    color: const Color(0xFFF1F3F5),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.notifications_active_rounded, color: Color(0xFF38BDF8), size: 20),
+                  child: const Icon(Icons.notifications_active_outlined, color: Color(0xFF212529), size: 20),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Finance Alerts & Notifications',
-                        style: TextStyle(
-                          color: Color(0xFF212529),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF212529),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       Text(
                         'Real-time ERP financial event feeds',
-                        style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                        style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11.5),
                       ),
                     ],
                   ),
@@ -270,7 +272,10 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
                       ),
                     );
                   },
-                  child: const Text('Mark all read', style: TextStyle(color: Color(0xFF38BDF8), fontSize: 12)),
+                  child: Text(
+                    'Mark all read',
+                    style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ],
             ),
@@ -290,7 +295,7 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
             ),
           ),
           const SizedBox(height: 8),
-          const Divider(color: Colors.white, height: 1),
+          const Divider(color: Color(0xFFE9ECEF), height: 1),
 
           // Notifications List
           Expanded(
@@ -313,23 +318,26 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
   Widget _buildFilterChip(String label, int count) {
     final isSelected = _selectedFilter == label;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        selected: isSelected,
-        showCheckmark: false,
-        backgroundColor: Colors.white,
-        selectedColor: const Color(0xFF0284C7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        label: Text(
-          '$label ($count)',
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+      padding: const EdgeInsets.only(right: 6),
+      child: InkWell(
+        onTap: () => setState(() => _selectedFilter = label),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF212529) : const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isSelected ? const Color(0xFF212529) : const Color(0xFFE9ECEF)),
+          ),
+          child: Text(
+            '$label ($count)',
+            style: GoogleFonts.instrumentSans(
+              color: isSelected ? Colors.white : const Color(0xFF495057),
+              fontSize: 11.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
           ),
         ),
-        onSelected: (_) => setState(() => _selectedFilter = label),
       ),
     );
   }
@@ -340,17 +348,15 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
         setState(() => _readIds.add(item.id));
         item.onTap?.call();
       },
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isRead ? const Color(0xFF131D2E) : const Color(0xFF2B3035),
-          borderRadius: BorderRadius.circular(14),
+          color: isRead ? const Color(0xFFF8F9FA) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: item.isUrgent && !isRead
-                ? item.type.color.withValues(alpha: 0.6)
-                : const Color(0xFF334155).withValues(alpha: 0.4),
-            width: item.isUrgent && !isRead ? 1.5 : 1,
+            color: item.isUrgent && !isRead ? const Color(0xFF212529) : const Color(0xFFE9ECEF),
+            width: item.isUrgent && !isRead ? 1.5 : 1.0,
           ),
         ),
         child: Row(
@@ -360,10 +366,10 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: item.type.color.withValues(alpha: 0.15),
+                color: const Color(0xFFF1F3F5),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(item.type.icon, color: item.type.color, size: 20),
+              child: Icon(item.type.icon, color: const Color(0xFF212529), size: 18),
             ),
             const SizedBox(width: 12),
 
@@ -377,13 +383,13 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: item.type.color.withValues(alpha: 0.2),
+                          color: const Color(0xFFF1F3F5),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           item.type.label,
-                          style: TextStyle(
-                            color: item.type.color,
+                          style: GoogleFonts.instrumentSans(
+                            color: const Color(0xFF495057),
                             fontSize: 9.5,
                             fontWeight: FontWeight.w700,
                           ),
@@ -392,24 +398,24 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
                       const Spacer(),
                       Text(
                         item.timeAgo,
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 10),
+                        style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 10.5),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
                     item.title,
-                    style: TextStyle(
-                      color: isRead ? const Color(0xFF64748B) : Colors.white,
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
                       fontSize: 13.5,
                       fontWeight: isRead ? FontWeight.w600 : FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     item.message,
-                    style: const TextStyle(
-                      color: Color(0xFF64748B),
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF6C757D),
                       fontSize: 12,
                       height: 1.35,
                     ),
@@ -420,14 +426,14 @@ class _FinanceNotificationsSheetState extends State<FinanceNotificationsSheet> {
                       children: [
                         Text(
                           'Tap to view details',
-                          style: TextStyle(
-                            color: item.type.color,
+                          style: GoogleFonts.instrumentSans(
+                            color: const Color(0xFF212529),
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(Icons.arrow_forward_rounded, color: item.type.color, size: 12),
+                        const Icon(Icons.arrow_forward_rounded, color: Color(0xFF212529), size: 12),
                       ],
                     ),
                   ],

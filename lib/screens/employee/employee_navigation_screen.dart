@@ -1,32 +1,36 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/erp_provider.dart';
 import 'pages/employee_dashboard_page.dart';
 import 'pages/employee_projects_page.dart';
-import 'pages/employee_tasks_page.dart';
 import 'pages/employee_calendar_page.dart';
 import 'pages/employee_profile_page.dart';
 import 'widgets/employee_notifications_sheet.dart';
 
-/// Screen Container: Dedicated Employee Mobile App Shell
-/// Provides fixed bottom navigation across 5 specialized pages:
-/// 1. Home (Dashboard)
-/// 2. Projects
-/// 3. Tasks & Schedule
-/// 4. Calendar
-/// 5. Profile
-///
-/// Top bar includes company branding, mode telemetry, and notification bell.
-/// Fully isolated from CEO and Sales portals: accessible through login only.
+/// Screen Container: Dedicated Technical Employee Mobile App Shell
+/// Provides sticky, responsive 4-destination bottom navigation bar:
+/// 0. Home: Main sketch overview dashboard (Quick metrics, Today's tasks, Projects, Meetings)
+/// 1. Projects: Filtered view of all assigned project cards with live progress bars
+/// 2. Calendar: Interactive Day / Week / Month schedule along with different tags & tasks breakdown
+/// 3. Profile: User account, leave request management, settings, and personal target
 class EmployeeNavigationScreen extends StatefulWidget {
-  const EmployeeNavigationScreen({super.key});
+  final int initialIndex;
+
+  const EmployeeNavigationScreen({super.key, this.initialIndex = 0});
 
   @override
   State<EmployeeNavigationScreen> createState() => _EmployeeNavigationScreenState();
 }
 
 class _EmployeeNavigationScreenState extends State<EmployeeNavigationScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   void _onBottomNavTapped(int index) {
     setState(() => _currentIndex = index);
@@ -44,158 +48,95 @@ class _EmployeeNavigationScreenState extends State<EmployeeNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final erp = context.watch<ErpProvider>();
-
-    // Calculate active alerts count for notification badge
-    final overdueCount = erp.myEmployeeTasks.where((t) => t.isOverdue).length;
-    final meetingsCount = erp.myEmployeeMeetings.length;
-    final totalAlerts = overdueCount + meetingsCount;
+    final unreadCount = erp.unreadEmployeeAlertsCount;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leadingWidth: 48,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: Center(
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: const BoxDecoration(
-                color: Color(0xFF212529),
-                shape: BoxShape.circle,
+      backgroundColor: const Color(0xFFF5F6F7),
+      // Sleek top AppBar for secondary tabs (Home has its own custom sketch header)
+      appBar: _currentIndex == 0
+          ? null
+          : AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF212529)),
+                onPressed: () => setState(() => _currentIndex = 0),
+                tooltip: 'Back to Home',
               ),
-              child: const Center(
-                child: Text(
-                  'Di',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
+              title: Text(
+                _getAppBarTitle(_currentIndex),
+                style: TextStyle(
+                  fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF212529),
+                  letterSpacing: -0.3,
                 ),
               ),
-            ),
-          ),
-        ),
-        titleSpacing: 8,
-        title: Row(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Row(
+              actions: [
+                Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Text(
-                      'Digital Inertia',
-                      style: TextStyle(
-                        color: Color(0xFF212529),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF212529), size: 24),
+                      tooltip: 'Alerts & Reminders',
+                      onPressed: _openNotificationsSheet,
                     ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE11D48),
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                          child: Center(
+                            child: Text(
+                              '$unreadCount',
+                              style: TextStyle(
+                                fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                                color: Colors.white,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-                Text(
-                  'Employee Workspace • ${erp.currentUserName.split(" ").first}',
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                const SizedBox(width: 8),
               ],
             ),
-            const SizedBox(width: 8),
-            // Distinct Mode Badge (Live API vs Demo Mode)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: erp.isLiveMode ? const Color(0xFFECFDF5) : const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: erp.isLiveMode ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                  width: 0.8,
-                ),
-              ),
-              child: Text(
-                erp.isLiveMode ? 'LIVE' : 'DEMO',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: erp.isLiveMode ? const Color(0xFF065F46) : const Color(0xFF92400E),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Notification Bell with dynamic unread count
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.notifications_none_rounded, color: Color(0xFF212529), size: 24),
-                  tooltip: 'Alerts & Reminders',
-                  onPressed: _openNotificationsSheet,
-                ),
-                if (totalAlerts > 0)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        '$totalAlerts',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // 0: Home (Dashboard)
+          // 0: Home (Main Sketch Dashboard)
           EmployeeDashboardPage(
+            onNavigateToProjects: () => setState(() => _currentIndex = 1),
+            onNavigateToCalendar: () => setState(() => _currentIndex = 2),
             onNavigateToTasks: () => setState(() => _currentIndex = 2),
-            onNavigateToCalendar: () => setState(() => _currentIndex = 3),
+            onNavigateToProfile: () => setState(() => _currentIndex = 3),
           ),
-          // 1: Projects
+          // 1: Projects (Filtered view of all assigned project cards)
           const EmployeeProjectsPage(),
-          // 2: Tasks & Schedule
-          const EmployeeTasksPage(),
-          // 3: Calendar
+          // 2: Calendar (Interactive Day / Week / Month schedule with tags and tasks breakdown)
           const EmployeeCalendarPage(),
-          // 4: Profile
+          // 3: Profile (User account, leave request management, and settings)
           const EmployeeProfilePage(),
         ],
       ),
-      // Fixed 5-tab Bottom Navigation Bar
+      // Sticky 4-Destination Bottom Navigation Bar matching design specification
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           border: const Border(
-            top: BorderSide(color: Color(0xFFE9ECEF), width: 1),
+            top: BorderSide(color: Color(0xFFE9ECEF), width: 1.2),
           ),
           boxShadow: [
             BoxShadow(
@@ -211,25 +152,28 @@ class _EmployeeNavigationScreenState extends State<EmployeeNavigationScreen> {
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           selectedItemColor: const Color(0xFF212529),
-          unselectedItemColor: const Color(0xFF6C757D),
-          selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-          unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          unselectedItemColor: const Color(0xFF868E96),
+          selectedLabelStyle: TextStyle(
+            fontFamily: GoogleFonts.instrumentSans().fontFamily,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontFamily: GoogleFonts.instrumentSans().fontFamily,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
           elevation: 0,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view_rounded),
-              activeIcon: Icon(Icons.grid_view_rounded),
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_filled),
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.folder_outlined),
+              icon: Icon(Icons.folder_open_outlined),
               activeIcon: Icon(Icons.folder_rounded),
               label: 'Projects',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.task_alt_rounded),
-              activeIcon: Icon(Icons.task_alt_rounded),
-              label: 'Tasks',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.calendar_month_outlined),
@@ -245,5 +189,18 @@ class _EmployeeNavigationScreenState extends State<EmployeeNavigationScreen> {
         ),
       ),
     );
+  }
+
+  String _getAppBarTitle(int index) {
+    switch (index) {
+      case 1:
+        return 'Assigned Projects';
+      case 2:
+        return 'Work Calendar & Schedule';
+      case 3:
+        return 'Profile & Account';
+      default:
+        return 'Dashboard';
+    }
   }
 }

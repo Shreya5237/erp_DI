@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/erp_provider.dart';
 import '../../models/user_role.dart';
 import '../screens/auth/login_screen.dart';
-import '../screens/employee/pages/employee_calendar_page.dart';
 
-/// Dark modern drawer navigation with full modular coverage and Persona Switcher
+/// Digital Inertia ERP — Universal App Navigation Drawer / Desktop Sidebar
+/// Supports both modal slide-out drawer mode and persistent desktop sidebar mode.
+/// Follows ultra-clean monochrome branding with Instrument Sans.
 class AppDrawer extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onSelectTab;
   final VoidCallback onOpenAdmin;
   final VoidCallback onOpenAlerts;
+  final bool isDrawer;
 
   const AppDrawer({
     super.key,
@@ -18,40 +21,51 @@ class AppDrawer extends StatelessWidget {
     required this.onSelectTab,
     required this.onOpenAdmin,
     required this.onOpenAlerts,
+    this.isDrawer = true,
   });
+
+  void _handleItemTap(BuildContext context, int tabIndex) {
+    if (isDrawer) {
+      Navigator.of(context).pop();
+    }
+    onSelectTab(tabIndex);
+  }
 
   @override
   Widget build(BuildContext context) {
     final erp = context.watch<ErpProvider>();
 
-    return Drawer(
-      backgroundColor: const Color(0xFF212529),
+    final userInitial = erp.currentUserName.isNotEmpty ? erp.currentUserName[0].toUpperCase() : 'D';
+
+    return Container(
+      width: 270,
+      color: const Color(0xFF212529),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User Header
+            // 1. BRANDING HEADER
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Container(
-                        width: 44,
-                        height: 44,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
-                          color: _getRoleColor(erp.currentRole),
-                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(9),
                         ),
                         child: Center(
                           child: Text(
-                            erp.currentUserName[0],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                            'DI',
+                            style: GoogleFonts.instrumentSans(
+                              color: const Color(0xFF212529),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
                             ),
                           ),
                         ),
@@ -62,221 +76,217 @@ class AppDrawer extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              erp.currentUserName,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                              'Digital Inertia',
+                              style: GoogleFonts.instrumentSans(
                                 color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                letterSpacing: -0.2,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
                             Text(
-                              erp.currentRole.label,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: _getRoleColor(erp.currentRole),
-                                fontWeight: FontWeight.w600,
+                              'STRATEGIC CONSULTING',
+                              style: GoogleFonts.instrumentSans(
+                                color: const Color(0xFFADB5BD),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 8.5,
+                                letterSpacing: 0.8,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Icon(Icons.corporate_fare_rounded, size: 15, color: Color(0xFF64748B)),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Digital Inertia • Enterprise ERP',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF94A3B8),
+                  const SizedBox(height: 14),
+                  // User Dossier Card
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.white,
+                          child: Text(
+                            userInitial,
+                            style: GoogleFonts.instrumentSans(
+                              color: const Color(0xFF212529),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                erp.currentUserName,
+                                style: GoogleFonts.instrumentSans(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                erp.currentRole.label.split(' / ').first,
+                                style: GoogleFonts.instrumentSans(
+                                  color: const Color(0xFFADB5BD),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            const Divider(color: Color(0xFF262C33), height: 1),
+            const Divider(color: Color(0xFF343A40), height: 1),
 
-            // Demo Account Switcher Ribbon
+            // 2. DEMO PERSONA SWITCHER RIBBON
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: Colors.white.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'SWITCH DEMO PERSONA',
-                    style: TextStyle(fontSize: 9.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                  Text(
+                    'SWITCH DEMO ROLE',
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 9,
+                      color: const Color(0xFFADB5BD),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
                   ),
                   const SizedBox(height: 6),
-                  Row(
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
                     children: [
                       _buildQuickRoleChip('CEO', UserRole.ceo, erp),
-                      const SizedBox(width: 6),
-                      _buildQuickRoleChip('Sales', UserRole.sales, erp),
+                      _buildQuickRoleChip('Tech Lead', UserRole.technical, erp),
+                      _buildQuickRoleChip('Sales BD', UserRole.sales, erp),
+                      _buildQuickRoleChip('Finance', UserRole.finance, erp),
+                      _buildQuickRoleChip('HR', UserRole.hr, erp),
+                      _buildQuickRoleChip('Intern', UserRole.intern, erp),
                     ],
                   ),
                 ],
               ),
             ),
 
-            // Navigation Items
+            // 3. NAVIGATION MODULES (All Connected Modules)
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 children: [
                   _buildDrawerItem(
-                    label: 'Dashboard',
-                    icon: Icons.dashboard_outlined,
+                    label: 'Executive Home',
+                    icon: Icons.dashboard_rounded,
                     isSelected: currentIndex == 0,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(0);
-                    },
+                    onTap: () => _handleItemTap(context, 0),
                   ),
                   _buildDrawerItem(
-                    label: 'Employees',
-                    icon: Icons.people_outline,
+                    label: 'Employees Directory',
+                    icon: Icons.people_outline_rounded,
                     isSelected: currentIndex == 1,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(1);
-                    },
+                    onTap: () => _handleItemTap(context, 1),
                   ),
                   _buildDrawerItem(
                     label: 'Interns & Recruitment',
                     icon: Icons.school_outlined,
                     isSelected: currentIndex == 2,
                     badgeCount: erp.activeInternsCount,
-                    isSelectedBadge: true,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(2);
-                    },
+                    onTap: () => _handleItemTap(context, 2),
                   ),
                   _buildDrawerItem(
                     label: 'Tasks & Agile',
-                    icon: Icons.check_circle_outline,
+                    icon: Icons.check_circle_outline_rounded,
                     isSelected: currentIndex == 3,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(3);
-                    },
+                    badgeCount: erp.allTasks.any((t) => !t.isCompleted) ? erp.allTasks.where((t) => !t.isCompleted).length : null,
+                    onTap: () => _handleItemTap(context, 3),
                   ),
                   _buildDrawerItem(
                     label: 'Sales & 12-Stage Pipeline',
-                    icon: Icons.trending_up,
+                    icon: Icons.trending_up_rounded,
                     isSelected: currentIndex == 4,
-                    badgeCount: erp.followUpsDueTodayCount,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(4);
-                    },
+                    badgeCount: erp.followUpsDueTodayCount > 0 ? erp.followUpsDueTodayCount : null,
+                    onTap: () => _handleItemTap(context, 4),
                   ),
                   _buildDrawerItem(
-                    label: 'Projects',
-                    icon: Icons.folder_open_outlined,
+                    label: 'Projects Portfolio',
+                    icon: Icons.folder_open_rounded,
                     isSelected: currentIndex == 5,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(5);
-                    },
+                    badgeCount: erp.overbudgetProjects.isNotEmpty ? erp.overbudgetProjects.length : null,
+                    onTap: () => _handleItemTap(context, 5),
                   ),
                   _buildDrawerItem(
-                    label: 'Departments',
+                    label: 'Executive Approvals',
+                    icon: Icons.verified_user_outlined,
+                    isSelected: currentIndex == 7,
+                    badgeCount: erp.pendingApprovals.isNotEmpty ? erp.pendingApprovals.length : null,
+                    onTap: () => _handleItemTap(context, 7),
+                  ),
+                  _buildDrawerItem(
+                    label: 'Calendar & Meetings',
+                    icon: Icons.calendar_month_outlined,
+                    isSelected: currentIndex == 8,
+                    onTap: () => _handleItemTap(context, 8),
+                  ),
+                  _buildDrawerItem(
+                    label: 'Departments Hub',
                     icon: Icons.domain_rounded,
                     isSelected: currentIndex == 9,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(9);
-                    },
+                    onTap: () => _handleItemTap(context, 9),
                   ),
                   _buildDrawerItem(
-                    label: 'Approvals Hub',
-                    icon: Icons.assignment_turned_in_outlined,
-                    isSelected: currentIndex == 7,
-                    badgeCount: erp.pendingApprovals.length,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(7);
-                    },
-                  ),
-                  _buildDrawerItem(
-                    label: 'Meetings & Sync',
-                    icon: Icons.event_available_outlined,
-                    isSelected: currentIndex == 8,
-                    badgeCount: erp.todayMeetings.length,
-                    isSelectedBadge: true,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(8);
-                    },
-                  ),
-                  _buildDrawerItem(
-                    label: 'Employee Calendar',
-                    icon: Icons.calendar_month_outlined,
-                    isSelected: false,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const EmployeeCalendarPage(
-                            showAppBar: true,
-                            allowEmployeeSwitching: true,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    label: 'iPhone Task Widget',
+                    label: 'Task Widget Studio',
                     icon: Icons.widgets_outlined,
                     isSelected: currentIndex == 10,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSelectTab(10);
-                    },
+                    onTap: () => _handleItemTap(context, 10),
                   ),
                   _buildDrawerItem(
                     label: 'Threshold Alerts',
                     icon: Icons.notifications_none_rounded,
-                    badgeCount: erp.thresholdAlerts.length,
+                    badgeCount: erp.thresholdAlerts.isNotEmpty ? erp.thresholdAlerts.length : null,
                     isSelected: false,
                     onTap: () {
-                      Navigator.of(context).pop();
+                      if (isDrawer) Navigator.of(context).pop();
                       onOpenAlerts();
                     },
                   ),
                   _buildDrawerItem(
-                    label: 'Admin & Settings',
-                    icon: Icons.settings_outlined,
+                    label: 'Admin Control Centre',
+                    icon: Icons.admin_panel_settings_outlined,
                     isSelected: currentIndex == 6,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onOpenAdmin();
-                    },
+                    onTap: () => _handleItemTap(context, 6),
                   ),
                 ],
               ),
             ),
 
-            // Bottom Logout
-            const Divider(color: Color(0xFF262C33), height: 1),
+            // 4. BOTTOM SIGN OUT
+            const Divider(color: Color(0xFF343A40), height: 1),
             Padding(
-              padding: const EdgeInsets.all(14.0),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: InkWell(
                 borderRadius: BorderRadius.circular(10),
                 onTap: () {
@@ -289,14 +299,14 @@ class AppDrawer extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   child: Row(
-                    children: const [
-                      Icon(Icons.logout_rounded, color: Colors.white, size: 18),
-                      SizedBox(width: 10),
+                    children: [
+                      const Icon(Icons.logout_rounded, color: Colors.white, size: 18),
+                      const SizedBox(width: 10),
                       Text(
                         'Sign Out',
-                        style: TextStyle(
+                        style: GoogleFonts.instrumentSans(
                           color: Colors.white,
-                          fontSize: 13.5,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -313,42 +323,27 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildQuickRoleChip(String label, UserRole role, ErpProvider erp) {
     final isSelected = erp.currentRole == role;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          erp.switchToDemoMode();
-          erp.setRole(role);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 5),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: isSelected ? const Color(0xFF212529) : Colors.white,
-              ),
-            ),
+    return GestureDetector(
+      onTap: () {
+        erp.switchToDemoMode();
+        erp.setRole(role);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.instrumentSans(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: isSelected ? const Color(0xFF212529) : Colors.white,
           ),
         ),
       ),
     );
-  }
-
-  Color _getRoleColor(UserRole role) {
-    switch (role) {
-      case UserRole.ceo:
-        return const Color(0xFFF59E0B);
-      case UserRole.sales:
-        return const Color(0xFF10B981);
-      default:
-        return const Color(0xFF0284C7);
-    }
   }
 
   Widget _buildDrawerItem({
@@ -357,27 +352,26 @@ class AppDrawer extends StatelessWidget {
     required bool isSelected,
     required VoidCallback onTap,
     int? badgeCount,
-    bool isSelectedBadge = false,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 4),
+      margin: const EdgeInsets.only(bottom: 3),
       decoration: BoxDecoration(
         color: isSelected ? Colors.white : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
         leading: Icon(
           icon,
           color: isSelected ? const Color(0xFF212529) : const Color(0xFFADB5BD),
-          size: 19,
+          size: 18,
         ),
         title: Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.instrumentSans(
             color: isSelected ? const Color(0xFF212529) : const Color(0xFFCED4DA),
-            fontSize: 13,
+            fontSize: 12.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -385,12 +379,12 @@ class AppDrawer extends StatelessWidget {
             ? Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isSelectedBadge ? const Color(0xFF0284C7) : const Color(0xFFEF4444),
+                  color: isSelected ? const Color(0xFF212529) : const Color(0xFFE03131),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   '$badgeCount',
-                  style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.instrumentSans(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               )
             : null,

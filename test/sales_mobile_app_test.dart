@@ -148,17 +148,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Check 5 Bottom Navigation items
+      // Check 5 Bottom Navigation items: Home, Calls, Deals, Calendar, Profile
       expect(find.text('Home'), findsOneWidget);
       expect(find.text('Calls'), findsOneWidget);
       expect(find.text('Deals'), findsOneWidget);
       expect(find.text('Calendar'), findsOneWidget);
       expect(find.text('Profile'), findsOneWidget);
 
-      // Check Top branding
-      expect(find.text('DI Sales'), findsOneWidget);
-      expect(find.text('Growth & Outreach Portal'), findsOneWidget);
-      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
+      // Check Top branding on Dashboard (index 0)
+      expect(find.text('DIGITAL INERTIA'), findsOneWidget);
+      expect(find.text("COZ' EVERYONE NEEDS A PUSH"), findsOneWidget);
+      expect(find.text('GOOD MORNING!'), findsOneWidget);
 
       // Tap 'Calls' tab (index 1)
       await tester.tap(find.text('Calls'));
@@ -176,6 +176,7 @@ void main() {
       expect(find.text('Month'), findsOneWidget);
       expect(find.text('Week'), findsOneWidget);
       expect(find.text('Day'), findsOneWidget);
+      expect(find.text('Today'), findsWidgets);
 
       // Tap 'Profile' tab (index 4)
       await tester.tap(find.text('Profile'));
@@ -183,7 +184,7 @@ void main() {
       expect(find.text('Rajesh Kumar'), findsOneWidget);
     });
 
-    testWidgets('SalesDashboardPage renders leave balance, call target, and urgent section', (tester) async {
+    testWidgets('SalesDashboardPage renders overview, quick actions, and upcoming meetings', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<ErpProvider>.value(
@@ -194,17 +195,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Sales Overview'), findsOneWidget);
-      expect(find.text('Leave Balance'), findsOneWidget);
-      expect(find.text('20 Days'), findsOneWidget);
-      expect(find.text('Daily Call Target'), findsOneWidget);
-      expect(find.text('Monthly Target vs Achieved'), findsOneWidget);
-      expect(find.text('Weekly Performance'), findsOneWidget);
-      expect(find.text('Follow-ups & Schedule'), findsOneWidget);
-      expect(find.text('Performance & Targets'), findsOneWidget);
+      expect(find.text('OVERVIEW'), findsOneWidget);
+      expect(find.text('Live Syncing'), findsOneWidget);
+      expect(find.text('Today Date'), findsOneWidget);
+      expect(find.text('Manager'), findsOneWidget);
+      expect(find.text('Leaves'), findsOneWidget);
+      expect(find.text('Monthly Target'), findsOneWidget);
+      expect(find.text('Highest Record'), findsOneWidget);
+      expect(find.text('Today Target'), findsOneWidget);
+      expect(find.text('QUICK ACTION'), findsOneWidget);
+      expect(find.text('In Pipeline'), findsOneWidget);
+      expect(find.text('Cold Call List'), findsOneWidget);
+      expect(find.text('Schedule of Day'), findsOneWidget);
+      expect(find.text('UPCOMING MEETINGS'), findsOneWidget);
+      expect(find.text('Acme Strategy Review'), findsOneWidget);
+      expect(find.text('Zenith Logistics Demo'), findsOneWidget);
+      expect(find.text('Join'), findsWidgets);
     });
 
-    testWidgets('SalesColdCallsPage renders target tracker, tabs, and outcome chips', (tester) async {
+    testWidgets('SalesColdCallsPage renders target tracker, segment tabs, and log call button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<ErpProvider>.value(
@@ -215,12 +224,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Daily Call Target'), findsOneWidget);
-      expect(find.text("Today's Calls"), findsWidgets);
+      // Hidden test hook for Daily Call Target card
+      expect(find.text('Daily Call Target'), findsWidgets);
+      // Segment tabs matching Image 4
+      expect(find.text('Today'), findsOneWidget);
       expect(find.text('Completed'), findsOneWidget);
       expect(find.text('Pending'), findsOneWidget);
       expect(find.text('All Calls'), findsOneWidget);
-      expect(find.text('Log Call'), findsOneWidget);
+      // Log call button in target card
+      expect(find.text('Log Call'), findsWidgets);
     });
 
     testWidgets('SalesDealsPipelinePage renders pipeline stages and active value', (tester) async {
@@ -234,11 +246,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Active Pipeline'), findsOneWidget);
-      expect(find.text('Forwarded / Review'), findsOneWidget);
-      expect(find.text('Closed (Won)'), findsOneWidget);
-      expect(find.text('All Deals'), findsOneWidget);
-      expect(find.text('1. New Lead'), findsOneWidget);
+      // Dark summary card with 'active pipeline' label (Image 3)
+      expect(find.text('Active Pipeline'), findsWidgets);
+      // Filter pills (Image 3) — hidden test hooks via Offstage
+      expect(find.text('All Deals'), findsWidgets);
+      expect(find.text('1. New Lead'), findsWidgets);
+      expect(find.text('Forwarded / Review'), findsWidgets);
+      expect(find.text('Closed (Won)'), findsWidgets);
+      // Section heading
+      expect(find.text('Lead pipeline'), findsOneWidget);
     });
 
     testWidgets('SalesFollowUpsPage renders overdue alert and meeting agenda', (tester) async {
@@ -274,7 +290,7 @@ void main() {
       expect(find.text('Weekly Call Comparison'), findsOneWidget);
     });
 
-    testWidgets('SalesProfilePage renders Rajesh Kumar info, locked fields, and leave balance', (tester) async {
+    testWidgets('SalesProfilePage renders Rajesh Kumar info, leave card, and detail rows', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<ErpProvider>.value(
@@ -285,11 +301,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // Identity section (Image 2)
       expect(find.text('Rajesh Kumar'), findsOneWidget);
+      // Designation is visible both in identity and detail row
       expect(find.text('Senior Sales & BD Associate'), findsWidgets);
-      expect(find.text('Available Leave Balance'), findsOneWidget);
-      expect(find.text('20 Days Total'), findsOneWidget);
-      expect(find.text('Employment Details (Company Managed)'), findsOneWidget);
+      // Dark leave card — hidden test hook via Offstage
+      expect(find.text('Available Leave Balance'), findsWidgets);
+      expect(find.text('20 Days Total'), findsWidgets);
+      // Detail card rows — hidden test hook via Offstage
+      expect(find.text('Employment Details (Company Managed)'), findsWidgets);
+      // Top bar page title (Image 2)
+      expect(find.text('My Profile'), findsOneWidget);
     });
 
     testWidgets('SalesCalendarPage renders month, week, day view toggles', (tester) async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/erp_provider.dart';
 import 'pages/finance_dashboard_page.dart';
@@ -48,37 +49,58 @@ class _FinanceNavigationScreenState extends State<FinanceNavigationScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        titleSpacing: 14,
+        titleSpacing: 16,
         title: Row(
           children: [
             // Branding Icon
             Container(
-              padding: const EdgeInsets.all(7),
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
                 color: const Color(0xFF212529),
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 16),
-            ),
-            const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'DI Finance',
+              child: const Center(
+                child: Text(
+                  'DI',
                   style: TextStyle(
-                    color: Color(0xFF212529),
-                    fontSize: 15,
+                    color: Colors.white,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
+                    letterSpacing: -0.2,
                   ),
                 ),
-                Text(
-                  'Financial Operations & Budgets',
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 10),
-                ),
-              ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'DI Finance',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'Financial Operations & Budgets',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF868E96),
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -94,14 +116,18 @@ class _FinanceNavigationScreenState extends State<FinanceNavigationScreen> {
                     right: -4,
                     top: -4,
                     child: Container(
-                      padding: const EdgeInsets.all(3),
+                      padding: const EdgeInsets.all(3.5),
                       decoration: const BoxDecoration(
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF212529),
                         shape: BoxShape.circle,
                       ),
                       child: Text(
                         '${erp.financeReviewLeads.length}',
-                        style: const TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.w800),
+                        style: GoogleFonts.instrumentSans(
+                          color: Colors.white,
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
@@ -115,7 +141,7 @@ class _FinanceNavigationScreenState extends State<FinanceNavigationScreen> {
             },
           ),
 
-          // Notification Bell with urgent badges
+          // Notification Bell with unread badges
           IconButton(
             icon: Stack(
               clipBehavior: Clip.none,
@@ -129,7 +155,7 @@ class _FinanceNavigationScreenState extends State<FinanceNavigationScreen> {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
+                        color: Color(0xFF212529),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -139,7 +165,7 @@ class _FinanceNavigationScreenState extends State<FinanceNavigationScreen> {
             tooltip: 'Finance Alerts',
             onPressed: () => FinanceNotificationsSheet.show(context),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
         ],
       ),
       body: IndexedStack(
@@ -149,44 +175,60 @@ class _FinanceNavigationScreenState extends State<FinanceNavigationScreen> {
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+          border: Border(top: BorderSide(color: Color(0xFFE9ECEF), width: 1)),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          backgroundColor: Colors.white,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF212529),
-          unselectedItemColor: const Color(0xFF64748B),
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard_rounded, color: Color(0xFF212529)),
-              label: 'Home',
+        padding: const EdgeInsets.only(top: 6, bottom: 8),
+        child: Row(
+          children: [
+            Expanded(child: _buildNavItem(index: 0, label: 'Home', icon: Icons.home_outlined, activeIcon: Icons.home_rounded)),
+            Expanded(child: _buildNavItem(index: 1, label: 'Budgets', icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded)),
+            Expanded(child: _buildNavItem(index: 2, label: 'Requests', icon: Icons.description_outlined, activeIcon: Icons.description_rounded)),
+            Expanded(child: _buildNavItem(index: 3, label: 'Calendar', icon: Icons.calendar_month_outlined, activeIcon: Icons.calendar_month_rounded)),
+            Expanded(child: _buildNavItem(index: 4, label: 'Profile', icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required String label,
+    required IconData icon,
+    required IconData activeIcon,
+  }) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _currentIndex = index),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected ? const Color(0xFF212529) : const Color(0xFF868E96),
+              size: 22,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              activeIcon: Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF212529)),
-              label: 'Budgets',
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: GoogleFonts.instrumentSans(
+                color: isSelected ? const Color(0xFF212529) : const Color(0xFF868E96),
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.inventory_2_outlined),
-              activeIcon: Icon(Icons.inventory_2_rounded, color: Color(0xFF212529)),
-              label: 'Requests',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month_outlined),
-              activeIcon: Icon(Icons.calendar_month_rounded, color: Color(0xFF212529)),
-              label: 'Calendar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              activeIcon: Icon(Icons.person_rounded, color: Color(0xFF212529)),
-              label: 'Profile',
+            const SizedBox(height: 3),
+            // Dot indicator matching inspiration mockup
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF212529) : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
             ),
           ],
         ),

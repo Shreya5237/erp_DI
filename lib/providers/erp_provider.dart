@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/user_role.dart';
 import '../models/hierarchy.dart';
 import '../models/employee.dart';
@@ -23,10 +23,19 @@ class ErpProvider extends ChangeNotifier {
   // Live Backend API Service & Status
   final ApiService _apiService = ApiService();
   bool _isLiveMode = false;
+  bool _forceOfflineMode = false;
+  bool get forceOfflineMode => _forceOfflineMode;
+  void setForceOfflineMode(bool val) {
+    _forceOfflineMode = val;
+    notifyListeners();
+  }
   bool _isAuthenticating = false;
   bool _isLoadingLeads = false;
   String? _authError;
   String? _leadsError;
+
+  // Unique ID Counter to guarantee collision-free IDs across fast operations
+  static int _idCounter = 0;
 
   // Current user session
   UserRole _currentRole = UserRole.ceo;
@@ -57,6 +66,187 @@ class ErpProvider extends ChangeNotifier {
   List<StaffingRequest> _staffingRequests = [];
   List<CustomerChangeRequest> _customerChangeRequests = [];
   HrMonthlyTargets _hrMonthlyTargets = const HrMonthlyTargets();
+
+  // Employee Dashboard Target & Live Alert Notifications
+  int _employeeTargetGoalPercent = 92;
+  int get employeeTargetGoalPercent => _employeeTargetGoalPercent;
+  void setEmployeeTargetGoal(int percent) {
+    _employeeTargetGoalPercent = percent;
+    notifyListeners();
+  }
+
+  final List<Map<String, dynamic>> _employeeAlerts = [
+    {
+      'id': 'ALT-01',
+      'title': 'New task assigned by Rajesh Kumar',
+      'subtitle': 'Client Pitch Deck Finalization (DI Rebrand & Strategy)',
+      'time': '10m ago',
+      'type': 'task',
+      'lead': 'Rajesh Kumar',
+      'isRead': false,
+      'isUrgent': true,
+    },
+    {
+      'id': 'ALT-02',
+      'title': 'Strategy review meeting scheduled',
+      'subtitle': 'Q4 Strategic Alignment with Rajesh K. at 11:00 AM',
+      'time': '45m ago',
+      'type': 'meeting',
+      'lead': 'Rajesh Kumar',
+      'isRead': false,
+      'isUrgent': false,
+    },
+    {
+      'id': 'ALT-03',
+      'title': 'Approaching deadline reminder',
+      'subtitle': 'Oct 18 • Rebrand (5 Days Remaining)',
+      'time': '2h ago',
+      'type': 'deadline',
+      'lead': 'System',
+      'isRead': false,
+      'isUrgent': true,
+    },
+    {
+      'id': 'ALT-04',
+      'title': 'Code review approved by Priya Nair',
+      'subtitle': 'PR #104 merged into master for Sprint 4',
+      'time': 'Yesterday',
+      'type': 'update',
+      'lead': 'Priya Nair',
+      'isRead': true,
+      'isUrgent': false,
+    },
+  ];
+
+  final Set<String> _readAlertIds = {};
+
+  List<Map<String, dynamic>> get employeeAlerts => List.unmodifiable(_employeeAlerts);
+
+  List<Map<String, dynamic>> get allEmployeeNotifications {
+    final List<Map<String, dynamic>> list = [];
+
+    // 1. Live Lead & Manager alerts from _employeeAlerts
+    for (final a in _employeeAlerts) {
+      final id = a['id'] as String;
+      final isRead = a['isRead'] == true || _readAlertIds.contains(id);
+      list.add({
+        'id': id,
+        'type': a['type'] ?? 'lead',
+        'title': a['title'] ?? 'Alert',
+        'subtitle': a['subtitle'] ?? '',
+        'time': a['time'] ?? 'Recent',
+        'lead': a['lead'] ?? 'Team Lead',
+        'isUrgent': a['isUrgent'] == true,
+        'isRead': isRead,
+        'icon': a['type'] == 'meeting'
+            ? Icons.videocam_rounded
+            : (a['type'] == 'submission'
+                ? Icons.task_alt_rounded
+                : (a['type'] == 'deadline' ? Icons.alarm_rounded : Icons.assignment_ind_rounded)),
+        'color': a['type'] == 'submission'
+            ? const Color(0xFF10B981)
+            : (a['isUrgent'] == true ? const Color(0xFFE11D48) : const Color(0xFF212529)),
+      });
+    }
+
+    // 2. Upcoming meeting reminders
+    for (final m in myEmployeeMeetings) {
+      final id = 'mtg-${m.id}';
+      final isRead = _readAlertIds.contains(id);
+      list.add({
+        'id': id,
+        'type': 'meeting',
+        'title': 'Meeting in 15 mins: ${m.title}',
+        'time': '${m.startTime} • Today',
+        'subtitle': 'Organizer: ${m.organizerName} • ${m.locationOrLink}',
+        'lead': m.organizerName,
+        'meeting': m,
+        'isUrgent': true,
+        'isRead': isRead,
+        'icon': Icons.videocam_rounded,
+        'color': const Color(0xFF0284C7),
+      });
+    }
+
+    // 3. Overdue and due today task alerts
+    final pendingDeadlines = myEmployeeTasks.where((t) => !t.isCompleted && (t.isOverdue || t.isDueToday)).toList();
+    for (final t in pendingDeadlines) {
+      final id = 'tsk-${t.id}';
+      final isRead = _readAlertIds.contains(id);
+      list.add({
+        'id': id,
+        'type': 'deadline',
+        'title': t.isOverdue ? 'Overdue Alert: ${t.title}' : 'Due Today: ${t.title}',
+        'time': t.deadlineCountdownText,
+        'subtitle': 'Assigned by ${t.assignedByName} • Project: ${t.projectName ?? "Corporate Project"}',
+        'lead': t.assignedByName,
+        'isUrgent': true,
+        'isRead': isRead,
+        'icon': Icons.alarm_rounded,
+        'color': const Color(0xFFE11D48),
+      });
+    }
+
+    return list;
+  }
+
+  int get unreadEmployeeAlertsCount => allEmployeeNotifications.where((a) => a['isRead'] == false).length;
+
+  void markAllAlertsAsRead() {
+    for (var a in _employeeAlerts) {
+      a['isRead'] = true;
+    }
+    for (var n in allEmployeeNotifications) {
+      _readAlertIds.add(n['id'] as String);
+    }
+    notifyListeners();
+  }
+
+  void markAlertAsRead(String id) {
+    _readAlertIds.add(id);
+    final idx = _employeeAlerts.indexWhere((a) => a['id'] == id);
+    if (idx != -1) {
+      _employeeAlerts[idx]['isRead'] = true;
+    }
+    notifyListeners();
+  }
+
+  void clearAlerts() {
+    _employeeAlerts.clear();
+    for (var n in allEmployeeNotifications) {
+      _readAlertIds.add(n['id'] as String);
+    }
+    notifyListeners();
+  }
+
+  void dispatchTaskCompletedAlert(CompanyTask task) {
+    // 1. Mark task completed
+    final idx = _tasks.indexWhere((t) => t.id == task.id);
+    if (idx != -1) {
+      _tasks[idx] = _tasks[idx].copyWith(
+        status: TaskStatus.approved,
+        progressPercent: 100,
+        completedAt: DateTime.now(),
+      );
+    }
+    // 2. Dispatch real-time alert to Team Lead / Manager
+    _employeeAlerts.insert(0, {
+      'id': 'ALT-${DateTime.now().millisecondsSinceEpoch}',
+      'title': 'Task Delivered to ${task.assignedByName}',
+      'subtitle': '"${task.title}" completed by $_currentUserName. Real-time alert dispatched to lead.',
+      'time': 'Just now',
+      'type': 'submission',
+      'lead': task.assignedByName,
+      'isRead': false,
+      'isUrgent': false,
+    });
+    _addAuditLog(
+      action: 'Task Completed & Dispatched',
+      module: 'Tasks',
+      details: '${task.title} completed by $_currentUserName and alert dispatched to lead ${task.assignedByName}',
+    );
+    notifyListeners();
+  }
 
   // Sales targets & KPIs (PRD Section 4.2)
   final int _weeklyContactTarget = 50;
@@ -293,55 +483,55 @@ class ErpProvider extends ChangeNotifier {
   ];
 
   Map<String, List<String>> get departmentSubcategories => const {
-    'Finance': ['Accounts', 'Payroll', 'Budgeting', 'Invoicing'],
-    'Sales': ['Business Development', 'Lead Management', 'Client Acquisition', 'Account Management'],
-    'Marketing': ['Digital Marketing', 'SEO', 'Social Media', 'Content Marketing', 'Branding'],
-    'HR': ['Recruitment', 'Onboarding', 'Training', 'Leave Management', 'Performance Management'],
-    'Technical': ['Frontend', 'Backend', 'Full-stack', 'Mobile Development', 'UI/UX', 'QA', 'DevOps', 'AI/ML'],
+    'Sales & Marketing': ['Enterprise Sales', 'Business Development', 'Client Acquisition', 'Account Management', 'B2B Partnerships'],
+    'Digital Marketing': ['SEO & SEM', 'Performance Marketing', 'Social Media Marketing', 'Content Strategy', 'Brand & Copywriting'],
+    'Technical': ['Frontend', 'Backend', 'Full-stack', 'Mobile Development', 'UI/UX', 'QA / Testing', 'DevOps / Cloud', 'AI / ML', 'Data Engineering', 'Cybersecurity'],
+    'HR': ['Talent Acquisition', 'Campus Recruitment', 'Onboarding', 'Leave Management', 'Performance Management', 'Employee Relations'],
+    'Finance': ['Financial Planning', 'Accounts & Ledger', 'Invoicing & Billing', 'Budgeting & Auditing', 'Payroll'],
   };
 
-  // 5 Primary Departments metrics (PRD Section 3 & 9.1)
+  // 5 Primary Departments metrics (Sales & Marketing, Digital Marketing, Technical, HR, Finance)
   List<DepartmentMetric> get departmentMetrics {
     return const [
       DepartmentMetric(
-        department: CompanyDepartment.hr,
-        totalEmployees: 3,
-        presentToday: 3,
+        department: CompanyDepartment.salesMarketing,
+        totalEmployees: 2,
+        presentToday: 2,
         activeTasks: 4,
         completedTasksThisWeek: 8,
-        workloadRatio: 0.65,
-      ),
-      DepartmentMetric(
-        department: CompanyDepartment.sales,
-        totalEmployees: 5,
-        presentToday: 4,
-        activeTasks: 7,
-        completedTasksThisWeek: 11,
-        workloadRatio: 0.85,
-      ),
-      DepartmentMetric(
-        department: CompanyDepartment.finance,
-        totalEmployees: 3,
-        presentToday: 3,
-        activeTasks: 3,
-        completedTasksThisWeek: 6,
-        workloadRatio: 0.60,
-      ),
-      DepartmentMetric(
-        department: CompanyDepartment.marketing,
-        totalEmployees: 5,
-        presentToday: 4,
-        activeTasks: 9,
-        completedTasksThisWeek: 14,
         workloadRatio: 0.80,
       ),
       DepartmentMetric(
-        department: CompanyDepartment.engineering,
-        totalEmployees: 8,
-        presentToday: 7,
-        activeTasks: 16,
-        completedTasksThisWeek: 22,
+        department: CompanyDepartment.digitalMarketing,
+        totalEmployees: 2,
+        presentToday: 2,
+        activeTasks: 3,
+        completedTasksThisWeek: 6,
+        workloadRatio: 0.75,
+      ),
+      DepartmentMetric(
+        department: CompanyDepartment.technical,
+        totalEmployees: 10,
+        presentToday: 9,
+        activeTasks: 21,
+        completedTasksThisWeek: 30,
         workloadRatio: 0.90,
+      ),
+      DepartmentMetric(
+        department: CompanyDepartment.hr,
+        totalEmployees: 2,
+        presentToday: 2,
+        activeTasks: 3,
+        completedTasksThisWeek: 7,
+        workloadRatio: 0.65,
+      ),
+      DepartmentMetric(
+        department: CompanyDepartment.finance,
+        totalEmployees: 2,
+        presentToday: 2,
+        activeTasks: 2,
+        completedTasksThisWeek: 5,
+        workloadRatio: 0.60,
       ),
     ];
   }
@@ -381,20 +571,85 @@ class ErpProvider extends ChangeNotifier {
   // Employee Mobile App Companion Getters
   Employee? get currentEmployee {
     try {
-      return _employees.firstWhere(
-        (e) => e.id == _currentUserId || e.name == _currentUserName,
-      );
+      final emailLower = _currentUserEmail.toLowerCase();
+      final idLower = _currentUserId.toLowerCase();
+      final nameLower = _currentUserName.toLowerCase();
+
+      // 1. Check full-time employees
+      final emp = _employees.where((e) =>
+        e.email.toLowerCase() == emailLower ||
+        e.id.toLowerCase() == idLower ||
+        e.name.toLowerCase() == nameLower
+      ).firstOrNull;
+
+      if (emp != null) return emp;
+
+      // 2. Check interns cohort
+      final intern = _interns.where((i) =>
+        i.email.toLowerCase() == emailLower ||
+        i.id.toLowerCase() == idLower ||
+        i.name.toLowerCase() == nameLower
+      ).firstOrNull;
+
+      if (intern != null) {
+        return Employee(
+          id: intern.id,
+          name: intern.name,
+          email: intern.email,
+          phone: intern.phone,
+          role: '${intern.domain} Trainee',
+          category: intern.category,
+          department: intern.domain,
+          departmentId: 'DEPT-INTERN',
+          subDepartmentId: 'DEPT-INT-${intern.domain.replaceAll(' ', '_').toUpperCase()}',
+          subDepartmentName: intern.domain,
+          team: intern.team,
+          reportingManager: intern.assignedPocName ?? 'Priya Nair',
+          joiningDate: intern.selectionDate,
+          employmentStatus: 'Active Intern',
+          isPOC: false,
+          isActive: true,
+          activeTaskCount: intern.totalTasks - intern.completedTasks,
+          completedTaskCount: intern.completedTasks,
+          performanceScore: intern.performanceRating,
+          leaveBalance: 6,
+          casualLeaves: 3,
+          sickLeaves: 3,
+          paidLeaves: 0,
+          employmentType: 'Internship Cohort',
+          batchDetails: intern.batchName,
+          location: '${intern.college} • Remote/HQ',
+          skills: [intern.domain, 'Corporate ERP', 'Agile Delivery'],
+          assignedProjectNames: ['Digital Inertia Core Cohort'],
+        );
+      }
+
+      return _employees.isNotEmpty ? _employees.first : null;
     } catch (_) {
       return _employees.isNotEmpty ? _employees.first : null;
     }
   }
 
   List<CompanyTask> get myEmployeeTasks {
+    final idLower = _currentUserId.toLowerCase();
+    final nameLower = _currentUserName.toLowerCase();
+    final firstName = nameLower.split(' ').first;
+    final isDigitalMarketing = _currentRole == UserRole.digitalMarketing ||
+        (_employees.any((e) => e.id.toLowerCase() == idLower && (e.departmentId == 'DEPT-DM' || e.department == 'Digital Marketing')));
+
     final list = _tasks.where((t) =>
-      t.assignedToId == _currentUserId ||
-      t.assignedToName == _currentUserName ||
-      t.assignedById == _currentUserId
+      t.assignedToId.toLowerCase() == idLower ||
+      t.assignedToName.toLowerCase() == nameLower ||
+      (firstName.length > 2 && t.assignedToName.toLowerCase().contains(firstName)) ||
+      t.assignedById.toLowerCase() == idLower
     ).toList();
+
+    if (list.isEmpty) {
+      if (isDigitalMarketing) {
+        return _tasks.where((t) => t.department == 'Digital Marketing' || t.projectId == 'PRJ-401').toList();
+      }
+      return _tasks.take(6).toList();
+    }
     return list;
   }
 
@@ -551,19 +806,79 @@ class ErpProvider extends ChangeNotifier {
   }
 
   List<Project> get myEmployeeProjects {
-    return _projects.where((p) =>
-      p.ownerEmployeeId == _currentUserId ||
-      p.ownerEmployeeName == _currentUserName ||
-      p.teamMemberNames.any((m) => m.contains(_currentUserName))
-    ).toList();
+    final nameLower = _currentUserName.toLowerCase();
+    final idLower = _currentUserId.toLowerCase();
+    final firstName = nameLower.split(' ').first;
+    final isDigitalMarketing = _currentRole == UserRole.digitalMarketing ||
+        (_employees.any((e) => e.id.toLowerCase() == idLower && (e.departmentId == 'DEPT-DM' || e.department == 'Digital Marketing')));
+
+    final list = _projects.where((p) {
+      final isOwner = p.ownerEmployeeId.toLowerCase() == idLower ||
+          p.ownerEmployeeName.toLowerCase() == nameLower;
+      final isMember = p.teamMemberNames.any((m) =>
+          m.toLowerCase().contains(nameLower) ||
+          (firstName.length > 2 && m.toLowerCase().contains(firstName)) ||
+          m.toLowerCase().contains('shreya') ||
+          m.toLowerCase().contains('arjun'));
+
+      if (isOwner || isMember) return true;
+
+      if (isDigitalMarketing) {
+        return p.id == 'PRJ-401' ||
+            p.domain == 'Digital Marketing' ||
+            p.assignedDepartments.contains('Digital Marketing') ||
+            p.team.contains('Digital Marketing');
+      }
+
+      return p.id == 'PRJ-402' || p.id == 'PRJ-401';
+    }).toList();
+
+    // Sort: PRJ-401 first for Digital Marketing, PRJ-402 first for Tech
+    list.sort((a, b) {
+      if (isDigitalMarketing) {
+        if (a.id == 'PRJ-401') return -1;
+        if (b.id == 'PRJ-401') return 1;
+      } else {
+        if (a.id == 'PRJ-402') return -1;
+        if (b.id == 'PRJ-402') return 1;
+      }
+      return 0;
+    });
+
+    if (list.isEmpty) {
+      if (isDigitalMarketing) {
+        return _projects.where((p) => p.domain == 'Digital Marketing' || p.id == 'PRJ-401').toList();
+      }
+      return _projects.take(4).toList();
+    }
+    return list;
   }
 
   List<Meeting> get myEmployeeMeetings {
-    final list = _meetings.where((m) =>
-      m.organizerName.contains(_currentUserName) ||
-      m.participantNames.any((p) => p.contains(_currentUserName)) ||
-      m.departmentOrProject == 'All Departments'
-    ).toList();
+    final nameLower = _currentUserName.toLowerCase();
+    final idLower = _currentUserId.toLowerCase();
+    final firstName = nameLower.split(' ').first;
+    final isDigitalMarketing = _currentRole == UserRole.digitalMarketing ||
+        (_employees.any((e) => e.id.toLowerCase() == idLower && (e.departmentId == 'DEPT-DM' || e.department == 'Digital Marketing')));
+
+    final list = _meetings.where((m) {
+      final isDirect = m.organizerName.toLowerCase().contains(nameLower) ||
+          m.participantNames.any((p) =>
+            p.toLowerCase().contains(nameLower) ||
+            (firstName.length > 2 && p.toLowerCase().contains(firstName))
+          );
+      if (isDirect) return true;
+
+      if (isDigitalMarketing) {
+        return m.departmentOrProject.toLowerCase().contains('marketing') ||
+            m.departmentOrProject == 'All Departments' ||
+            m.participantNames.any((p) => p.toLowerCase().contains('kavita'));
+      }
+
+      return m.departmentOrProject == 'All Departments' ||
+          m.participantNames.any((p) => p.toLowerCase().contains('arjun') || p.toLowerCase().contains('shreya'));
+    }).toList();
+
     list.sort((a, b) => a.date.compareTo(b.date));
     return list;
   }
@@ -1131,11 +1446,18 @@ class ErpProvider extends ChangeNotifier {
       _currentUserName = 'Laven Lokesh';
       _currentUserEmail = 'laven@digitalinertia.com';
       _currentUserId = 'EMP-001';
-    } else if (role == UserRole.sales) {
+    } else if (role == UserRole.sales || role == UserRole.salesMarketing) {
       _currentUserName = 'Rajesh Kumar';
       _currentUserEmail = 'rajesh.kumar@digitalinertia.com';
       _currentUserId = 'EMP-112';
-    } else if (role == UserRole.employee || role == UserRole.deptLead || role == UserRole.poc) {
+    } else if (role == UserRole.digitalMarketing) {
+      _currentUserName = 'Sanjay Menon';
+      _currentUserEmail = 'sanjay.menon@digitalinertia.com';
+      _currentUserId = 'EMP-113';
+    } else if (role == UserRole.employee ||
+        role == UserRole.deptLead ||
+        role == UserRole.poc ||
+        role == UserRole.technical) {
       _currentUserName = 'Arjun Sharma';
       _currentUserEmail = 'arjun.sharma@digitalinertia.com';
       _currentUserId = 'EMP-101';
@@ -1152,14 +1474,15 @@ class ErpProvider extends ChangeNotifier {
       _currentUserEmail = 'priya.nair@digitalinertia.com';
       _currentUserId = 'EMP-102';
     } else {
-      _currentUserName = 'Karthik R (Intern)';
-      _currentUserEmail = 'karthik.intern@digitalinertia.com';
+      _currentUserName = 'Aarav Gupta';
+      _currentUserEmail = 'aarav.gupta@collegemail.edu';
       _currentUserId = 'INT-201';
     }
     notifyListeners();
   }
 
   void switchToDemoMode() {
+    _forceOfflineMode = true;
     _isLiveMode = false;
     _apiService.clearSession();
     _authError = null;
@@ -1194,6 +1517,7 @@ class ErpProvider extends ChangeNotifier {
 
   void logout() {
     _isLiveMode = false;
+    _forceOfflineMode = false;
     _apiService.clearSession();
     _authError = null;
     _leadsError = null;
@@ -1216,16 +1540,24 @@ class ErpProvider extends ChangeNotifier {
       _isLiveMode = true;
       _authError = null;
 
-      // Map Spring Boot user role to UserRole enum
+      // Map Spring Boot user role to UserRole enum (CEO + 5 Departments)
       final roleStr = result.user.role.toUpperCase();
       if (roleStr.contains('CEO') || roleStr.contains('ADMIN')) {
         _currentRole = UserRole.ceo;
+      } else if (roleStr.contains('DIGITAL_MARKETING') || roleStr.contains('DIGITAL')) {
+        _currentRole = UserRole.digitalMarketing;
       } else if (roleStr.contains('SALES')) {
-        _currentRole = UserRole.sales;
-      } else if (roleStr.contains('POC') || roleStr.contains('TECH') || roleStr.contains('EMPLOYEE')) {
-        _currentRole = UserRole.employee;
+        _currentRole = UserRole.salesMarketing;
+      } else if (roleStr.contains('FINANCE') || roleStr.contains('ACCOUNTS')) {
+        _currentRole = UserRole.finance;
+      } else if (roleStr.contains('HR') || roleStr.contains('PEOPLE')) {
+        _currentRole = UserRole.hr;
+      } else if (roleStr.contains('POC')) {
+        _currentRole = UserRole.poc;
+      } else if (roleStr.contains('INTERN')) {
+        _currentRole = UserRole.intern;
       } else {
-        _currentRole = UserRole.employee;
+        _currentRole = UserRole.technical;
       }
 
       _currentUserName = result.user.fullName;
@@ -1255,6 +1587,198 @@ class ErpProvider extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  /// Unified authentication method that:
+  /// 1. Validates password: 'password123!' (also accepts 'password123')
+  /// 2. Normalizes username / email (e.g. 'arjun.sharma' -> 'arjun.sharma@digitalinertia.com')
+  /// 3. Attempts live Spring Boot backend authentication if reachable.
+  /// 4. Seamlessly authenticates against local database directory when offline,
+  ///    mapping any registered user to their proper department dashboard and tasks.
+  Future<bool> authenticateUser(String input, String password) async {
+    _isAuthenticating = true;
+    _authError = null;
+    notifyListeners();
+
+    final cleanInput = input.trim();
+    final cleanPassword = password.trim();
+
+    if (cleanInput.isEmpty || cleanPassword.isEmpty) {
+      _isAuthenticating = false;
+      _authError = 'Please enter your username or email and password.';
+      notifyListeners();
+      throw Exception(_authError);
+    }
+
+    // Requirement: Set all passwords to password123!
+    if (cleanPassword != 'password123!' && cleanPassword != 'password123') {
+      _isAuthenticating = false;
+      _authError = 'Invalid password. All corporate accounts use password123!';
+      notifyListeners();
+      throw Exception(_authError);
+    }
+
+    String email = cleanInput;
+    if (!email.contains('@')) {
+      email = '$cleanInput@digitalinertia.com';
+    }
+    email = email.toLowerCase();
+
+    // 1. First attempt live backend API if available and not forced offline
+    if (!_forceOfflineMode) {
+      try {
+        final success = await loginWithApi(email, cleanPassword).timeout(const Duration(seconds: 2));
+        if (success) {
+          return true;
+        }
+      } catch (_) {
+        // Backend is offline or unreachable - continue with database directory matching
+      }
+    }
+
+    // 2. Offline / Local Database Directory Authentication
+    // Check CEO / Executive
+    if (email == 'laven@digitalinertia.com' ||
+        email == 'laven.lokesh@digitalinertia.com' ||
+        cleanInput.toLowerCase() == 'laven' ||
+        cleanInput.toLowerCase() == 'ceo' ||
+        cleanInput.toLowerCase() == 'admin' ||
+        cleanInput.toLowerCase() == 'emp-001') {
+      _currentRole = UserRole.ceo;
+      _currentUserName = 'Laven Lokesh';
+      _currentUserEmail = 'laven@digitalinertia.com';
+      _currentUserId = 'EMP-001';
+      _isLiveMode = false;
+      _isAuthenticating = false;
+      _authError = null;
+      _addAuditLog(
+        action: 'User Logged In',
+        module: 'Authentication',
+        details: 'Authenticated Laven Lokesh (CEO)',
+      );
+      notifyListeners();
+      return true;
+    }
+
+    // Check GM / MD
+    if (cleanInput.toLowerCase() == 'emp-gm' ||
+        cleanInput.toLowerCase() == 'gm' ||
+        cleanInput.toLowerCase() == 'md' ||
+        cleanInput.toLowerCase() == 'general manager' ||
+        email == 'gm@digitalinertia.com' ||
+        email == 'md@digitalinertia.com') {
+      _currentRole = UserRole.gm;
+      _currentUserName = 'Priya Nair';
+      _currentUserEmail = 'priya.nair@digitalinertia.com';
+      _currentUserId = 'EMP-102';
+      _isLiveMode = false;
+      _isAuthenticating = false;
+      _authError = null;
+      _addAuditLog(
+        action: 'User Logged In',
+        module: 'Authentication',
+        details: 'Authenticated Priya Nair (GM / MD)',
+      );
+      notifyListeners();
+      return true;
+    }
+
+    // Check full-time Employees
+    Employee? matchedEmployee;
+    for (final emp in _employees) {
+      if (emp.email.toLowerCase() == email ||
+          emp.name.toLowerCase() == cleanInput.toLowerCase() ||
+          emp.id.toLowerCase() == cleanInput.toLowerCase() ||
+          (cleanInput.toLowerCase() == 'finance' && emp.id == 'EMP-501') ||
+          (cleanInput.toLowerCase() == 'sales' && emp.id == 'EMP-201') ||
+          (cleanInput.toLowerCase() == 'marketing' && emp.id == 'EMP-301') ||
+          (cleanInput.toLowerCase() == 'hr' && emp.id == 'EMP-401') ||
+          ((cleanInput.toLowerCase() == 'tech' || cleanInput.toLowerCase() == 'employee') && emp.id == 'EMP-101')) {
+        matchedEmployee = emp;
+        break;
+      }
+    }
+
+    if (matchedEmployee != null) {
+      _currentUserName = matchedEmployee.name;
+      _currentUserEmail = matchedEmployee.email;
+      _currentUserId = matchedEmployee.id;
+
+      // Determine department and role across the 5 corporate departments:
+      // 1. Sales & Marketing, 2. Digital Marketing, 3. Technical, 4. HR, 5. Finance
+      final deptId = matchedEmployee.departmentId.toUpperCase();
+      final deptName = matchedEmployee.department.toLowerCase();
+
+      if (deptId == 'DEPT-HR' || deptName == 'hr') {
+        _currentRole = UserRole.hr;
+      } else if (deptId == 'DEPT-FIN' || deptName == 'finance') {
+        _currentRole = UserRole.finance;
+      } else if (deptId == 'DEPT-DM' || deptName.contains('digital marketing')) {
+        _currentRole = UserRole.digitalMarketing;
+      } else if (deptId == 'DEPT-SM' || deptName.contains('sales')) {
+        _currentRole = UserRole.salesMarketing;
+      } else {
+        // Technical Department
+        _currentRole = matchedEmployee.isPOC ? UserRole.poc : UserRole.technical;
+      }
+
+      _isLiveMode = false;
+      _isAuthenticating = false;
+      _authError = null;
+      _addAuditLog(
+        action: 'User Logged In',
+        module: 'Authentication',
+        details: 'Authenticated ${matchedEmployee.name} (${_currentRole.label})',
+      );
+      notifyListeners();
+      return true;
+    }
+
+    // Check Interns
+    Intern? matchedIntern;
+    for (final intern in _interns) {
+      final nameClean = intern.name.toLowerCase().replaceAll(' ', '');
+      final inputClean = cleanInput.toLowerCase().replaceAll(' ', '').replaceAll('.', '');
+      final emailClean = email.toLowerCase();
+      final internEmailClean = intern.email.toLowerCase();
+      final corpEmail = '${intern.name.toLowerCase().replaceAll(' ', '.')}@digitalinertia.com';
+
+      if (internEmailClean == emailClean ||
+          corpEmail == emailClean ||
+          intern.name.toLowerCase() == cleanInput.toLowerCase() ||
+          intern.id.toLowerCase() == cleanInput.toLowerCase() ||
+          cleanInput.toLowerCase() == 'intern' ||
+          emailClean.startsWith(nameClean) ||
+          inputClean == nameClean) {
+        matchedIntern = intern;
+        break;
+      }
+    }
+
+    if (matchedIntern != null) {
+      _currentUserName = matchedIntern.name;
+      _currentUserEmail = matchedIntern.email;
+      _currentUserId = matchedIntern.id;
+
+      // Interns are strictly mapped to UserRole.intern to guarantee least-privilege intern workspace routing
+      _currentRole = UserRole.intern;
+
+      _isLiveMode = false;
+      _isAuthenticating = false;
+      _authError = null;
+      _addAuditLog(
+        action: 'User Logged In',
+        module: 'Authentication',
+        details: 'Authenticated intern ${matchedIntern.name} (${matchedIntern.domain})',
+      );
+      notifyListeners();
+      return true;
+    }
+
+    _isAuthenticating = false;
+    _authError = 'User "$cleanInput" is not registered in the system database.';
+    notifyListeners();
+    throw Exception(_authError);
   }
 
   /// Fetches live leads from GET /api/v1/leads
@@ -1412,6 +1936,56 @@ class ErpProvider extends ChangeNotifier {
         progressPercent: status == TaskStatus.done ? 100 : (status == TaskStatus.inProgress ? 50 : 0),
         completedAt: status == TaskStatus.done ? DateTime.now() : null,
       );
+
+      // Recalculate Project Progress if tied to a project (Section 4.D Specification)
+      if (t.projectName != null && t.projectName!.isNotEmpty) {
+        final projIdx = _projects.indexWhere((p) => p.name.toLowerCase() == t.projectName!.toLowerCase());
+        if (projIdx != -1) {
+          final projTasks = _tasks.where((tsk) => tsk.projectName?.toLowerCase() == t.projectName!.toLowerCase()).toList();
+          if (projTasks.isNotEmpty) {
+            final completedTasks = projTasks.where((tsk) => tsk.isCompleted).length;
+            final newProgress = (completedTasks / projTasks.length).clamp(0.0, 1.0);
+            _projects[projIdx] = _projects[projIdx].copyWith(
+              progress: newProgress,
+              status: newProgress >= 1.0 ? ProjectStatus.completed : ProjectStatus.inProgress,
+            );
+          }
+        }
+      }
+
+      // If blocked, escalate to manager and record in project activeBlockers
+      if (status == TaskStatus.blocked && blockerReason != null && blockerReason.isNotEmpty) {
+        if (t.projectName != null) {
+          final projIdx = _projects.indexWhere((p) => p.name.toLowerCase() == t.projectName!.toLowerCase());
+          if (projIdx != -1) {
+            final currentBlockers = List<String>.from(_projects[projIdx].activeBlockers);
+            if (!currentBlockers.contains(blockerReason)) {
+              currentBlockers.add('${t.title}: $blockerReason');
+              _projects[projIdx] = _projects[projIdx].copyWith(
+                activeBlockers: currentBlockers,
+                status: ProjectStatus.delayed,
+              );
+            }
+          }
+        }
+        _employeeAlerts.insert(0, {
+          'id': 'alt-blk-${DateTime.now().millisecondsSinceEpoch}',
+          'type': 'blocker',
+          'title': 'Task Blocked: ${t.title}',
+          'subtitle': 'Reason: $blockerReason • Assigned to ${t.assignedToName}',
+          'time': 'Just now',
+          'lead': t.assignedByName,
+          'isUrgent': true,
+          'isRead': false,
+        });
+      }
+
+      _addAuditLog(
+        action: 'Task Status Updated',
+        details: 'Task "${t.title}" moved to ${status.label} by $_currentUserName',
+        module: 'Tasks & Agile',
+      );
+
       notifyListeners();
     }
   }
@@ -1762,7 +2336,7 @@ class ErpProvider extends ChangeNotifier {
     String? projectName,
   }) {
     final newTask = CompanyTask(
-      id: 'TSK-${DateTime.now().millisecondsSinceEpoch % 1000}',
+      id: 'TSK-${DateTime.now().millisecondsSinceEpoch}-${++_idCounter}',
       title: title,
       description: description,
       domain: domain,
@@ -1929,6 +2503,39 @@ class ErpProvider extends ChangeNotifier {
         convertedProjectId: newProjId,
       );
     }
+
+    // Auto-create kickoff architecture task for owner (Section 6 Step 4 & 5)
+    createTask(
+      title: 'Project Kickoff & Architecture Blueprint: $projectName',
+      description: 'Formal kickoff meeting, team member assignments, and initial sprint deliverables for $clientName.',
+      domain: 'Technology and Engineering',
+      department: 'Technology and Engineering',
+      assignedToId: owner.id,
+      assignedToName: owner.name,
+      assigneeType: AssigneeType.employee,
+      dueDate: DateTime.now().add(const Duration(days: 3)),
+      priority: TaskPriority.high,
+      projectName: projectName,
+    );
+
+    // Cross-department Handover Notification
+    _employeeAlerts.insert(0, {
+      'id': 'alt-prj-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'project',
+      'title': 'Deal Won & Project Handover: $projectName',
+      'subtitle': 'Client: $clientName • Allocated Budget: ₹${(budget / 100000).toStringAsFixed(1)}L',
+      'time': 'Just now',
+      'lead': owner.name,
+      'isUrgent': false,
+      'isRead': false,
+    });
+
+    _addAuditLog(
+      action: 'Deal Won & Project Handover',
+      module: 'Sales & Delivery',
+      details: 'Converted deal "$clientName" into Project "$projectName" with ₹${(budget / 100000).toStringAsFixed(1)}L budget',
+    );
+
     notifyListeners();
   }
 
@@ -2094,12 +2701,15 @@ class ErpProvider extends ChangeNotifier {
 
   void _initSeedData() {
     _employees = [
+      // ==========================================
+      // DEPARTMENT 1: Technical (5 Employees + Specialist)
+      // ==========================================
       Employee(
         id: 'EMP-101',
         name: 'Arjun Sharma',
         email: 'arjun.sharma@digitalinertia.com',
         phone: '+91 98201 14521',
-        role: 'Lead Frontend & Mobile Developer',
+        role: 'Lead Frontend Developer & Architect',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
@@ -2107,11 +2717,11 @@ class ErpProvider extends ChangeNotifier {
         subDepartmentName: 'Frontend',
         team: 'Client Experience Engineering',
         reportingManager: 'Laven Lokesh (CEO)',
-        joiningDate: DateTime(2024, 3, 15),
+        joiningDate: DateTime(2023, 4, 15),
         employmentStatus: 'Full-time',
         isPOC: true,
         isActive: true,
-        activeTaskCount: 5,
+        activeTaskCount: 2,
         completedTaskCount: 18,
         performanceScore: 4.85,
         leaveBalance: 14,
@@ -2119,76 +2729,166 @@ class ErpProvider extends ChangeNotifier {
         sickLeaves: 5,
         paidLeaves: 3,
         employmentType: 'Permanent Employee',
-        batchDetails: 'Batch 2024-Q1 Engineering Lead',
         emergencyContact: '+91 98201 99887 (Pooja Sharma - Spouse)',
         bio: 'Lead Engineer passionate about responsive mobile architecture, clean interfaces, and resilient high-throughput cloud services.',
         location: 'Bengaluru HQ • Hybrid',
         skills: ['Flutter & Dart', 'React & Next.js', 'Go & Node.js', 'PostgreSQL', 'Docker & Kubernetes', 'System Architecture'],
-        assignedProjectNames: ['Digital Inertia ERP Core', 'EcoTrack App', 'FinTech Payment Gateway', 'Green Energy Dashboard'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'Digital Inertia ERP Core', 'OmniChannel Enterprise Sales Rollout', 'FinTech Payment Gateway Microservices'],
       ),
       Employee(
         id: 'EMP-102',
         name: 'Priya Nair',
         email: 'priya.nair@digitalinertia.com',
         phone: '+91 98450 78210',
-        role: 'Backend Developer',
+        role: 'Senior Backend Developer & Database Lead',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
         subDepartmentId: 'DEPT-TEC-BE',
         subDepartmentName: 'Backend',
         team: 'Core Platform Engineering',
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 6, 1),
+        employmentStatus: 'Full-time',
         isPOC: true,
         isActive: true,
-        activeTaskCount: 5, // Workload capacity overload alert (>4 tasks)
+        activeTaskCount: 3,
+        completedTaskCount: 24,
+        performanceScore: 4.90,
+        leaveBalance: 12,
+        casualLeaves: 5,
+        sickLeaves: 4,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98450 11223 (Ramesh Nair - Brother)',
+        bio: 'Database and microservices architect specializing in PostgreSQL replication, high-throughput REST/gRPC APIs, and distributed systems.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Java & Spring Boot', 'PostgreSQL', 'Redis', 'Kafka', 'System Architecture', 'Kubernetes'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'Digital Inertia ERP Core', 'EcoTrack IoT Mobile Platform', 'FinTech Payment Gateway Microservices'],
       ),
       Employee(
         id: 'EMP-103',
         name: 'Karthik R',
         email: 'karthik.r@digitalinertia.com',
         phone: '+91 97112 65430',
-        role: 'Full Stack Developer',
+        role: 'Full Stack Engineer & Cloud Integrations',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
         subDepartmentId: 'DEPT-TEC-FS',
         subDepartmentName: 'Full-stack',
         team: 'Core Platform Engineering',
+        reportingManager: 'Arjun Sharma',
+        joiningDate: DateTime(2023, 8, 10),
+        employmentStatus: 'Full-time',
         isPOC: true,
         isActive: true,
         activeTaskCount: 2,
+        completedTaskCount: 16,
+        performanceScore: 4.75,
+        leaveBalance: 15,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 97112 88990 (Suma R - Mother)',
+        bio: 'Full stack builder linking reactive Flutter frontends with cloud-native Spring Boot backends and Redis distributed caching.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Flutter', 'Node.js', 'PostgreSQL', 'Docker', 'AWS', 'GraphQL'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'EcoTrack IoT Mobile Platform', 'FinTech Payment Gateway Microservices'],
       ),
       Employee(
         id: 'EMP-104',
         name: 'Sneha V',
         email: 'sneha.v@digitalinertia.com',
         phone: '+91 99304 98124',
-        role: 'Frontend Developer',
+        role: 'Frontend UI & Design Systems Engineer',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
         subDepartmentId: 'DEPT-TEC-FE',
         subDepartmentName: 'Frontend',
         team: 'Client Experience Engineering',
-        isPOC: true,
+        reportingManager: 'Arjun Sharma',
+        joiningDate: DateTime(2023, 9, 1),
+        employmentStatus: 'Full-time',
+        isPOC: false,
         isActive: true,
-        activeTaskCount: 3,
+        activeTaskCount: 2,
+        completedTaskCount: 19,
+        performanceScore: 4.80,
+        leaveBalance: 13,
+        casualLeaves: 5,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 99304 55443 (Vipin K - Father)',
+        bio: 'Crafts pixel-perfect Flutter UI components, design tokens, micro-interactions, and responsive layout grids.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Flutter UI', 'Design Systems', 'Figma', 'Responsive Layouts', 'Dart Animation'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'OmniChannel Enterprise Sales Rollout', 'Corporate People Hub & Workforce System'],
       ),
       Employee(
         id: 'EMP-105',
         name: 'Rohan Mehta',
         email: 'rohan.mehta@digitalinertia.com',
         phone: '+91 98214 33219',
-        role: 'Mobile App Developer',
+        role: 'Mobile App Lead (Flutter & Native)',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
-        subDepartmentId: 'DEPT-TEC-MOB',
-        subDepartmentName: 'Mobile Development',
+        subDepartmentId: 'DEPT-TEC-MO',
+        subDepartmentName: 'Mobile App',
         team: 'Client Experience Engineering',
+        reportingManager: 'Arjun Sharma',
+        joiningDate: DateTime(2023, 11, 15),
+        employmentStatus: 'Full-time',
         isPOC: true,
         isActive: true,
-        activeTaskCount: 5, // Workload capacity overload alert (>4 tasks)
+        activeTaskCount: 2,
+        completedTaskCount: 21,
+        performanceScore: 4.82,
+        leaveBalance: 14,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98214 77665 (Kavita Mehta - Mother)',
+        bio: 'Cross-platform mobile architect specializing in Flutter, native BLE peripherals, IoT background sync, and offline storage.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Flutter', 'Android Native', 'iOS Native', 'BLE Hardware', 'SQLite', 'Push Notifications'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'EcoTrack IoT Mobile Platform', 'Corporate People Hub & Workforce System'],
+      ),
+      Employee(
+        id: 'EMP-118',
+        name: 'Shreya Kulkarni',
+        email: 'shreya.kulkarni@digitalinertia.com',
+        phone: '+91 98204 11980',
+        role: 'Technical Specialist & Full Stack Engineer',
+        category: RoleCategory.technical,
+        department: 'Technical',
+        departmentId: 'DEPT-TECH',
+        subDepartmentId: 'DEPT-TEC-FS',
+        subDepartmentName: 'Full-stack',
+        team: 'Client Experience Engineering',
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2024, 7, 1),
+        employmentStatus: 'Full-time',
+        isPOC: true,
+        isActive: true,
+        activeTaskCount: 3,
+        completedTaskCount: 15,
+        performanceScore: 4.88,
+        leaveBalance: 14,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98204 88776 (Anil Kulkarni - Father)',
+        bio: 'Technical specialist building end-to-end ERP microservices, state machines, and real-time enterprise dashboards.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Flutter & Dart', 'Spring Boot', 'PostgreSQL', 'State Management', 'Enterprise ERP'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'Digital Marketing & Growth Engine', 'OmniChannel Enterprise Sales Rollout'],
       ),
       Employee(
         id: 'EMP-106',
@@ -2200,59 +2900,119 @@ class ErpProvider extends ChangeNotifier {
         department: 'Technical',
         departmentId: 'DEPT-TECH',
         subDepartmentId: 'DEPT-TEC-AI',
-        subDepartmentName: 'AI/ML',
+        subDepartmentName: 'AI / ML',
         team: 'Applied Intelligence Lab',
+        reportingManager: 'Arjun Sharma',
+        joiningDate: DateTime(2024, 1, 10),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 14,
+        performanceScore: 4.84,
+        leaveBalance: 15,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98190 88771 (Pravin Deshmukh - Father)',
+        bio: 'AI/ML specialist developing predictive models, telemetry autoencoders, and NLP workflows for enterprise ERP.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Python & PyTorch', 'TensorFlow', 'FastAPI', 'MLOps', 'Docker'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'Digital Marketing & Growth Engine'],
       ),
       Employee(
         id: 'EMP-107',
         name: 'Vikram Singh',
         email: 'vikram.singh@digitalinertia.com',
         phone: '+91 97401 88320',
-        role: 'Data Engineer',
+        role: 'Data Engineer & ETL Pipelines Lead',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
-        subDepartmentId: 'DEPT-TEC-BE',
-        subDepartmentName: 'Backend',
+        subDepartmentId: 'DEPT-TEC-DE',
+        subDepartmentName: 'Data Engineering',
         team: 'Core Platform Engineering',
+        reportingManager: 'Priya Nair',
+        joiningDate: DateTime(2024, 2, 1),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 16,
+        performanceScore: 4.76,
+        leaveBalance: 14,
+        casualLeaves: 5,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 97401 11223 (Kiran Singh - Brother)',
+        bio: 'Architect of resilient batch and streaming ETL pipelines using PostgreSQL, Kafka, and Apache Spark.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['PostgreSQL', 'Apache Kafka', 'Python', 'SQL Optimization', 'Airflow'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'FinTech Payment Gateway Microservices'],
       ),
       Employee(
         id: 'EMP-108',
         name: 'Neha Patel',
         email: 'neha.patel@digitalinertia.com',
         phone: '+91 98331 44590',
-        role: 'QA / Testing Lead',
+        role: 'QA / Testing Lead & Automation Architect',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
         subDepartmentId: 'DEPT-TEC-QA',
-        subDepartmentName: 'QA',
+        subDepartmentName: 'QA / Testing',
         team: 'Quality & Reliability',
+        reportingManager: 'Arjun Sharma',
+        joiningDate: DateTime(2024, 3, 1),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 22,
+        performanceScore: 4.89,
+        leaveBalance: 13,
+        casualLeaves: 5,
+        sickLeaves: 4,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98331 99008 (Hitesh Patel - Spouse)',
+        bio: 'Automated test suite designer for end-to-end integration and load benchmarking across mobile and backend microservices.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Flutter Integration Test', 'Locust & JMeter', 'Selenium', 'CI/CD Pipelines', 'Appium'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'EcoTrack IoT Mobile Platform'],
       ),
       Employee(
         id: 'EMP-109',
         name: 'Rahul Verma',
         email: 'rahul.verma@digitalinertia.com',
         phone: '+91 98110 99450',
-        role: 'DevOps / Cloud Specialist',
+        role: 'DevOps & Cloud Specialist',
         category: RoleCategory.technical,
         department: 'Technical',
         departmentId: 'DEPT-TECH',
         subDepartmentId: 'DEPT-TEC-OPS',
-        subDepartmentName: 'DevOps',
+        subDepartmentName: 'DevOps / Cloud',
         team: 'Core Platform Engineering',
+        reportingManager: 'Priya Nair',
+        joiningDate: DateTime(2024, 4, 15),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 19,
+        performanceScore: 4.82,
+        leaveBalance: 16,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98110 22334 (Sarita Verma - Mother)',
+        bio: 'Cloud infra engineer managing Kubernetes clusters, zero-downtime rolling deployments, and container security.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Kubernetes', 'Docker', 'AWS', 'Terraform', 'Prometheus & Grafana'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'FinTech Payment Gateway Microservices'],
       ),
       Employee(
         id: 'EMP-110',
@@ -2266,137 +3026,877 @@ class ErpProvider extends ChangeNotifier {
         subDepartmentId: 'DEPT-TEC-UIX',
         subDepartmentName: 'UI/UX',
         team: 'Client Experience Engineering',
+        reportingManager: 'Arjun Sharma',
+        joiningDate: DateTime(2024, 5, 1),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 17,
+        performanceScore: 4.85,
+        leaveBalance: 15,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98402 77889 (Anand Iyer - Father)',
+        bio: 'Designs token-based design systems, human-centered UI patterns, and cross-platform Figma design assets for Digital Inertia.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Figma', 'Design Systems', 'Flutter UI', 'Micro-interactions', 'Design Tokens'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'Digital Marketing & Growth Engine'],
       ),
       Employee(
         id: 'EMP-111',
         name: 'Meera Joshi',
         email: 'meera.joshi@digitalinertia.com',
         phone: '+91 98205 66780',
-        role: 'HR / Recruitment Specialist',
+        role: 'HR & Talent Acquisition Specialist',
         category: RoleCategory.nonTechnical,
         department: 'HR',
         departmentId: 'DEPT-HR',
         subDepartmentId: 'DEPT-HR-REC',
         subDepartmentName: 'Recruitment',
         team: 'People & Workplace',
-        isPOC: false,
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 5, 10),
+        employmentStatus: 'Full-time',
+        isPOC: true,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 25,
+        performanceScore: 4.90,
+        leaveBalance: 14,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98205 88990 (Alok Joshi - Spouse)',
+        bio: 'People specialist orchestrating university recruitment cohorts, intern onboarding, employee leaves, and workforce retention.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Talent Acquisition', 'Campus Hiring', 'Employee Engagement', 'HR Compliance', 'Policy Governance'],
+        assignedProjectNames: ['Corporate People Hub & Workforce System', 'Digital Inertia ERP Core'],
       ),
       Employee(
         id: 'EMP-112',
         name: 'Rajesh Kumar',
         email: 'rajesh.kumar@digitalinertia.com',
         phone: '+91 98101 44321',
-        role: 'Sales / Business Development',
+        role: 'Enterprise Sales & BD Lead',
         category: RoleCategory.nonTechnical,
-        department: 'Sales',
-        departmentId: 'DEPT-SAL',
-        subDepartmentId: 'DEPT-SAL-BD',
-        subDepartmentName: 'Business Development',
+        department: 'Sales & Marketing',
+        departmentId: 'DEPT-SM',
+        subDepartmentId: 'DEPT-SM-SLS',
+        subDepartmentName: 'Enterprise Sales',
         team: 'Corporate Growth & Sales',
-        isPOC: false,
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 7, 20),
+        employmentStatus: 'Full-time',
+        isPOC: true,
         isActive: true,
         activeTaskCount: 2,
+        completedTaskCount: 28,
+        performanceScore: 4.92,
+        leaveBalance: 11,
+        casualLeaves: 4,
+        sickLeaves: 4,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98101 77889 (Sunita Kumar - Spouse)',
+        bio: 'Enterprise B2B dealmaker closing Fortune 500 digital transformations, SaaS contracts, and multi-year consulting retainers.',
+        location: 'Mumbai Office • Hybrid',
+        skills: ['Enterprise Sales', 'Client Negotiation', 'Contract Structuring', 'Executive Relations', 'Pipeline Management'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'OmniChannel Enterprise Sales Rollout'],
       ),
       Employee(
         id: 'EMP-113',
         name: 'Sanjay Menon',
         email: 'sanjay.menon@digitalinertia.com',
         phone: '+91 98410 77650',
-        role: 'Marketing Strategist',
+        role: 'Digital Marketing Strategist & SEO Lead',
         category: RoleCategory.nonTechnical,
-        department: 'Marketing',
-        departmentId: 'DEPT-MKT',
-        subDepartmentId: 'DEPT-MKT-DIG',
-        subDepartmentName: 'Digital Marketing',
+        department: 'Digital Marketing',
+        departmentId: 'DEPT-DM',
+        subDepartmentId: 'DEPT-MKT-SEO',
+        subDepartmentName: 'SEO & Strategy',
         team: 'Corporate Growth & Sales',
-        isPOC: false,
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 10, 1),
+        employmentStatus: 'Full-time',
+        isPOC: true,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 21,
+        performanceScore: 4.87,
+        leaveBalance: 13,
+        casualLeaves: 5,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98410 44556 (Geeta Menon - Spouse)',
+        bio: 'Growth marketing strategist driving technical SEO, organic visibility silos, multi-channel ad engines, and brand authority.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Technical SEO', 'Performance Marketing', 'Conversion Optimization', 'Google Ads', 'Content Architecture'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'OmniChannel Enterprise Sales Rollout'],
       ),
       Employee(
         id: 'EMP-114',
         name: 'Pooja Hegde',
         email: 'pooja.hegde@digitalinertia.com',
         phone: '+91 98211 22390',
-        role: 'Operations Manager',
+        role: 'Financial Operations & Budgeting Manager',
         category: RoleCategory.nonTechnical,
         department: 'Finance',
         departmentId: 'DEPT-FIN',
         subDepartmentId: 'DEPT-FIN-BUD',
-        subDepartmentName: 'Budgeting',
+        subDepartmentName: 'Budgeting & Ops',
         team: 'Financial & Business Ops',
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 12, 5),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 18,
+        performanceScore: 4.82,
+        leaveBalance: 15,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98211 88992 (Girish Hegde - Father)',
+        bio: 'Manages enterprise operational finances, commercial project budgets, cost-benefit allocations, and audit reconciliations.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Financial Analysis', 'Budgeting & Cost Allocation', 'Project Margin Auditing', 'ERP Billing'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'FinTech Payment Gateway Microservices'],
       ),
       Employee(
         id: 'EMP-115',
         name: 'Siddharth Roy',
         email: 'siddharth.roy@digitalinertia.com',
         phone: '+91 98300 88710',
-        role: 'Finance / Accounts Lead',
+        role: 'Finance & Accounts Lead',
         category: RoleCategory.nonTechnical,
         department: 'Finance',
         departmentId: 'DEPT-FIN',
         subDepartmentId: 'DEPT-FIN-ACC',
         subDepartmentName: 'Accounts',
         team: 'Financial & Business Ops',
-        isPOC: false,
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2024, 2, 15),
+        employmentStatus: 'Full-time',
+        isPOC: true,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 20,
+        performanceScore: 4.91,
+        leaveBalance: 12,
+        casualLeaves: 5,
+        sickLeaves: 4,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98300 22119 (Tanushree Roy - Spouse)',
+        bio: 'Heads general ledger auditing, client invoicing lifecycles, banking partnerships, and corporate fiscal governance.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Corporate Finance', 'General Ledger', 'Tax & Compliance', 'Banking Reconciliations', 'Statutory Audits'],
+        assignedProjectNames: ['FinTech Payment Gateway Microservices', 'Digital Inertia ERP Core'],
       ),
       Employee(
         id: 'EMP-116',
         name: 'Kavita Rao',
         email: 'kavita.rao@digitalinertia.com',
         phone: '+91 98452 33410',
-        role: 'Customer Support Manager',
+        role: 'Client Acquisition & Account Manager',
         category: RoleCategory.nonTechnical,
-        department: 'Sales',
-        departmentId: 'DEPT-SAL',
-        subDepartmentId: 'DEPT-SAL-ACC',
-        subDepartmentName: 'Account Management',
+        department: 'Sales & Marketing',
+        departmentId: 'DEPT-SM',
+        subDepartmentId: 'DEPT-SM-ACQ',
+        subDepartmentName: 'Client Acquisition',
         team: 'Corporate Growth & Sales',
+        reportingManager: 'Rajesh Kumar',
+        joiningDate: DateTime(2024, 3, 20),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
         activeTaskCount: 1,
+        completedTaskCount: 14,
+        performanceScore: 4.80,
+        leaveBalance: 16,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98452 77665 (Kishore Rao - Father)',
+        bio: 'Leads high-value B2B enterprise proposals, discovery calls, customer retention strategies, and sales pipeline conversion.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Client Acquisition', 'Account Governance', 'CRM Automation', 'Deal Structuring', 'Customer Success'],
+        assignedProjectNames: ['OmniChannel Enterprise Sales Rollout', 'Digital Inertia ERP Core'],
       ),
       Employee(
         id: 'EMP-117',
         name: 'Aditya Sen',
         email: 'aditya.sen@digitalinertia.com',
         phone: '+91 98115 55620',
-        role: 'Content / Communications',
+        role: 'Content & Social Media Specialist',
         category: RoleCategory.nonTechnical,
-        department: 'Marketing',
-        departmentId: 'DEPT-MKT',
+        department: 'Digital Marketing',
+        departmentId: 'DEPT-DM',
         subDepartmentId: 'DEPT-MKT-CNT',
         subDepartmentName: 'Content Marketing',
         team: 'Corporate Growth & Sales',
+        reportingManager: 'Sanjay Menon',
+        joiningDate: DateTime(2024, 6, 1),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
-        activeTaskCount: 0,
+        activeTaskCount: 1,
+        completedTaskCount: 12,
+        performanceScore: 4.72,
+        leaveBalance: 17,
+        casualLeaves: 8,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98115 11990 (Priya Sen - Sister)',
+        bio: 'Creates engaging B2B technical content, developer thought leadership articles, and high-impact social media campaign storytelling.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Content Marketing', 'Copywriting', 'Social Media Growth', 'Brand Storytelling', 'Technical Blogs'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine'],
+      ),
+
+      // ==========================================
+      // DEPARTMENT 2: Sales & Marketing (5 Employees)
+      // ==========================================
+      Employee(
+        id: 'EMP-201',
+        name: 'Rajesh Kumar',
+        email: 'rajesh.kumar@digitalinertia.com',
+        phone: '+91 98101 44321',
+        role: 'VP Enterprise Sales & Client Partnerships',
+        category: RoleCategory.nonTechnical,
+        department: 'Sales & Marketing',
+        departmentId: 'DEPT-SM',
+        subDepartmentId: 'DEPT-SM-SLS',
+        subDepartmentName: 'Enterprise Sales',
+        team: 'Corporate Growth & Sales',
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 7, 20),
+        employmentStatus: 'Full-time',
+        isPOC: true,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 28,
+        performanceScore: 4.92,
+        leaveBalance: 11,
+        casualLeaves: 4,
+        sickLeaves: 4,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98101 77889 (Sunita Kumar - Spouse)',
+        bio: 'Enterprise B2B dealmaker closing Fortune 500 digital transformations, SaaS contracts, and multi-year consulting retainers.',
+        location: 'Mumbai Office • Hybrid',
+        skills: ['Enterprise Sales', 'Client Negotiation', 'Contract Structuring', 'Executive Relations', 'Pipeline Management'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'EcoTrack IoT Mobile Platform', 'OmniChannel Enterprise Sales Rollout', 'FinTech Payment Gateway Microservices'],
       ),
       Employee(
-        id: 'EMP-118',
-        name: 'Shreya Kulkarni',
-        email: 'shreya.kulkarni@digitalinertia.com',
-        phone: '+91 98204 11980',
-        role: 'Administration Lead',
+        id: 'EMP-202',
+        name: 'Meera Sen',
+        email: 'meera.sen@digitalinertia.com',
+        phone: '+91 98452 33410',
+        role: 'Senior Account Executive & Enterprise Deals',
+        category: RoleCategory.nonTechnical,
+        department: 'Sales & Marketing',
+        departmentId: 'DEPT-SM',
+        subDepartmentId: 'DEPT-SM-SLS',
+        subDepartmentName: 'Enterprise Sales',
+        team: 'Corporate Growth & Sales',
+        reportingManager: 'Rajesh Kumar',
+        joiningDate: DateTime(2023, 9, 12),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 19,
+        performanceScore: 4.78,
+        leaveBalance: 14,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98452 88991 (Arindam Sen - Father)',
+        bio: 'Drives high-velocity enterprise deal cycles, lead discovery calls, product demonstrations, and customer expansion.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Account Management', 'SaaS Demos', 'CRM Automation', 'Deal Closing', 'Lead Nurturing'],
+        assignedProjectNames: ['OmniChannel Enterprise Sales Rollout', 'Corporate People Hub & Workforce System'],
+      ),
+      Employee(
+        id: 'EMP-203',
+        name: 'Vikram Malhotra',
+        email: 'vikram.malhotra@digitalinertia.com',
+        phone: '+91 98203 77412',
+        role: 'Business Development Manager',
+        category: RoleCategory.nonTechnical,
+        department: 'Sales & Marketing',
+        departmentId: 'DEPT-SM',
+        subDepartmentId: 'DEPT-SM-BD',
+        subDepartmentName: 'Business Development',
+        team: 'Corporate Growth & Sales',
+        reportingManager: 'Rajesh Kumar',
+        joiningDate: DateTime(2024, 1, 15),
+        employmentStatus: 'Full-time',
+        isPOC: true,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 14,
+        performanceScore: 4.70,
+        leaveBalance: 15,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98203 11224 (Pooja Malhotra - Sister)',
+        bio: 'Spearheads inbound lead qualification, outbound strategic accounts outreach, and joint channel partner alliances.',
+        location: 'Mumbai Office • Hybrid',
+        skills: ['Business Development', 'Outbound Sales', 'Strategic Partnerships', 'Market Analysis'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'OmniChannel Enterprise Sales Rollout'],
+      ),
+      Employee(
+        id: 'EMP-204',
+        name: 'Ananya Kapoor',
+        email: 'ananya.kapoor@digitalinertia.com',
+        phone: '+91 98190 22345',
+        role: 'Solutions Consultant & Deal Strategist',
+        category: RoleCategory.nonTechnical,
+        department: 'Sales & Marketing',
+        departmentId: 'DEPT-SM',
+        subDepartmentId: 'DEPT-SM-SOL',
+        subDepartmentName: 'Solutions Consulting',
+        team: 'Corporate Growth & Sales',
+        reportingManager: 'Rajesh Kumar',
+        joiningDate: DateTime(2024, 2, 1),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 12,
+        performanceScore: 4.81,
+        leaveBalance: 16,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98190 66778 (Rohit Kapoor - Spouse)',
+        bio: 'Bridges technical capabilities with customer business requirements to author compelling commercial RFP proposals.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Solution Selling', 'RFP Responses', 'Technical Proof of Concept', 'Value Engineering'],
+        assignedProjectNames: ['Digital Inertia ERP Core'],
+      ),
+      Employee(
+        id: 'EMP-205',
+        name: 'Aditya Joshi',
+        email: 'aditya.joshi@digitalinertia.com',
+        phone: '+91 98115 55620',
+        role: 'Sales Operations & Inbound Lead Specialist',
+        category: RoleCategory.nonTechnical,
+        department: 'Sales & Marketing',
+        departmentId: 'DEPT-SM',
+        subDepartmentId: 'DEPT-SM-OPS',
+        subDepartmentName: 'Sales Ops',
+        team: 'Corporate Growth & Sales',
+        reportingManager: 'Rajesh Kumar',
+        joiningDate: DateTime(2024, 3, 10),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 11,
+        performanceScore: 4.65,
+        leaveBalance: 17,
+        casualLeaves: 8,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98115 33445 (Suresh Joshi - Father)',
+        bio: 'Oversees sales CRM pipeline telemetry, automated deal stage notifications, contract archives, and sales SLA adherence.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Salesforce & HubSpot', 'Sales Operations', 'Lead Routing', 'Quota Reporting'],
+        assignedProjectNames: ['EcoTrack IoT Mobile Platform'],
+      ),
+
+      // ==========================================
+      // DEPARTMENT 3: Digital Marketing (5 Employees)
+      // ==========================================
+      Employee(
+        id: 'EMP-301',
+        name: 'Kavita Reddy',
+        email: 'kavita.reddy@digitalinertia.com',
+        phone: '+91 98410 77650',
+        role: 'Head of Digital Marketing & Growth',
+        category: RoleCategory.nonTechnical,
+        department: 'Digital Marketing',
+        departmentId: 'DEPT-DM',
+        subDepartmentId: 'DEPT-DM-GRW',
+        subDepartmentName: 'Growth & Strategy',
+        team: 'Digital Marketing & Growth',
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 10, 1),
+        employmentStatus: 'Full-time',
+        isPOC: true,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 22,
+        performanceScore: 4.88,
+        leaveBalance: 13,
+        casualLeaves: 5,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98410 22331 (Mahesh Reddy - Brother)',
+        bio: 'Growth marketing leader orchestrating omnichannel acquisition funnels, digital brand performance, and high-ROI ad engines.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Omnichannel Growth', 'PPC Strategy', 'Marketing Telemetry', 'Conversion Rate Optimization', 'Brand Positioning'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'OmniChannel Enterprise Sales Rollout'],
+      ),
+      Employee(
+        id: 'EMP-302',
+        name: 'Sameer Deshmukh',
+        email: 'sameer.deshmukh@digitalinertia.com',
+        phone: '+91 98210 99012',
+        role: 'Performance Ads & PPC Campaign Manager',
+        category: RoleCategory.nonTechnical,
+        department: 'Digital Marketing',
+        departmentId: 'DEPT-DM',
+        subDepartmentId: 'DEPT-DM-PPC',
+        subDepartmentName: 'Paid Media',
+        team: 'Digital Marketing & Growth',
+        reportingManager: 'Kavita Reddy',
+        joiningDate: DateTime(2023, 11, 20),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 18,
+        performanceScore: 4.80,
+        leaveBalance: 14,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98210 44556 (Shilpa Deshmukh - Mother)',
+        bio: 'Manages \$250k+ quarterly paid media budgets across Google Ads, LinkedIn Campaign Manager, Meta Ads, and automated bid rules.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Google Ads', 'Meta Ads Manager', 'LinkedIn B2B Ads', 'ROAS Optimization', 'A/B Creative Testing'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'EcoTrack IoT Mobile Platform'],
+      ),
+      Employee(
+        id: 'EMP-303',
+        name: 'Pooja Deshmukh',
+        email: 'pooja.deshmukh@digitalinertia.com',
+        phone: '+91 98211 22390',
+        role: 'SEO & Organic Search Strategist',
+        category: RoleCategory.nonTechnical,
+        department: 'Digital Marketing',
+        departmentId: 'DEPT-DM',
+        subDepartmentId: 'DEPT-DM-SEO',
+        subDepartmentName: 'Search Engine Optimization',
+        team: 'Digital Marketing & Growth',
+        reportingManager: 'Kavita Reddy',
+        joiningDate: DateTime(2023, 12, 5),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 15,
+        performanceScore: 4.75,
+        leaveBalance: 15,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98211 88992 (Girish Hegde - Father)',
+        bio: 'Technical SEO authority scaling organic impressions through content silo architectures, schema markups, and backlinks.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Technical SEO', 'Keyword Research', 'Google Search Console', 'Ahrefs / Semrush', 'Content Strategy'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'Corporate People Hub & Workforce System'],
+      ),
+      Employee(
+        id: 'EMP-304',
+        name: 'Naveen Chandra',
+        email: 'naveen.chandra@digitalinertia.com',
+        phone: '+91 98300 88710',
+        role: 'Social Media & Brand Engagement Lead',
+        category: RoleCategory.nonTechnical,
+        department: 'Digital Marketing',
+        departmentId: 'DEPT-DM',
+        subDepartmentId: 'DEPT-DM-SOC',
+        subDepartmentName: 'Social & Brand',
+        team: 'Digital Marketing & Growth',
+        reportingManager: 'Kavita Reddy',
+        joiningDate: DateTime(2024, 2, 15),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 13,
+        performanceScore: 4.70,
+        leaveBalance: 16,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98300 11447 (Radha Chandra - Mother)',
+        bio: 'Commands brand presence across LinkedIn, X/Twitter, YouTube, and Discord to drive organic engineering thought leadership.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Social Media Strategy', 'B2B Brand Engagement', 'Influencer Marketing', 'Community Building'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'FinTech Payment Gateway Microservices'],
+      ),
+      Employee(
+        id: 'EMP-305',
+        name: 'Rhea Pillai',
+        email: 'rhea.pillai@digitalinertia.com',
+        phone: '+91 98402 11234',
+        role: 'Creative Visual & Content Marketing Specialist',
+        category: RoleCategory.nonTechnical,
+        department: 'Digital Marketing',
+        departmentId: 'DEPT-DM',
+        subDepartmentId: 'DEPT-DM-CRT',
+        subDepartmentName: 'Creative Design',
+        team: 'Digital Marketing & Growth',
+        reportingManager: 'Kavita Reddy',
+        joiningDate: DateTime(2024, 4, 1),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 11,
+        performanceScore: 4.82,
+        leaveBalance: 18,
+        casualLeaves: 8,
+        sickLeaves: 5,
+        paidLeaves: 5,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98402 66779 (Dev Pillai - Brother)',
+        bio: 'Produces high-impact graphic design, promotional brand videos, UI illustrations, and conversion-optimized ad creatives.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Visual Design', 'Figma & Adobe CC', 'Motion Graphics', 'Ad Creative Production', 'Copywriting'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'OmniChannel Enterprise Sales Rollout'],
+      ),
+
+      // ==========================================
+      // DEPARTMENT 4: HR (5 Employees)
+      // ==========================================
+      Employee(
+        id: 'EMP-401',
+        name: 'Sunita Verma',
+        email: 'sunita.verma@digitalinertia.com',
+        phone: '+91 98205 66780',
+        role: 'Director of People & Culture',
         category: RoleCategory.nonTechnical,
         department: 'HR',
         departmentId: 'DEPT-HR',
-        subDepartmentId: 'DEPT-HR-ONB',
-        subDepartmentName: 'Onboarding',
-        team: 'Financial & Business Ops',
+        subDepartmentId: 'DEPT-HR-DIR',
+        subDepartmentName: 'People Leadership',
+        team: 'People & Culture',
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 5, 10),
+        employmentStatus: 'Full-time',
+        isPOC: true,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 26,
+        performanceScore: 4.90,
+        leaveBalance: 12,
+        casualLeaves: 5,
+        sickLeaves: 4,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98205 99001 (Alok Verma - Spouse)',
+        bio: 'People executive directing employee engagement, university hiring cohorts, competitive compensation, and corporate ethics.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['People Operations', 'Executive Leadership', 'Organizational Design', 'Talent Strategy', 'Policy Governance'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'FinTech Payment Gateway Microservices', 'Corporate People Hub & Workforce System'],
+      ),
+      Employee(
+        id: 'EMP-402',
+        name: 'Amitabh Roy',
+        email: 'amitabh.roy@digitalinertia.com',
+        phone: '+91 98331 44590',
+        role: 'Lead Talent Acquisition & University Hiring',
+        category: RoleCategory.nonTechnical,
+        department: 'HR',
+        departmentId: 'DEPT-HR',
+        subDepartmentId: 'DEPT-HR-TA',
+        subDepartmentName: 'Talent Acquisition',
+        team: 'People & Culture',
+        reportingManager: 'Sunita Verma',
+        joiningDate: DateTime(2023, 8, 25),
+        employmentStatus: 'Full-time',
         isPOC: false,
         isActive: true,
-        activeTaskCount: 0,
+        activeTaskCount: 2,
+        completedTaskCount: 20,
+        performanceScore: 4.82,
+        leaveBalance: 14,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98331 77880 (Bina Roy - Mother)',
+        bio: 'Heads campus cohort recruitment across IITs, NITs, and BITS, managing technical screening assessments and offer rollout.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Campus Recruitment', 'Technical Interviewing', 'Applicant Tracking', 'Candidate Pipeline'],
+        assignedProjectNames: ['EcoTrack IoT Mobile Platform', 'Corporate People Hub & Workforce System'],
+      ),
+      Employee(
+        id: 'EMP-403',
+        name: 'Neha Bansal',
+        email: 'neha.bansal@digitalinertia.com',
+        phone: '+91 98110 99450',
+        role: 'HR Operations & People Compliance',
+        category: RoleCategory.nonTechnical,
+        department: 'HR',
+        departmentId: 'DEPT-HR',
+        subDepartmentId: 'DEPT-HR-OPS',
+        subDepartmentName: 'HR Operations',
+        team: 'People & Culture',
+        reportingManager: 'Sunita Verma',
+        joiningDate: DateTime(2023, 10, 18),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 16,
+        performanceScore: 4.76,
+        leaveBalance: 15,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98110 33446 (Tarun Bansal - Brother)',
+        bio: 'Administers employee lifecycle paperwork, statutory compliance, benefits administration, background verification, and leave portals.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['HR Operations', 'Statutory Compliance', 'Payroll Deductions', 'Benefits Management'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'Corporate People Hub & Workforce System'],
+      ),
+      Employee(
+        id: 'EMP-404',
+        name: 'Karan Singhania',
+        email: 'karan.singhania@digitalinertia.com',
+        phone: '+91 98720 33008',
+        role: 'Employee Experience & Learning Specialist',
+        category: RoleCategory.nonTechnical,
+        department: 'HR',
+        departmentId: 'DEPT-HR',
+        subDepartmentId: 'DEPT-HR-LND',
+        subDepartmentName: 'Learning & Dev',
+        team: 'People & Culture',
+        reportingManager: 'Sunita Verma',
+        joiningDate: DateTime(2024, 1, 20),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 12,
+        performanceScore: 4.72,
+        leaveBalance: 16,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98720 11225 (Renu Singhania - Mother)',
+        bio: 'Designs onboarding bootcamps, continuous engineering learning curricula, team offsites, and internal company hackathons.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Employee Experience', 'L&D Curricula', 'Team Culture', 'Internal Events'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine'],
+      ),
+      Employee(
+        id: 'EMP-405',
+        name: 'Divya Nambiar',
+        email: 'divya.nambiar@digitalinertia.com',
+        phone: '+91 98300 22009',
+        role: 'Workforce Analytics & HR Business Partner',
+        category: RoleCategory.nonTechnical,
+        department: 'HR',
+        departmentId: 'DEPT-HR',
+        subDepartmentId: 'DEPT-HR-BP',
+        subDepartmentName: 'HR Business Partner',
+        team: 'People & Culture',
+        reportingManager: 'Sunita Verma',
+        joiningDate: DateTime(2024, 3, 5),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 10,
+        performanceScore: 4.80,
+        leaveBalance: 17,
+        casualLeaves: 8,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98300 88993 (Madhavan Nambiar - Father)',
+        bio: 'Consults with department leads on headcount planning, performance management cycles, and team productivity telemetry.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['HR Business Partnering', 'Workforce Analytics', 'Performance Review Systems', 'Headcount Modeling'],
+        assignedProjectNames: ['OmniChannel Enterprise Sales Rollout'],
+      ),
+
+      // ==========================================
+      // DEPARTMENT 5: Finance (5 Employees)
+      // ==========================================
+      Employee(
+        id: 'EMP-501',
+        name: 'Rameshwar Gupta',
+        email: 'rameshwar.gupta@digitalinertia.com',
+        phone: '+91 98111 20005',
+        role: 'Chief Financial Officer',
+        category: RoleCategory.nonTechnical,
+        department: 'Finance',
+        departmentId: 'DEPT-FIN',
+        subDepartmentId: 'DEPT-FIN-CFO',
+        subDepartmentName: 'Executive Finance',
+        team: 'Corporate Finance & Accounts',
+        reportingManager: 'Laven Lokesh (CEO)',
+        joiningDate: DateTime(2023, 3, 1),
+        employmentStatus: 'Full-time',
+        isPOC: true,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 30,
+        performanceScore: 4.95,
+        leaveBalance: 10,
+        casualLeaves: 4,
+        sickLeaves: 3,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98111 44557 (Usha Gupta - Spouse)',
+        bio: 'Executive CFO overseeing corporate fiscal health, capital allocation, statutory audits, investor relations, and financial risk governance.',
+        location: 'Mumbai Office • Hybrid',
+        skills: ['Corporate Finance', 'FP&A', 'Taxation & Auditing', 'Cash Flow Optimization', 'Investor Relations'],
+        assignedProjectNames: ['FinTech Payment Gateway Microservices'],
+      ),
+      Employee(
+        id: 'EMP-502',
+        name: 'Shalini Rao',
+        email: 'shalini.rao@digitalinertia.com',
+        phone: '+91 98200 45003',
+        role: 'Financial Controller & Head of Accounts',
+        category: RoleCategory.nonTechnical,
+        department: 'Finance',
+        departmentId: 'DEPT-FIN',
+        subDepartmentId: 'DEPT-FIN-CTL',
+        subDepartmentName: 'Controllership',
+        team: 'Corporate Finance & Accounts',
+        reportingManager: 'Rameshwar Gupta',
+        joiningDate: DateTime(2023, 6, 15),
+        employmentStatus: 'Full-time',
+        isPOC: true,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 25,
+        performanceScore: 4.88,
+        leaveBalance: 13,
+        casualLeaves: 5,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98200 77882 (Gokul Rao - Spouse)',
+        bio: 'Supervises month-end ledger closing, GAAP/IFRS accounting compliance, multi-entity consolidation, and banking accounts.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Financial Controllership', 'General Ledger', 'Audit Readiness', 'Entity Consolidation'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'FinTech Payment Gateway Microservices'],
+      ),
+      Employee(
+        id: 'EMP-503',
+        name: 'Manish Aggarwal',
+        email: 'manish.aggarwal@digitalinertia.com',
+        phone: '+91 98410 78004',
+        role: 'Senior Corporate Accountant & Ledger',
+        category: RoleCategory.nonTechnical,
+        department: 'Finance',
+        departmentId: 'DEPT-FIN',
+        subDepartmentId: 'DEPT-FIN-ACC',
+        subDepartmentName: 'Accounting',
+        team: 'Corporate Finance & Accounts',
+        reportingManager: 'Shalini Rao',
+        joiningDate: DateTime(2023, 9, 1),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 1,
+        completedTaskCount: 19,
+        performanceScore: 4.74,
+        leaveBalance: 14,
+        casualLeaves: 6,
+        sickLeaves: 5,
+        paidLeaves: 3,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98410 11226 (Pawan Aggarwal - Brother)',
+        bio: 'Specializes in accounts payable, vendor disbursement cycles, TDS/GST tax filings, and bank reconciliation routines.',
+        location: 'Bengaluru HQ • On-site',
+        skills: ['Corporate Accounting', 'GST & Direct Tax', 'Accounts Payable', 'Bank Reconciliations'],
+        assignedProjectNames: ['EcoTrack IoT Mobile Platform'],
+      ),
+      Employee(
+        id: 'EMP-504',
+        name: 'Deepak Chawla',
+        email: 'deepak.chawla@digitalinertia.com',
+        phone: '+91 98450 12001',
+        role: 'Financial Analyst & Budget Planning',
+        category: RoleCategory.nonTechnical,
+        department: 'Finance',
+        departmentId: 'DEPT-FIN',
+        subDepartmentId: 'DEPT-FIN-FPA',
+        subDepartmentName: 'FP&A',
+        team: 'Corporate Finance & Accounts',
+        reportingManager: 'Shalini Rao',
+        joiningDate: DateTime(2024, 1, 10),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 15,
+        performanceScore: 4.82,
+        leaveBalance: 16,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98450 99883 (Anita Chawla - Mother)',
+        bio: 'Builds revenue forecast models, quarterly department budget variance analyses, burn rate dashboards, and ROI models.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['FP&A Modeling', 'Budget Variance Analysis', 'Unit Economics', 'Excel Financial Engineering'],
+        assignedProjectNames: ['Digital Marketing & Growth Engine', 'Corporate People Hub & Workforce System'],
+      ),
+      Employee(
+        id: 'EMP-505',
+        name: 'Tanvi Mathur',
+        email: 'tanvi.mathur@digitalinertia.com',
+        phone: '+91 98311 44014',
+        role: 'Billing, Payroll & Invoicing Specialist',
+        category: RoleCategory.nonTechnical,
+        department: 'Finance',
+        departmentId: 'DEPT-FIN',
+        subDepartmentId: 'DEPT-FIN-BIL',
+        subDepartmentName: 'Billing & Payroll',
+        team: 'Corporate Finance & Accounts',
+        reportingManager: 'Shalini Rao',
+        joiningDate: DateTime(2024, 2, 28),
+        employmentStatus: 'Full-time',
+        isPOC: false,
+        isActive: true,
+        activeTaskCount: 2,
+        completedTaskCount: 14,
+        performanceScore: 4.70,
+        leaveBalance: 16,
+        casualLeaves: 7,
+        sickLeaves: 5,
+        paidLeaves: 4,
+        employmentType: 'Permanent Employee',
+        emergencyContact: '+91 98311 66770 (Sanjay Mathur - Father)',
+        bio: 'Directs client milestone invoicing, automated recurring subscription billings, accounts receivable aging, and employee payroll.',
+        location: 'Bengaluru HQ • Hybrid',
+        skills: ['Invoicing & Billing', 'Payroll Processing', 'Accounts Receivable', 'Stripe Billing'],
+        assignedProjectNames: ['Digital Inertia ERP Core', 'OmniChannel Enterprise Sales Rollout'],
       ),
     ];
 
@@ -2935,1055 +4435,778 @@ class ErpProvider extends ChangeNotifier {
 
     // 42 Total Tasks (matching PostgreSQL 02_seed.sql: 20 Completed, 8 In Progress, 6 To Do, 5 Overdue, 3 Needs Rework)
     _tasks = [
-      // Technical Employee (Arjun Sharma) Dedicated Agile Tasks
+      // =========================================================================
+      // 1. TECHNICAL EMPLOYEE DASHBOARD FEATURED TASKS (Arjun Sharma - EMP-101)
+      // =========================================================================
       CompanyTask(
-        id: 'TSK-101',
-        title: 'Resolve Redis cache stampede on auth microservice',
-        description: 'Implement distributed locking with Redlock and exponential backoff to prevent thundering herd on token validation.',
-        domain: 'Backend & DevOps',
+        id: 'TSK-100A',
+        title: 'Client Pitch Deck Finalization',
+        description: 'Finalize high-impact executive presentation deck for client pitch. Align value propositions, milestone delivery roadmap, and SLA architecture.',
+        domain: 'Technical',
         team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
+        department: 'Technical',
         assignedToId: 'EMP-101',
         assignedToName: 'Arjun Sharma',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair (Lead)',
-        projectId: 'PRJ-306',
+        assignedById: 'EMP-201',
+        assignedByName: 'Rajesh Kumar',
+        projectId: 'PRJ-402',
         projectName: 'Digital Inertia ERP Core',
         dueDate: DateTime.now(), // Due today
         status: TaskStatus.inProgress,
         priority: TaskPriority.urgent,
-        progressPercent: 60,
+        progressPercent: 75,
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
       ),
       CompanyTask(
-        id: 'TSK-102',
-        title: 'Review API contract swagger specs with Core API team',
-        description: 'Validate OpenAPI 3.1 endpoints for billing webhooks, idempotency keys, and error payloads.',
-        domain: 'API Engineering',
+        id: 'TSK-100B',
+        title: 'Strategic Growth Audit Review',
+        description: 'Conduct comprehensive audit review on key performance levers, scalability metrics, and client engagement deliverables for Q4 expansion.',
+        domain: 'Technical',
         team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-101',
+        assignedToName: 'Arjun Sharma',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-201',
+        assignedByName: 'Rajesh Kumar',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now(), // Due today
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.medium,
+        progressPercent: 40,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+      CompanyTask(
+        id: 'TSK-100C',
+        title: 'Beta Architecture Design',
+        description: 'Review high-level architectural blueprints for the analytics streaming engine, message broker throughput, and telemetry schema.',
+        domain: 'Technical',
+        team: 'Core Platform Engineering',
+        department: 'Technical',
         assignedToId: 'EMP-101',
         assignedToName: 'Arjun Sharma',
         assigneeType: AssigneeType.employee,
         assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair (Lead)',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now(), // Due today
-        status: TaskStatus.todo,
-        priority: TaskPriority.high,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      CompanyTask(
-        id: 'TSK-103',
-        title: 'Implement biometric unlock and biometric prompt handler',
-        description: 'Add LocalAuthentication plugin support with secure enclave keystore token caching.',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
-        assignedToId: 'EMP-101',
-        assignedToName: 'Arjun Sharma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta (PM)',
-        projectId: 'PRJ-301',
-        projectName: 'EcoTrack App',
-        dueDate: DateTime.now().add(const Duration(days: 1)), // Due tomorrow
+        assignedByName: 'Priya Nair',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().add(const Duration(days: 1)),
         status: TaskStatus.inProgress,
         priority: TaskPriority.high,
-        progressPercent: 45,
+        progressPercent: 80,
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
       ),
       CompanyTask(
-        id: 'TSK-104',
-        title: 'Setup push notification routing for meeting alerts',
-        description: 'Hook background notification handler into local notification scheduler with 15-minute lead time.',
-        domain: 'Mobile App',
+        id: 'TSK-101',
+        title: 'Conversion Pixel & Telemetry SDK Integration',
+        description: 'Embed Meta CAPI, Google Ads Tag, and server-side tracking pipelines with sub-millisecond response for the Digital Marketing Campaign.',
+        domain: 'Technical',
         team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
+        department: 'Technical',
         assignedToId: 'EMP-101',
         assignedToName: 'Arjun Sharma',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-101',
-        assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().add(const Duration(days: 1)), // Due tomorrow
-        status: TaskStatus.todo,
-        priority: TaskPriority.medium,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      CompanyTask(
-        id: 'TSK-105',
-        title: 'Write end-to-end integration tests for payment webhooks',
-        description: 'Automate test harness simulating delayed bank captures, chargeback signals, and signature verifications.',
-        domain: 'Testing & QA',
-        team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
-        assignedToId: 'EMP-101',
-        assignedToName: 'Arjun Sharma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair (Lead)',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().add(const Duration(days: 3)), // Next 3 days
-        status: TaskStatus.todo,
-        priority: TaskPriority.high,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      CompanyTask(
-        id: 'TSK-106',
-        title: 'Optimize state tree renders and widget repaint boundaries',
-        description: 'Audit DevTools performance overlays, isolate heavy animations into RepaintBoundaries.',
-        domain: 'Performance',
-        team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
-        assignedToId: 'EMP-101',
-        assignedToName: 'Arjun Sharma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-101',
-        assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-301',
-        projectName: 'EcoTrack App',
-        dueDate: DateTime.now().add(const Duration(days: 5)), // Next 5 days
-        status: TaskStatus.todo,
-        priority: TaskPriority.medium,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      CompanyTask(
-        id: 'TSK-107',
-        title: 'Prepare sprint 4 release candidate build artifacts',
-        description: 'Tag Git commit v1.4.0-rc1, generate signed Android AAB and iOS archive for staging verification.',
-        domain: 'DevOps & Release',
-        team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
-        assignedToId: 'EMP-101',
-        assignedToName: 'Arjun Sharma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-101',
-        assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().add(const Duration(days: 6)), // Next 6 days
-        status: TaskStatus.todo,
-        priority: TaskPriority.low,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      CompanyTask(
-        id: 'TSK-108',
-        title: 'Benchmark Docker container cold-start latency',
-        description: 'Profile cold-start times under container resource constraints and document JIT compile warming.',
-        domain: 'Cloud Infrastructure',
-        team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
-        assignedToId: 'EMP-101',
-        assignedToName: 'Arjun Sharma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair (Lead)',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 1)), // Overdue by 1 day!
-        status: TaskStatus.overdue,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime(2026, 10, 18), // Deadline card target
+        status: TaskStatus.inProgress,
         priority: TaskPriority.urgent,
-        progressPercent: 30,
+        progressPercent: 60,
         createdAt: DateTime.now().subtract(const Duration(days: 4)),
       ),
       CompanyTask(
-        id: 'TSK-109',
-        title: 'Configure responsive tablet grid system',
-        description: 'Implement adaptive layout breakpoints for iPad Pro and foldables in employee portal viewports.',
-        domain: 'Frontend & UI',
+        id: 'TSK-100D',
+        title: 'Executive KPI Card System Implementation',
+        description: 'Built 2x3 uniform responsive grid architecture with real-time target metrics and notification badges for the technical dashboard.',
+        domain: 'Technical',
         team: 'Client Experience Engineering',
-        department: 'Technology and Engineering',
+        department: 'Technical',
         assignedToId: 'EMP-101',
         assignedToName: 'Arjun Sharma',
         assigneeType: AssigneeType.employee,
         assignedById: 'EMP-101',
         assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-306',
+        projectId: 'PRJ-402',
         projectName: 'Digital Inertia ERP Core',
         dueDate: DateTime.now().subtract(const Duration(days: 2)),
         status: TaskStatus.done,
-        priority: TaskPriority.medium,
+        priority: TaskPriority.high,
         progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 2)),
-        createdAt: DateTime.now().subtract(const Duration(days: 6)),
-      ),
-      // 5 Overdue Tasks (triggers ALT-TSK)
-      CompanyTask(
-        id: 'TSK-401',
-        title: 'Database setup',
-        description: 'Provision PostgreSQL 18 HA replication cluster and execute initial DDL scripts',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'INT-203',
-        assignedToName: 'Chirag Sethi',
-        assigneeType: AssigneeType.intern,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().subtract(const Duration(days: 1)),
-        status: TaskStatus.overdue,
-        priority: TaskPriority.urgent,
-        progressPercent: 30,
+        completedAt: DateTime.now().subtract(const Duration(days: 1)),
         createdAt: DateTime.now().subtract(const Duration(days: 5)),
       ),
+
+      // =========================================================================
+      // 2. TECHNICAL DEPARTMENT (Priya Nair, Karthik R, Sneha V, Rohan Mehta, Shreya)
+      // =========================================================================
       CompanyTask(
-        id: 'TSK-402',
-        title: 'Fix authentication gateway timeout',
-        description: 'Resolve 504 gateway timeout under 2,000 concurrent OAuth authorization code grants',
-        domain: 'Backend',
+        id: 'TSK-102',
+        title: 'Real-time Marketing Attribution API',
+        description: 'Build high-throughput event ingestion endpoint to reconcile multi-touch campaign attribution IDs with client conversion events.',
+        domain: 'Technical',
         team: 'Core Platform Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-102',
+        assignedToName: 'Priya Nair',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().add(const Duration(days: 6)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 65,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+      CompanyTask(
+        id: 'TSK-202',
+        title: 'PostgreSQL 18 Query Latency Optimization',
+        description: 'Optimize execution plans for employee task rollups and add composite indexes for multi-tenant queries.',
+        domain: 'Technical',
+        team: 'Core Platform Engineering',
+        department: 'Technical',
         assignedToId: 'EMP-102',
         assignedToName: 'Priya Nair',
         assigneeType: AssigneeType.employee,
         assignedById: 'EMP-102',
         assignedByName: 'Priya Nair',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().subtract(const Duration(days: 2)),
-        status: TaskStatus.overdue,
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().add(const Duration(days: 4)),
+        status: TaskStatus.inProgress,
         priority: TaskPriority.urgent,
-        progressPercent: 40,
-        createdAt: DateTime.now().subtract(const Duration(days: 6)),
+        progressPercent: 70,
+        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      ),
+      CompanyTask(
+        id: 'TSK-501',
+        title: 'PCI-DSS HSM Hardware Security Module Attestation',
+        description: 'Deployed Argon2id password hashing, hardware token signing, and SOC-2 Type II audit logs for PulsePay payment microservices.',
+        domain: 'Technical',
+        team: 'Core Platform Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-102',
+        assignedToName: 'Priya Nair',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-102',
+        assignedByName: 'Priya Nair',
+        projectId: 'PRJ-405',
+        projectName: 'FinTech Payment Gateway Microservices',
+        dueDate: DateTime(2026, 9, 15),
+        status: TaskStatus.done,
+        priority: TaskPriority.urgent,
+        progressPercent: 100,
+        completedAt: DateTime(2026, 9, 15),
+        createdAt: DateTime(2026, 9, 1),
+      ),
+      CompanyTask(
+        id: 'TSK-203',
+        title: 'Centralized State Provider Architecture',
+        description: 'Refactor state machines to broadcast granular updates via ChangeNotifier across all department screens.',
+        domain: 'Technical',
+        team: 'Core Platform Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-103',
+        assignedToName: 'Karthik R',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-101',
+        assignedByName: 'Arjun Sharma',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().add(const Duration(days: 5)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 80,
+        createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      ),
+      CompanyTask(
+        id: 'TSK-302',
+        title: 'Edge Telemetry Time-Series Pipeline',
+        description: 'Process 5,000 pings/sec of power, voltage, and temperature metrics with TimescaleDB retention.',
+        domain: 'Technical',
+        team: 'Core Platform Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-103',
+        assignedToName: 'Karthik R',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-105',
+        assignedByName: 'Rohan Mehta',
+        projectId: 'PRJ-403',
+        projectName: 'EcoTrack IoT Mobile Platform',
+        dueDate: DateTime.now().add(const Duration(days: 8)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 50,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+      CompanyTask(
+        id: 'TSK-204',
+        title: 'Design Tokens & 2x3 Grid Layout Standard',
+        description: 'Implement monochrome theme tokens and uniform childAspectRatio grids across dashboard cards.',
+        domain: 'Technical',
+        team: 'Client Experience Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-104',
+        assignedToName: 'Sneha V',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-101',
+        assignedByName: 'Arjun Sharma',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().subtract(const Duration(days: 1)),
+        status: TaskStatus.done,
+        priority: TaskPriority.high,
+        progressPercent: 100,
+        completedAt: DateTime.now().subtract(const Duration(days: 1)),
+        createdAt: DateTime.now().subtract(const Duration(days: 3)),
       ),
       CompanyTask(
         id: 'TSK-403',
-        title: 'Optimize state tree rebuilds',
-        description: 'Profile widget subtree renders in Flutter and eliminate unneeded RepaintBoundary redraws',
-        domain: 'Mobile App',
+        title: 'Sales Companion Offline Field App',
+        description: 'Implement local SQLite database caching and optimistic sync for field sales reps in transit.',
+        domain: 'Technical',
         team: 'Client Experience Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-104',
+        assignedToName: 'Sneha V',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-101',
+        assignedByName: 'Arjun Sharma',
+        projectId: 'PRJ-404',
+        projectName: 'OmniChannel Enterprise Sales Rollout',
+        dueDate: DateTime.now().add(const Duration(days: 9)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 45,
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      CompanyTask(
+        id: 'TSK-301',
+        title: 'BLE Inverter Telemetry Companion App',
+        description: 'Implement Bluetooth Low Energy GATT characteristic listener in Flutter for solar inverters.',
+        domain: 'Technical',
+        team: 'Client Experience Engineering',
+        department: 'Technical',
         assignedToId: 'EMP-105',
         assignedToName: 'Rohan Mehta',
         assigneeType: AssigneeType.employee,
         assignedById: 'EMP-105',
         assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-301',
-        projectName: 'EcoTrack App',
-        dueDate: DateTime.now().subtract(const Duration(days: 1)),
-        status: TaskStatus.overdue,
-        priority: TaskPriority.high,
-        progressPercent: 50,
-        createdAt: DateTime.now().subtract(const Duration(days: 4)),
-      ),
-      CompanyTask(
-        id: 'TSK-404',
-        title: 'Update client SLA contract addendum',
-        description: 'Incorporate Tier-1 99.95% uptime guarantees and incident escalation workflow',
-        domain: 'Sales / Business Development',
-        team: 'Corporate Growth & Sales',
-        assignedToId: 'EMP-112',
-        assignedToName: 'Rajesh Kumar',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-112',
-        assignedByName: 'Rajesh Kumar',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().subtract(const Duration(days: 2)),
-        status: TaskStatus.overdue,
-        priority: TaskPriority.high,
-        progressPercent: 20,
-        createdAt: DateTime.now().subtract(const Duration(days: 7)),
-      ),
-      CompanyTask(
-        id: 'TSK-405',
-        title: 'Patch OpenSSL vulnerabilities on production edge',
-        description: 'Apply CVE-2024 security updates across reverse proxy ingress pods',
-        domain: 'DevOps / Cloud',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-102',
-        assignedToName: 'Priya Nair',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 1)),
-        status: TaskStatus.overdue,
+        projectId: 'PRJ-403',
+        projectName: 'EcoTrack IoT Mobile Platform',
+        dueDate: DateTime.now().add(const Duration(days: 7)),
+        status: TaskStatus.inProgress,
         priority: TaskPriority.urgent,
-        progressPercent: 40,
-        createdAt: DateTime.now().subtract(const Duration(days: 4)),
+        progressPercent: 65,
+        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      ),
+      CompanyTask(
+        id: 'TSK-205',
+        title: 'Technical Deliverables & Sub-Task Partitioning',
+        description: 'Decompose quarterly sprint objectives into actionable individual developer work packages.',
+        domain: 'Technical',
+        team: 'Client Experience Engineering',
+        department: 'Technical',
+        assignedToId: 'EMP-118',
+        assignedToName: 'Shreya Kulkarni',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-101',
+        assignedByName: 'Arjun Sharma',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().add(const Duration(days: 4)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 60,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
 
-      // 8 In Progress Tasks
+      // =========================================================================
+      // 3. SALES & MARKETING DEPARTMENT (Rajesh, Meera, Vikram, Ananya, Aditya)
+      // =========================================================================
       CompanyTask(
-        id: 'TSK-406',
-        title: 'Build login API',
-        description: 'Implement JWT token exchange, refresh tokens and bcrypt password verification endpoints',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'INT-201',
-        assignedToName: 'Aarav Sharma',
-        assigneeType: AssigneeType.intern,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().add(const Duration(days: 2)),
+        id: 'TSK-401',
+        title: 'Zenith Logistics Enterprise Master Service Contract',
+        description: 'Negotiate master terms, SLA penalty schedules, and multi-year maintenance tiers with client counsel.',
+        domain: 'Sales & Marketing',
+        team: 'Corporate Growth & Sales',
+        department: 'Sales & Marketing',
+        assignedToId: 'EMP-201',
+        assignedToName: 'Rajesh Kumar',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-201',
+        assignedByName: 'Rajesh Kumar',
+        projectId: 'PRJ-404',
+        projectName: 'OmniChannel Enterprise Sales Rollout',
+        dueDate: DateTime.now().add(const Duration(days: 6)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.urgent,
+        progressPercent: 55,
+        createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      ),
+      CompanyTask(
+        id: 'TSK-402',
+        title: 'Territory Account Mapping & Sales Rep Quota Allocation',
+        description: 'Distribute regional enterprise target accounts across 5 enterprise sales account executives.',
+        domain: 'Sales & Marketing',
+        team: 'Corporate Growth & Sales',
+        department: 'Sales & Marketing',
+        assignedToId: 'EMP-202',
+        assignedToName: 'Meera Sen',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-201',
+        assignedByName: 'Rajesh Kumar',
+        projectId: 'PRJ-404',
+        projectName: 'OmniChannel Enterprise Sales Rollout',
+        dueDate: DateTime.now().add(const Duration(days: 7)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 50,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+      CompanyTask(
+        id: 'TSK-106',
+        title: 'Inbound Lead Qualification & CRM Attribution Sync',
+        description: 'Configure automated HubSpot webhook triggers to route marketing-qualified leads to sales reps.',
+        domain: 'Sales & Marketing',
+        team: 'Corporate Growth & Sales',
+        department: 'Sales & Marketing',
+        assignedToId: 'EMP-203',
+        assignedToName: 'Vikram Malhotra',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-201',
+        assignedByName: 'Rajesh Kumar',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().add(const Duration(days: 5)),
         status: TaskStatus.inProgress,
         priority: TaskPriority.high,
         progressPercent: 65,
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
       ),
       CompanyTask(
-        id: 'TSK-407',
-        title: 'Refactor state provider architecture',
-        description: 'Decouple view controllers and establish centralized Provider tree for real-time reactivity',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-102',
-        assignedToName: 'Priya Nair',
+        id: 'TSK-206',
+        title: 'Executive Sales Dashboard Requirements Sign-off',
+        description: 'Review pipeline funnel analytics, deal stage transitions, and quarterly quota projections.',
+        domain: 'Sales & Marketing',
+        team: 'Corporate Growth & Sales',
+        department: 'Sales & Marketing',
+        assignedToId: 'EMP-204',
+        assignedToName: 'Ananya Kapoor',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-302',
-        projectName: 'Green Energy Dashboard',
-        dueDate: DateTime.now().add(const Duration(days: 3)),
-        status: TaskStatus.inProgress,
-        priority: TaskPriority.high,
-        progressPercent: 70,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+        assignedById: 'EMP-201',
+        assignedByName: 'Rajesh Kumar',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().subtract(const Duration(days: 3)),
+        status: TaskStatus.done,
+        priority: TaskPriority.medium,
+        progressPercent: 100,
+        completedAt: DateTime.now().subtract(const Duration(days: 2)),
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
       ),
       CompanyTask(
-        id: 'TSK-408',
-        title: 'Integrate biometric local authentication',
-        description: 'Implement LocalAuthentication on Android BiometricPrompt and iOS LocalAuthentication FaceID',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
+        id: 'TSK-303',
+        title: 'CleanTech Enterprise Trial & Demo Coordination',
+        description: 'Coordinate on-site hardware pilot demonstration for 3 commercial solar farm operators.',
+        domain: 'Sales & Marketing',
+        team: 'Corporate Growth & Sales',
+        department: 'Sales & Marketing',
+        assignedToId: 'EMP-205',
+        assignedToName: 'Aditya Joshi',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-301',
-        projectName: 'EcoTrack App',
-        dueDate: DateTime.now().add(const Duration(days: 4)),
+        assignedById: 'EMP-201',
+        assignedByName: 'Rajesh Kumar',
+        projectId: 'PRJ-403',
+        projectName: 'EcoTrack IoT Mobile Platform',
+        dueDate: DateTime.now().add(const Duration(days: 8)),
         status: TaskStatus.inProgress,
         priority: TaskPriority.high,
         progressPercent: 55,
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
+
+      // =========================================================================
+      // 4. DIGITAL MARKETING DEPARTMENT (Kavita, Sameer, Pooja, Naveen, Rhea)
+      // =========================================================================
       CompanyTask(
-        id: 'TSK-409',
-        title: 'Deploy Prometheus and Grafana alerts',
-        description: 'Set up metrics scraping for PostgreSQL connection pools and p99 latency thresholds',
-        domain: 'DevOps / Cloud',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-109',
-        assignedToName: 'Rahul Verma',
+        id: 'TSK-103B',
+        title: 'Omnichannel Marketing Funnel Strategy & Budget Allocation',
+        description: 'Direct multi-channel paid ad funnel, retargeting rules, and conversion tracking KPIs for OmniSphere Retail.',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        department: 'Digital Marketing',
+        assignedToId: 'EMP-301',
+        assignedToName: 'Kavita Reddy',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().add(const Duration(days: 4)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.urgent,
+        progressPercent: 75,
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+      ),
+      CompanyTask(
+        id: 'TSK-310',
+        title: 'Organic Search Growth & Core Web Vitals Optimization',
+        description: 'Lead high-impact SEO strategy, Core Web Vitals performance benchmarks, and keyword clustering for enterprise clients.',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        department: 'Digital Marketing',
+        assignedToId: 'EMP-113',
+        assignedToName: 'Sanjay Menon',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().add(const Duration(days: 4)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 65,
+        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      ),
+      CompanyTask(
+        id: 'TSK-103',
+        title: 'Google & Meta Omnichannel PPC Campaign Launch',
+        description: 'Configure high-intent search ads, dynamic remarketing catalog, and target ROAS bid strategy.',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        department: 'Digital Marketing',
+        assignedToId: 'EMP-302',
+        assignedToName: 'Sameer Deshmukh',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().add(const Duration(days: 3)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.urgent,
+        progressPercent: 70,
+        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      ),
+      CompanyTask(
+        id: 'TSK-104',
+        title: 'Organic Keyword Silo & Technical SEO Overhaul',
+        description: 'Implement Core Web Vitals audit, schema structured data, and high-volume pillar content clusters.',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        department: 'Digital Marketing',
+        assignedToId: 'EMP-303',
+        assignedToName: 'Pooja Hegde',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
         dueDate: DateTime.now().add(const Duration(days: 5)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
+        progressPercent: 65,
+        createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      ),
+      CompanyTask(
+        id: 'TSK-209',
+        title: 'Corporate Brand Identity & Typography Guidelines',
+        description: 'Publish Instrument Sans font styling rules, SVG logo assets, and social badge components.',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        department: 'Digital Marketing',
+        assignedToId: 'EMP-304',
+        assignedToName: 'Naveen Chandra',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().subtract(const Duration(days: 4)),
+        status: TaskStatus.done,
+        priority: TaskPriority.medium,
+        progressPercent: 100,
+        completedAt: DateTime.now().subtract(const Duration(days: 3)),
+        createdAt: DateTime.now().subtract(const Duration(days: 6)),
+      ),
+      CompanyTask(
+        id: 'TSK-105',
+        title: 'High-Converting Ad Creatives & Brand Video Assets',
+        description: 'Deliver motion graphics, responsive display banners, and TikTok/Reels product showcases.',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        department: 'Digital Marketing',
+        assignedToId: 'EMP-305',
+        assignedToName: 'Rhea Pillai',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().subtract(const Duration(days: 2)),
+        status: TaskStatus.done,
+        priority: TaskPriority.medium,
+        progressPercent: 100,
+        completedAt: DateTime.now().subtract(const Duration(days: 1)),
+        createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      ),
+      CompanyTask(
+        id: 'TSK-404',
+        title: 'B2B Sales Enablement Collateral & Interactive Calculator',
+        description: 'Produce interactive ROI savings calculator web widget and enterprise product one-pagers.',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        department: 'Digital Marketing',
+        assignedToId: 'EMP-305',
+        assignedToName: 'Rhea Pillai',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-301',
+        assignedByName: 'Kavita Reddy',
+        projectId: 'PRJ-404',
+        projectName: 'OmniChannel Enterprise Sales Rollout',
+        dueDate: DateTime.now().add(const Duration(days: 7)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.medium,
+        progressPercent: 50,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+
+      // =========================================================================
+      // 5. HR DEPARTMENT (Sunita, Amitabh, Neha, Karan, Divya)
+      // =========================================================================
+      CompanyTask(
+        id: 'TSK-504',
+        title: 'Compliance & Infosec Security Training Cohort',
+        description: 'Conducted mandatory ISO 27001 zero-trust training and secure coding assessment for engineers.',
+        domain: 'HR',
+        team: 'People & Culture',
+        department: 'HR',
+        assignedToId: 'EMP-401',
+        assignedToName: 'Sunita Verma',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-401',
+        assignedByName: 'Sunita Verma',
+        projectId: 'PRJ-405',
+        projectName: 'FinTech Payment Gateway Microservices',
+        dueDate: DateTime(2026, 9, 18),
+        status: TaskStatus.done,
+        priority: TaskPriority.medium,
+        progressPercent: 100,
+        completedAt: DateTime(2026, 9, 18),
+        createdAt: DateTime(2026, 9, 5),
+      ),
+      CompanyTask(
+        id: 'TSK-306',
+        title: 'Embedded Systems Firmware Staffing Requisition',
+        description: 'Interview 4 senior embedded C++ and RTOS engineers for Phase 2 hardware integration sprint.',
+        domain: 'HR',
+        team: 'People & Culture',
+        department: 'HR',
+        assignedToId: 'EMP-402',
+        assignedToName: 'Amitabh Roy',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-401',
+        assignedByName: 'Sunita Verma',
+        projectId: 'PRJ-403',
+        projectName: 'EcoTrack IoT Mobile Platform',
+        dueDate: DateTime.now().add(const Duration(days: 8)),
         status: TaskStatus.inProgress,
         priority: TaskPriority.medium,
         progressPercent: 45,
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
       CompanyTask(
-        id: 'TSK-410',
-        title: 'Train sensor anomaly autoencoder model',
-        description: 'Extract historical energy telemetry and train PyTorch autoencoder for voltage spike prediction',
-        domain: 'AI / ML',
-        team: 'Applied Intelligence Lab',
-        assignedToId: 'EMP-106',
-        assignedToName: 'Ananya Deshmukh',
+        id: 'TSK-207',
+        title: 'Employee Directory & Leave Balance Integration',
+        description: 'Verify 25 employee profiles, reporting chains, and automated annual leave quota deductions.',
+        domain: 'HR',
+        team: 'People & Culture',
+        department: 'HR',
+        assignedToId: 'EMP-403',
+        assignedToName: 'Neha Bansal',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-106',
-        assignedByName: 'Ananya Deshmukh',
-        projectId: 'PRJ-303',
-        projectName: 'AI Analytics Platform',
-        dueDate: DateTime.now().add(const Duration(days: 6)),
+        assignedById: 'EMP-401',
+        assignedByName: 'Sunita Verma',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().add(const Duration(days: 5)),
         status: TaskStatus.inProgress,
         priority: TaskPriority.high,
-        progressPercent: 60,
+        progressPercent: 80,
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
       ),
       CompanyTask(
-        id: 'TSK-411',
-        title: 'Draft campus hiring assessment rubrics',
-        description: 'Compile technical interview grading rubric for Q3 engineering campus drive',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-102',
-        assignedToName: 'Priya Nair',
+        id: 'TSK-108',
+        title: 'Creative Agency & Freelance Contractor Onboarding',
+        description: 'Execute master services agreements and compliance NDAs for external video production team.',
+        domain: 'HR',
+        team: 'People & Culture',
+        department: 'HR',
+        assignedToId: 'EMP-404',
+        assignedToName: 'Karan Singhania',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        dueDate: DateTime.now().add(const Duration(days: 4)),
-        status: TaskStatus.inProgress,
+        assignedById: 'EMP-401',
+        assignedByName: 'Sunita Verma',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().subtract(const Duration(days: 3)),
+        status: TaskStatus.done,
         priority: TaskPriority.medium,
+        progressPercent: 100,
+        completedAt: DateTime.now().subtract(const Duration(days: 2)),
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+      ),
+      CompanyTask(
+        id: 'TSK-406',
+        title: 'Sales Incentive & Commission Policy Framework',
+        description: 'Draft quarterly performance incentive tiers, accelerated attainment accelerators, and SPIFFs.',
+        domain: 'HR',
+        team: 'People & Culture',
+        department: 'HR',
+        assignedToId: 'EMP-405',
+        assignedToName: 'Divya Nambiar',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-401',
+        assignedByName: 'Sunita Verma',
+        projectId: 'PRJ-404',
+        projectName: 'OmniChannel Enterprise Sales Rollout',
+        dueDate: DateTime.now().add(const Duration(days: 7)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.high,
         progressPercent: 50,
         createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
+
+      // =========================================================================
+      // 6. FINANCE DEPARTMENT (Siddharth, Rameshwar, Shalini, Manish, Deepak, Tanvi)
+      // =========================================================================
       CompanyTask(
-        id: 'TSK-412',
-        title: 'Coordinate Q3 sales outreach webinar',
-        description: 'Produce demonstration deck for CleanTech and solar energy enterprise prospects',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        dueDate: DateTime.now().add(const Duration(days: 5)),
-        status: TaskStatus.inProgress,
-        priority: TaskPriority.medium,
-        progressPercent: 40,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-      CompanyTask(
-        id: 'TSK-413',
-        title: 'Reconcile Q3 enterprise client receivables',
-        description: 'Verify Stripe and wire transfer settlement statements with bank accounts',
-        domain: 'Finance / Accounts',
-        team: 'Financial & Business Ops',
+        id: 'TSK-510',
+        title: 'Q4 Budget Allocation & Feasibility Sign-off',
+        description: 'Review departmental CAPEX/OPEX resource requests, cashflow forecasting, and commercial feasibility margins for upcoming client contracts.',
+        domain: 'Finance',
+        team: 'Corporate Finance & Accounts',
+        department: 'Finance',
         assignedToId: 'EMP-115',
         assignedToName: 'Siddharth Roy',
         assigneeType: AssigneeType.employee,
         assignedById: 'EMP-115',
         assignedByName: 'Siddharth Roy',
-        dueDate: DateTime.now().add(const Duration(days: 6)),
+        projectId: 'PRJ-301',
+        projectName: 'EcoTrack App',
+        dueDate: DateTime.now().add(const Duration(days: 3)),
+        status: TaskStatus.inProgress,
+        priority: TaskPriority.urgent,
+        progressPercent: 60,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+      CompanyTask(
+        id: 'TSK-503',
+        title: 'Banking Settlement & Escrow Account Reconciliation',
+        description: 'Automated reconciliation routines matching 100,000 daily transaction batches with central banks.',
+        domain: 'Finance',
+        team: 'Corporate Finance & Accounts',
+        department: 'Finance',
+        assignedToId: 'EMP-501',
+        assignedToName: 'Rameshwar Gupta',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-501',
+        assignedByName: 'Rameshwar Gupta',
+        projectId: 'PRJ-405',
+        projectName: 'FinTech Payment Gateway Microservices',
+        dueDate: DateTime(2026, 9, 25),
+        status: TaskStatus.done,
+        priority: TaskPriority.urgent,
+        progressPercent: 100,
+        completedAt: DateTime(2026, 9, 25),
+        createdAt: DateTime(2026, 9, 10),
+      ),
+      CompanyTask(
+        id: 'TSK-208',
+        title: 'Enterprise General Ledger Chart of Accounts Validation',
+        description: 'Audit journal voucher posting rules, cost center tagging, and depreciation schedule tables.',
+        domain: 'Finance',
+        team: 'Corporate Finance & Accounts',
+        department: 'Finance',
+        assignedToId: 'EMP-502',
+        assignedToName: 'Shalini Rao',
+        assigneeType: AssigneeType.employee,
+        assignedById: 'EMP-501',
+        assignedByName: 'Rameshwar Gupta',
+        projectId: 'PRJ-402',
+        projectName: 'Digital Inertia ERP Core',
+        dueDate: DateTime.now().add(const Duration(days: 4)),
         status: TaskStatus.inProgress,
         priority: TaskPriority.high,
-        progressPercent: 50,
-        createdAt: DateTime.now().subtract(const Duration(days: 4)),
-      ),
-
-      // 6 To Do Tasks
-      CompanyTask(
-        id: 'TSK-414',
-        title: 'Design dashboard UI',
-        description: 'Produce Figma vector components for executive KPI cards and Tasks Donut Chart',
-        domain: 'Frontend',
-        team: 'Client Experience Engineering',
-        assignedToId: 'INT-202',
-        assignedToName: 'Bhavna Kulkarni',
-        assigneeType: AssigneeType.intern,
-        assignedById: 'EMP-110',
-        assignedByName: 'Divya Iyer',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().add(const Duration(days: 5)),
-        status: TaskStatus.todo,
-        priority: TaskPriority.medium,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      CompanyTask(
-        id: 'TSK-415',
-        title: 'Implement Locust load benchmarking',
-        description: 'Script realistic user journeys to stress-test 10,000 concurrent requests against GraphQL gateway',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().add(const Duration(days: 7)),
-        status: TaskStatus.todo,
-        priority: TaskPriority.high,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      CompanyTask(
-        id: 'TSK-416',
-        title: 'Configure AWS WAF managed rules',
-        description: 'Protect payment API endpoints against SQL injection, cross-site scripting and bot attacks',
-        domain: 'Cybersecurity',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-102',
-        assignedToName: 'Priya Nair',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().add(const Duration(days: 8)),
-        status: TaskStatus.todo,
-        priority: TaskPriority.high,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      CompanyTask(
-        id: 'TSK-417',
-        title: 'Setup multi-region Kafka mirrors',
-        description: 'Establish MirrorMaker 2 cluster between AWS Mumbai and Singapore for disaster recovery',
-        domain: 'Data Engineering',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-107',
-        assignedToName: 'Vikram Singh',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-107',
-        assignedByName: 'Vikram Singh',
-        projectId: 'PRJ-303',
-        projectName: 'AI Analytics Platform',
-        dueDate: DateTime.now().add(const Duration(days: 9)),
-        status: TaskStatus.todo,
-        priority: TaskPriority.medium,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      CompanyTask(
-        id: 'TSK-418',
-        title: 'Create client onboarding playbook',
-        description: 'Write step-by-step documentation for SaaS tenant setup and DNS verification',
-        domain: 'Customer Support',
-        team: 'Corporate Growth & Sales',
-        assignedToId: 'EMP-116',
-        assignedToName: 'Kavita Rao',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-116',
-        assignedByName: 'Kavita Rao',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().add(const Duration(days: 10)),
-        status: TaskStatus.todo,
-        priority: TaskPriority.medium,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      CompanyTask(
-        id: 'TSK-419',
-        title: 'Update employee handbook policies',
-        description: 'Revise remote work security guidelines and intellectual property clauses',
-        domain: 'Administration',
-        team: 'Financial & Business Ops',
-        assignedToId: 'EMP-114',
-        assignedToName: 'Pooja Hegde',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-114',
-        assignedByName: 'Pooja Hegde',
-        dueDate: DateTime.now().add(const Duration(days: 12)),
-        status: TaskStatus.todo,
-        priority: TaskPriority.low,
-        progressPercent: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-
-      // 3 Needs Rework Tasks
-      CompanyTask(
-        id: 'TSK-420',
-        title: 'Deliverable revision #1 - Lead detail dialog',
-        description: 'Address missing responsive layout constraints on small viewport screens',
-        domain: 'Frontend',
-        team: 'Client Experience Engineering',
-        assignedToId: 'INT-202',
-        assignedToName: 'Bhavna Kulkarni',
-        assigneeType: AssigneeType.intern,
-        assignedById: 'EMP-104',
-        assignedByName: 'Sneha V',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().add(const Duration(days: 2)),
-        status: TaskStatus.needsRework,
-        priority: TaskPriority.medium,
-        progressPercent: 60,
-        ceoReviewNotes: 'Fix layout overflow and clipping on compact screens',
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      CompanyTask(
-        id: 'TSK-421',
-        title: 'Deliverable revision #2 - SQL index optimization',
-        description: 'Index coverage failed benchmark on multi-tenant partition key scans',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-103',
-        assignedToName: 'Karthik R',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().add(const Duration(days: 3)),
-        status: TaskStatus.needsRework,
-        priority: TaskPriority.high,
         progressPercent: 75,
-        ceoReviewNotes: 'Add composite indexes for tenant_id and created_at',
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
       ),
       CompanyTask(
-        id: 'TSK-422',
-        title: 'Deliverable revision #3 - Mobile push notification handler',
-        description: 'Silent background push notification fails on iOS 18 power-save mode',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
+        id: 'TSK-305',
+        title: 'IoT Sensor Hardware Bill of Materials Audit',
+        description: 'Reconcile procurement purchase orders for IoT gateways, sensors, and customs duty fees.',
+        domain: 'Finance',
+        team: 'Corporate Finance & Accounts',
+        department: 'Finance',
+        assignedToId: 'EMP-503',
+        assignedToName: 'Manish Aggarwal',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-305',
-        projectName: 'Fleet Logistics Mobile',
-        dueDate: DateTime.now().add(const Duration(days: 4)),
-        status: TaskStatus.needsRework,
-        priority: TaskPriority.high,
-        progressPercent: 65,
-        ceoReviewNotes: 'Format APNs background payload to standard specification',
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-
-      // 20 Completed Tasks
-      CompanyTask(
-        id: 'TSK-423',
-        title: 'Implement CEO executive dashboard layout',
-        description: 'Render responsive cards and high-contrast dark visual components',
-        domain: 'Frontend',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-101',
-        assignedToName: 'Arjun Sharma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-101',
-        assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 5)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 5)),
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      ),
-      CompanyTask(
-        id: 'TSK-424',
-        title: 'Implement custom Tasks Donut Chart painter',
-        description: 'Draw animated SVG/Canvas circular ring with center total counter',
-        domain: 'Frontend',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-104',
-        assignedToName: 'Sneha V',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-101',
-        assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 5)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 5)),
-        createdAt: DateTime.now().subtract(const Duration(days: 9)),
-      ),
-      CompanyTask(
-        id: 'TSK-425',
-        title: 'Design dark navigation drawer matching mockups',
-        description: 'Create drawer layout with CEO profile header and routing shortcuts',
-        domain: 'UI/UX Engineering',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-110',
-        assignedToName: 'Divya Iyer',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-110',
-        assignedByName: 'Divya Iyer',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
+        assignedById: 'EMP-502',
+        assignedByName: 'Shalini Rao',
+        projectId: 'PRJ-403',
+        projectName: 'EcoTrack IoT Mobile Platform',
         dueDate: DateTime.now().subtract(const Duration(days: 4)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 4)),
-        createdAt: DateTime.now().subtract(const Duration(days: 8)),
-      ),
-      CompanyTask(
-        id: 'TSK-426',
-        title: 'Setup PostgreSQL 18 master configuration',
-        description: 'Configure shared_buffers, work_mem and max_connections for workload',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-102',
-        assignedToName: 'Priya Nair',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().subtract(const Duration(days: 6)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.urgent,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 6)),
-        createdAt: DateTime.now().subtract(const Duration(days: 12)),
-      ),
-      CompanyTask(
-        id: 'TSK-427',
-        title: 'Implement password hashing with Argon2id',
-        description: 'Replace legacy SHA-256 with Argon2id cryptographic salt and key stretching',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-103',
-        assignedToName: 'Karthik R',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 6)),
-        status: TaskStatus.approved,
+        status: TaskStatus.done,
         priority: TaskPriority.high,
         progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 6)),
-        createdAt: DateTime.now().subtract(const Duration(days: 11)),
-      ),
-      CompanyTask(
-        id: 'TSK-428',
-        title: 'Build unified Filter Bottom Sheet modal',
-        description: 'Create domain, role, team and status filter controls with reset action',
-        domain: 'Frontend',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-101',
-        assignedToName: 'Arjun Sharma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-101',
-        assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 4)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 4)),
+        completedAt: DateTime.now().subtract(const Duration(days: 3)),
         createdAt: DateTime.now().subtract(const Duration(days: 7)),
       ),
       CompanyTask(
-        id: 'TSK-429',
-        title: 'Configure iOS Runner bundle identifiers',
-        description: 'Update CFBundleIdentifier and FaceID privacy descriptions in Info.plist',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
+        id: 'TSK-107',
+        title: 'Marketing Ad Spend & CAC Financial Audit',
+        description: 'Reconcile prepaid ad network invoices against monthly burn rate and audit blended CAC metrics.',
+        domain: 'Finance',
+        team: 'Corporate Finance & Accounts',
+        department: 'Finance',
+        assignedToId: 'EMP-504',
+        assignedToName: 'Deepak Chawla',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-301',
-        projectName: 'EcoTrack App',
-        dueDate: DateTime.now().subtract(const Duration(days: 5)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 5)),
-        createdAt: DateTime.now().subtract(const Duration(days: 8)),
-      ),
-      CompanyTask(
-        id: 'TSK-430',
-        title: 'Configure Android Gradle 8.13 dependencies',
-        description: 'Update AndroidManifest.xml permissions and configure minSdk 24',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-301',
-        projectName: 'EcoTrack App',
-        dueDate: DateTime.now().subtract(const Duration(days: 5)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 5)),
-        createdAt: DateTime.now().subtract(const Duration(days: 8)),
-      ),
-      CompanyTask(
-        id: 'TSK-431',
-        title: 'Deploy Redis cache cluster on AWS ElastiCache',
-        description: 'Setup 3-node Redis cluster with automatic failover and read replicas',
-        domain: 'DevOps / Cloud',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-109',
-        assignedToName: 'Rahul Verma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().subtract(const Duration(days: 7)),
-        status: TaskStatus.approved,
+        assignedById: 'EMP-501',
+        assignedByName: 'Rameshwar Gupta',
+        projectId: 'PRJ-401',
+        projectName: 'Digital Marketing & Growth Engine',
+        dueDate: DateTime.now().add(const Duration(days: 5)),
+        status: TaskStatus.inProgress,
         priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 7)),
-        createdAt: DateTime.now().subtract(const Duration(days: 14)),
-      ),
-      CompanyTask(
-        id: 'TSK-432',
-        title: 'Conduct intern Batch Apr-A orientation',
-        description: 'Host onboarding session covering code standards, Git branches and PR reviews',
-        domain: 'HR / Recruitment',
-        team: 'People & Workplace',
-        assignedToId: 'EMP-111',
-        assignedToName: 'Meera Joshi',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-111',
-        assignedByName: 'Meera Joshi',
-        dueDate: DateTime.now().subtract(const Duration(days: 9)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 9)),
-        createdAt: DateTime.now().subtract(const Duration(days: 12)),
-      ),
-      CompanyTask(
-        id: 'TSK-433',
-        title: 'Finalize EcoTrack sensor protocol specs',
-        description: 'Document Bluetooth Low Energy GATT characteristics for solar telemetry',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-301',
-        projectName: 'EcoTrack App',
-        dueDate: DateTime.now().subtract(const Duration(days: 8)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 8)),
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-      ),
-      CompanyTask(
-        id: 'TSK-434',
-        title: 'Verify payment gateway webhooks idempotency',
-        description: 'Implement database unique constraint and Redis lock for order IDs',
-        domain: 'Backend',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-102',
-        assignedToName: 'Priya Nair',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-304',
-        projectName: 'FinTech Payment Gateway',
-        dueDate: DateTime.now().subtract(const Duration(days: 7)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.urgent,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 7)),
-        createdAt: DateTime.now().subtract(const Duration(days: 13)),
-      ),
-      CompanyTask(
-        id: 'TSK-435',
-        title: 'Automate CI test execution in GitHub Actions',
-        description: 'Create parallel test matrices for unit, widget and integration tests',
-        domain: 'QA / Testing',
-        team: 'Quality & Reliability',
-        assignedToId: 'EMP-108',
-        assignedToName: 'Neha Patel',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-108',
-        assignedByName: 'Neha Patel',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 6)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 6)),
-        createdAt: DateTime.now().subtract(const Duration(days: 11)),
-      ),
-      CompanyTask(
-        id: 'TSK-436',
-        title: 'Publish Q3 company press release',
-        description: 'Highlight Digital Inertia AI telemetry suite expansion and customer wins',
-        domain: 'Content / Communications',
-        team: 'Corporate Growth & Sales',
-        assignedToId: 'EMP-117',
-        assignedToName: 'Aditya Sen',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-117',
-        assignedByName: 'Aditya Sen',
-        dueDate: DateTime.now().subtract(const Duration(days: 8)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.low,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 8)),
-        createdAt: DateTime.now().subtract(const Duration(days: 14)),
-      ),
-      CompanyTask(
-        id: 'TSK-437',
-        title: 'Prepare GreenTech enterprise quotation',
-        description: 'Assemble bill of materials and tiered cloud licensing proposal',
-        domain: 'Sales / Business Development',
-        team: 'Corporate Growth & Sales',
-        assignedToId: 'EMP-112',
-        assignedToName: 'Rajesh Kumar',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-112',
-        assignedByName: 'Rajesh Kumar',
-        dueDate: DateTime.now().subtract(const Duration(days: 6)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 6)),
-        createdAt: DateTime.now().subtract(const Duration(days: 10)),
-      ),
-      CompanyTask(
-        id: 'TSK-438',
-        title: 'Audit AWS VPC security group ingress rules',
-        description: 'Close unnecessary inbound ports and restrict SSH to Bastion VPN tunnel',
-        domain: 'Cybersecurity',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-102',
-        assignedToName: 'Priya Nair',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 7)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 7)),
-        createdAt: DateTime.now().subtract(const Duration(days: 13)),
-      ),
-      CompanyTask(
-        id: 'TSK-439',
-        title: 'Build lead pipeline Kanban card components',
-        description: 'Design responsive status pill badges and quick contact action buttons',
-        domain: 'Frontend',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-104',
-        assignedToName: 'Sneha V',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-101',
-        assignedByName: 'Arjun Sharma',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 4)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 4)),
-        createdAt: DateTime.now().subtract(const Duration(days: 8)),
-      ),
-      CompanyTask(
-        id: 'TSK-440',
-        title: 'Review Fleet Logistics GPS ping frequency',
-        description: 'Optimize location telemetry throttling to conserve 35% battery consumption',
-        domain: 'Mobile App',
-        team: 'Client Experience Engineering',
-        assignedToId: 'EMP-105',
-        assignedToName: 'Rohan Mehta',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-105',
-        assignedByName: 'Rohan Mehta',
-        projectId: 'PRJ-305',
-        projectName: 'Fleet Logistics Mobile',
-        dueDate: DateTime.now().subtract(const Duration(days: 5)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.medium,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 5)),
-        createdAt: DateTime.now().subtract(const Duration(days: 9)),
-      ),
-      CompanyTask(
-        id: 'TSK-441',
-        title: 'Setup daily automated PostgreSQL backups',
-        description: 'Configure pg_dump scheduled snapshots to S3 bucket with 30-day lifecycle rule',
-        domain: 'DevOps / Cloud',
-        team: 'Core Platform Engineering',
-        assignedToId: 'EMP-109',
-        assignedToName: 'Rahul Verma',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-102',
-        assignedByName: 'Priya Nair',
-        projectId: 'PRJ-306',
-        projectName: 'Digital Inertia ERP Core',
-        dueDate: DateTime.now().subtract(const Duration(days: 6)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 6)),
-        createdAt: DateTime.now().subtract(const Duration(days: 12)),
-      ),
-      CompanyTask(
-        id: 'TSK-442',
-        title: 'Conduct quarterly financial forecast review',
-        description: 'Review burn rate, recurring ARR and contractor disbursements with executive board',
-        domain: 'Finance / Accounts',
-        team: 'Financial & Business Ops',
-        assignedToId: 'EMP-115',
-        assignedToName: 'Siddharth Roy',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-115',
-        assignedByName: 'Siddharth Roy',
-        dueDate: DateTime.now().subtract(const Duration(days: 7)),
-        status: TaskStatus.approved,
-        priority: TaskPriority.high,
-        progressPercent: 100,
-        completedAt: DateTime.now().subtract(const Duration(days: 7)),
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-      ),
-      CompanyTask(
-        id: 'TSK-443',
-        title: 'Launch Q4 Social Media Brand Awareness Campaign',
-        description: 'Execute targeted LinkedIn and Meta advertising for Enterprise ERP solution release.',
-        domain: 'Marketing / Branding',
-        department: 'Marketing',
-        team: 'Corporate Growth & Sales',
-        assignedToId: 'EMP-113',
-        assignedToName: 'Sanjay Menon',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-001',
-        assignedByName: 'Laven Lokesh',
-        dueDate: DateTime.now(),
-        status: TaskStatus.todo,
-        priority: TaskPriority.high,
-        projectName: 'DI Enterprise Branding',
+        progressPercent: 70,
         createdAt: DateTime.now().subtract(const Duration(days: 3)),
       ),
       CompanyTask(
-        id: 'TSK-444',
-        title: 'Audit SEO Keywords & Technical Blog Backlinks',
-        description: 'Optimize high-conversion landing pages for Flutter ERP and Mobile enterprise queries.',
-        domain: 'Marketing / SEO',
-        department: 'Marketing',
-        team: 'Corporate Growth & Sales',
-        assignedToId: 'EMP-113',
-        assignedToName: 'Sanjay Menon',
+        id: 'TSK-405',
+        title: 'Recurring Enterprise Invoicing & Milestone Schedule',
+        description: 'Configure automated recurring billing for quarterly software licenses and bank wire instructions.',
+        domain: 'Finance',
+        team: 'Corporate Finance & Accounts',
+        department: 'Finance',
+        assignedToId: 'EMP-505',
+        assignedToName: 'Tanvi Mathur',
         assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-113',
-        assignedByName: 'Sanjay Menon',
-        dueDate: DateTime.now().add(const Duration(days: 2)),
+        assignedById: 'EMP-502',
+        assignedByName: 'Shalini Rao',
+        projectId: 'PRJ-404',
+        projectName: 'OmniChannel Enterprise Sales Rollout',
+        dueDate: DateTime.now().add(const Duration(days: 6)),
         status: TaskStatus.inProgress,
-        priority: TaskPriority.medium,
-        projectName: 'Digital Inbound Marketing',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      CompanyTask(
-        id: 'TSK-445',
-        title: 'Publish Monthly Client Case Study: EcoTrack',
-        description: 'Finalize copy, customer quote approvals, and visual infographics for PDF release.',
-        domain: 'Marketing / Content',
-        department: 'Marketing',
-        team: 'Corporate Growth & Sales',
-        assignedToId: 'EMP-113',
-        assignedToName: 'Sanjay Menon',
-        assigneeType: AssigneeType.employee,
-        assignedById: 'EMP-113',
-        assignedByName: 'Sanjay Menon',
-        dueDate: DateTime.now().add(const Duration(days: 5)),
-        status: TaskStatus.todo,
-        priority: TaskPriority.medium,
-        projectName: 'DI Enterprise Branding',
-        createdAt: DateTime.now(),
+        priority: TaskPriority.high,
+        progressPercent: 55,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
       ),
     ];
 
@@ -4233,110 +5456,219 @@ class ErpProvider extends ChangeNotifier {
       ),
     ];
 
-    // 6 Active Projects (matching PostgreSQL 02_seed.sql: PRJ-304 triggers ALT-PRJ delayed alert)
+    // Active Projects (matching PostgreSQL 02_seed.sql / V5 migrations: PRJ-301 EcoTrack, PRJ-304 delayed alert)
     _projects = [
+      // Project 0: EcoTrack App (PRJ-301 - CleanTech Innovations, synchronized with _projectBudgets)
       Project(
         id: 'PRJ-301',
         name: 'EcoTrack App',
         clientName: 'CleanTech Innovations',
         domain: 'Mobile App',
         team: 'Client Experience Engineering',
-        description: 'Cross-platform Flutter IoT and sustainability telemetry tracker.',
+        assignedDepartments: const ['Technical', 'Finance', 'Sales & Marketing', 'Digital Marketing', 'HR'],
+        description: 'Cross-platform Flutter mobile dashboard and BLE sensor gateway for rooftop solar farms, real-time inverter diagnostics, and battery health telemetry.',
+        deliverablesScope: 'Flutter mobile client, BLE GATT communication, TimescaleDB telemetry pipeline, customer trial deployments, and BOM audit.',
         budget: 45000.0,
         ownerEmployeeId: 'EMP-105',
         ownerEmployeeName: 'Rohan Mehta',
-        teamMemberNames: ['Rohan Mehta', 'Sneha V', 'Arjun Sharma', 'Aarav Sharma (Intern)'],
+        teamMemberNames: [
+          'Rohan Mehta (Mobile Lead)',
+          'Karthik R (Telemetry Backend)',
+          'Priya Nair (Database Lead)',
+          'Rajesh Kumar (Enterprise Sales)',
+          'Siddharth Roy (Finance Controller)',
+        ],
         status: ProjectStatus.inProgress,
         progress: 0.75, // 75%
         plannedProgress: 0.75,
-        startDate: DateTime.now().subtract(const Duration(days: 30)),
-        deadline: DateTime.now().add(const Duration(days: 15)),
+        startDate: DateTime(2025, 1, 15),
+        deadline: DateTime(2025, 5, 15),
       ),
+
+      // Project 1: Digital Marketing & Growth Engine (Ongoing / In Progress - The Digital Marketing Project)
       Project(
-        id: 'PRJ-302',
-        name: 'Green Energy Dashboard',
-        clientName: 'Enel Horizon Grid',
+        id: 'PRJ-401',
+        name: 'Digital Marketing & Growth Engine',
+        clientName: 'OmniSphere Retail',
+        domain: 'Digital Marketing',
+        team: 'Digital Marketing & Growth',
+        assignedDepartments: const ['Digital Marketing', 'Technical', 'Sales & Marketing', 'Finance', 'HR'],
+        description: 'Omnichannel digital marketing transformation: automated PPC retargeting engine, SEO overhaul, conversion tracking telemetry, and viral social campaign.',
+        deliverablesScope: 'Full ad funnel, Meta & Google tracking SDKs, technical SEO architecture, conversion rate audit, and creative assets.',
+        budget: 65000.0,
+        ownerEmployeeId: 'EMP-301',
+        ownerEmployeeName: 'Kavita Reddy',
+        teamMemberNames: [
+          'Kavita Reddy (Digital Marketing Lead)',
+          'Sameer Deshmukh (PPC Specialist)',
+          'Pooja Hegde (SEO Strategist)',
+          'Rhea Pillai (Creative Visuals)',
+          'Arjun Sharma (Frontend & SDKs)',
+          'Priya Nair (Backend Data Pipeline)',
+          'Vikram Malhotra (Lead Attribution Sync)',
+          'Deepak Chawla (Ad Spend & CAC Audit)',
+          'Karan Singhania (Agency Onboarding)'
+        ],
+        status: ProjectStatus.inProgress,
+        progress: 0.70, // 70%
+        plannedProgress: 0.75,
+        startDate: DateTime(2026, 8, 1),
+        deadline: DateTime(2026, 12, 15),
+      ),
+
+      // Project 2: Digital Inertia ERP Core (Ongoing / In Progress)
+      Project(
+        id: 'PRJ-402',
+        name: 'Digital Inertia ERP Core',
+        clientName: 'DI Strategic Holdings',
         domain: 'Web Platform',
-        team: 'Client Experience Engineering',
-        description: 'Solar microgrid web analytics with live WebSockets.',
-        budget: 60000.0,
-        ownerEmployeeId: 'EMP-101',
-        ownerEmployeeName: 'Arjun Sharma',
-        teamMemberNames: ['Arjun Sharma', 'Sneha V', 'Bhavna Kulkarni (Intern)'],
-        status: ProjectStatus.inProgress,
-        progress: 0.40, // 40%
-        plannedProgress: 0.45,
-        startDate: DateTime.now().subtract(const Duration(days: 20)),
-        deadline: DateTime.now().add(const Duration(days: 25)),
-      ),
-      Project(
-        id: 'PRJ-303',
-        name: 'AI Analytics Platform',
-        clientName: 'Quantra BioSciences',
-        domain: 'AI / ML',
-        team: 'Applied Intelligence Lab',
-        description: 'Predictive churn and retention model pipeline with PyTorch.',
-        budget: 85000.0,
-        ownerEmployeeId: 'EMP-106',
-        ownerEmployeeName: 'Ananya Deshmukh',
-        teamMemberNames: ['Ananya Deshmukh', 'Vikram Singh', 'Eeshan Guha (Intern)'],
-        status: ProjectStatus.inProgress,
-        progress: 0.90, // 90%
-        plannedProgress: 0.90,
-        startDate: DateTime.now().subtract(const Duration(days: 45)),
-        deadline: DateTime.now().add(const Duration(days: 5)),
-      ),
-      Project(
-        id: 'PRJ-304',
-        name: 'FinTech Payment Gateway',
-        clientName: 'PulsePay Global',
-        domain: 'Backend',
         team: 'Core Platform Engineering',
-        description: 'PCI-DSS certified microservices payment routing and webhook settlement.',
+        assignedDepartments: const ['Technical', 'Sales & Marketing', 'HR', 'Finance', 'Digital Marketing'],
+        description: 'Multi-tenant enterprise ERP platform unifying engineering workflows, sales CRM pipelines, HR workforce directories, and financial accounting ledgers.',
+        deliverablesScope: 'State provider architecture, responsive dashboard layouts, PostgreSQL replication, role hierarchies, and real-time alerts.',
         budget: 120000.0,
         ownerEmployeeId: 'EMP-102',
         ownerEmployeeName: 'Priya Nair',
-        teamMemberNames: ['Priya Nair', 'Karthik R', 'Arjun Sharma', 'Rahul Verma'],
+        teamMemberNames: [
+          'Priya Nair (Backend Lead)',
+          'Arjun Sharma (Frontend Architect)',
+          'Karthik R (Full Stack)',
+          'Sneha V (Design Systems UI)',
+          'Rohan Mehta (Mobile Lead)',
+          'Shreya Kulkarni (Full Stack Specialist)',
+          'Rajesh Kumar (Sales VP)',
+          'Ananya Kapoor (Solutions Consultant)',
+          'Sunita Verma (HR Director)',
+          'Neha Bansal (HR Compliance)',
+          'Shalini Rao (Financial Controller)',
+          'Tanvi Mathur (Invoicing Specialist)',
+          'Naveen Chandra (Brand & Typography)'
+        ],
         status: ProjectStatus.inProgress,
-        progress: 0.15, // 15%
-        plannedProgress: 0.35, // 35% -> Behind by 20% (>= 15% threshold) triggers "1 project delayed"
-        activeBlockers: ['PCI-DSS hardware security module HSM integration delay from bank sponsor'],
-        startDate: DateTime.now().subtract(const Duration(days: 15)),
-        deadline: DateTime.now().add(const Duration(days: 60)),
+        progress: 0.85, // 85%
+        plannedProgress: 0.85,
+        startDate: DateTime(2026, 6, 1),
+        deadline: DateTime(2026, 11, 30),
       ),
+
+      // Project 3: EcoTrack IoT Mobile Platform (Ongoing / In Progress)
       Project(
-        id: 'PRJ-305',
-        name: 'Fleet Logistics Mobile',
-        clientName: 'SwiftLogistics Express',
+        id: 'PRJ-403',
+        name: 'EcoTrack IoT Mobile Platform',
+        clientName: 'CleanTech Innovations',
         domain: 'Mobile App',
         team: 'Client Experience Engineering',
-        description: 'Driver dispatching and proof-of-delivery GPS tracking app.',
-        budget: 50000.0,
+        assignedDepartments: const ['Technical', 'Sales & Marketing', 'Finance', 'HR', 'Digital Marketing'],
+        description: 'Cross-platform Flutter mobile dashboard and BLE sensor gateway for rooftop solar farms, real-time inverter diagnostics, and battery health telemetry.',
+        deliverablesScope: 'Flutter mobile client, BLE GATT communication, TimescaleDB telemetry pipeline, customer trial deployments, and BOM audit.',
+        budget: 95000.0,
         ownerEmployeeId: 'EMP-105',
         ownerEmployeeName: 'Rohan Mehta',
-        teamMemberNames: ['Rohan Mehta', 'Neha Patel', 'Ritika Kaul (Intern)'],
+        teamMemberNames: [
+          'Rohan Mehta (Mobile Lead)',
+          'Karthik R (Telemetry Backend)',
+          'Priya Nair (Database Lead)',
+          'Rajesh Kumar (Enterprise Sales)',
+          'Aditya Joshi (Sales Operations)',
+          'Manish Aggarwal (Hardware BOM Audit)',
+          'Amitabh Roy (Firmware Staffing)',
+          'Sameer Deshmukh (CleanTech Case Study)'
+        ],
         status: ProjectStatus.inProgress,
-        progress: 0.30,
-        plannedProgress: 0.30,
-        startDate: DateTime.now().subtract(const Duration(days: 25)),
-        deadline: DateTime.now().add(const Duration(days: 35)),
+        progress: 0.58, // 58%
+        plannedProgress: 0.60,
+        startDate: DateTime(2026, 7, 15),
+        deadline: DateTime(2027, 1, 31),
       ),
+
+      // Project 4: OmniChannel Enterprise Sales Rollout (Ongoing / In Progress)
       Project(
-        id: 'PRJ-306',
-        name: 'Digital Inertia ERP Core',
-        clientName: 'Digital Inertia Holdings',
-        domain: 'Web Platform',
-        team: 'Core Platform Engineering',
-        description: 'Executive resource planning & multi-domain enterprise operations hub.',
-        budget: 75000.0,
-        ownerEmployeeId: 'EMP-103',
-        ownerEmployeeName: 'Karthik R',
-        teamMemberNames: ['Karthik R', 'Arjun Sharma', 'Divya Iyer'],
+        id: 'PRJ-404',
+        name: 'OmniChannel Enterprise Sales Rollout',
+        clientName: 'Zenith Global Logistics',
+        domain: 'Sales & CRM',
+        team: 'Corporate Growth & Sales',
+        assignedDepartments: const ['Sales & Marketing', 'Technical', 'Digital Marketing', 'Finance', 'HR'],
+        description: 'Automated enterprise B2B sales automation engine, quote-to-cash workflow, field sales mobile companion, and sales commission incentive tracker.',
+        deliverablesScope: 'Sales funnel stages, offline SQLite field app, B2B enablement calculator, milestone billing schedules, and quota tier rubrics.',
+        budget: 80000.0,
+        ownerEmployeeId: 'EMP-201',
+        ownerEmployeeName: 'Rajesh Kumar',
+        teamMemberNames: [
+          'Rajesh Kumar (Sales VP)',
+          'Meera Sen (Enterprise Deals)',
+          'Vikram Malhotra (BD Manager)',
+          'Sneha V (Sales Companion UI)',
+          'Arjun Sharma (Frontend Architect)',
+          'Kavita Reddy (Digital Marketing Lead)',
+          'Rhea Pillai (Sales Enablement Collateral)',
+          'Tanvi Mathur (Recurring Invoicing)',
+          'Divya Nambiar (Commission Framework)'
+        ],
         status: ProjectStatus.inProgress,
-        progress: 0.85,
-        plannedProgress: 0.85,
-        startDate: DateTime.now().subtract(const Duration(days: 15)),
-        deadline: DateTime.now().add(const Duration(days: 10)),
+        progress: 0.44, // 44%
+        plannedProgress: 0.50,
+        startDate: DateTime(2026, 9, 1),
+        deadline: DateTime(2027, 3, 31),
+      ),
+
+      // Project 5: FinTech Multi-Currency Payment Gateway (Completed)
+      Project(
+        id: 'PRJ-405',
+        name: 'FinTech Payment Gateway Microservices',
+        clientName: 'PulsePay Global',
+        domain: 'Backend',
+        team: 'Core Platform Engineering',
+        assignedDepartments: const ['Technical', 'Finance', 'Sales & Marketing', 'HR', 'Digital Marketing'],
+        description: 'PCI-DSS certified microservices payment routing, high-frequency currency exchange ledger, bank settlement webhooks, and zero-trust security audit.',
+        deliverablesScope: 'HSM attestation, multi-currency ledger, bank reconciliation engine, ISO 27001 infosec training, and press wire release.',
+        budget: 150000.0,
+        ownerEmployeeId: 'EMP-102',
+        ownerEmployeeName: 'Priya Nair',
+        teamMemberNames: [
+          'Priya Nair (Backend Lead)',
+          'Karthik R (Ledger Engine)',
+          'Arjun Sharma (Security Webhooks)',
+          'Rameshwar Gupta (CFO)',
+          'Shalini Rao (Controllership)',
+          'Rajesh Kumar (Banking Relations)',
+          'Sunita Verma (Infosec Compliance)',
+          'Naveen Chandra (Global PR Wire)'
+        ],
+        status: ProjectStatus.completed,
+        progress: 1.0, // 100%
+        plannedProgress: 1.0,
+        startDate: DateTime(2026, 1, 10),
+        deadline: DateTime(2026, 9, 28),
+      ),
+
+      // Project 6: Corporate People Hub & Workforce System (Completed)
+      Project(
+        id: 'PRJ-406',
+        name: 'Corporate People Hub & Workforce System',
+        clientName: 'Inertia Talent Consortium',
+        domain: 'HR & Recruitment',
+        team: 'People & Culture',
+        assignedDepartments: const ['HR', 'Technical', 'Finance', 'Digital Marketing', 'Sales & Marketing'],
+        description: 'Comprehensive people ops platform: university campus cohort screening, intern performance rubric evaluation, employee self-service portal, and payroll integration.',
+        deliverablesScope: 'Campus recruitment portal, interview panel rostering, employee mobile self-service app, stipend disbursements, and campus employer branding.',
+        budget: 45000.0,
+        ownerEmployeeId: 'EMP-401',
+        ownerEmployeeName: 'Sunita Verma',
+        teamMemberNames: [
+          'Sunita Verma (HR Director)',
+          'Amitabh Roy (University Hiring)',
+          'Neha Bansal (People Operations)',
+          'Sneha V (Self-Service Mobile UI)',
+          'Deepak Chawla (Stipend Disbursement)',
+          'Pooja Hegde (Campus Brand Campaign)',
+          'Meera Sen (University Relations)'
+        ],
+        status: ProjectStatus.completed,
+        progress: 1.0, // 100%
+        plannedProgress: 1.0,
+        startDate: DateTime(2026, 2, 1),
+        deadline: DateTime(2026, 8, 30),
       ),
     ];
 
@@ -4394,6 +5726,32 @@ class ErpProvider extends ChangeNotifier {
 
     // Seed Scheduled Meetings (PRD Section 10 & 9.1)
     _meetings = [
+      Meeting(
+        id: 'MTG-00A',
+        title: 'Q4 Strategic Alignment',
+        participantNames: ['Rajesh Kumar', 'Arjun Sharma', 'Shreya Kulkarni', 'Laven Lokesh'],
+        date: DateTime(2026, 10, 14),
+        startTime: '11:00 AM',
+        endTime: '12:00 PM',
+        locationOrLink: 'Meet: di-q4-alignment',
+        agenda: 'Review quarterly goals, delivery milestones, and technical alignment for DI Rebrand & Strategy.',
+        organizerName: 'Rajesh K.',
+        departmentOrProject: 'DI Rebrand & Strategy',
+        status: 'Scheduled',
+      ),
+      Meeting(
+        id: 'MTG-02DM',
+        title: 'Digital Marketing & Conversion Sprint',
+        participantNames: ['Kavita Reddy', 'Sameer Deshmukh', 'Pooja Hegde', 'Rhea Pillai', 'Naveen Chandra', 'Arjun Sharma'],
+        date: DateTime.now().add(const Duration(days: 1)),
+        startTime: '02:00 PM',
+        endTime: '03:00 PM',
+        locationOrLink: 'Meet: di-marketing-sprint',
+        agenda: 'Review Google Ads & Meta PPC ROAS metrics, conversion tracking pixel health, and organic SEO architecture.',
+        organizerName: 'Kavita Reddy',
+        departmentOrProject: 'Digital Marketing & Growth Engine',
+        status: 'Scheduled',
+      ),
       Meeting(
         id: 'MTG-01',
         title: 'Weekly Executive Operations & Pipeline Sync',

@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/erp_provider.dart';
 import '../../../models/project.dart';
@@ -58,10 +59,19 @@ class _EmployeeProjectsPageState extends State<EmployeeProjectsPage> {
                 // Search Input
                 TextField(
                   onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 13,
+                    color: const Color(0xFF212529),
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Search assigned projects...',
-                    hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                    prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF64748B)),
+                    hintStyle: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      fontSize: 13,
+                      color: const Color(0xFFADB5BD),
+                    ),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF6C757D)),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 16),
@@ -71,8 +81,9 @@ class _EmployeeProjectsPageState extends State<EmployeeProjectsPage> {
                     filled: true,
                     fillColor: const Color(0xFFF5F6F7),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF212529), width: 1.5)),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -95,19 +106,34 @@ class _EmployeeProjectsPageState extends State<EmployeeProjectsPage> {
               ],
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          const Divider(height: 1, color: Color(0xFFE9ECEF)),
 
           // Projects List
           Expanded(
             child: filtered.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.folder_open_rounded, size: 40, color: Color(0xFF94A3B8)),
-                        SizedBox(height: 10),
-                        Text('No projects found', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF475569))),
-                        Text('Try clearing the search or status filter.', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+                        const Icon(Icons.folder_open_rounded, size: 40, color: Color(0xFFADB5BD)),
+                        const SizedBox(height: 10),
+                        Text(
+                          'No projects found',
+                          style: TextStyle(
+                            fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF495057),
+                          ),
+                        ),
+                        Text(
+                          'Try clearing the search or status filter.',
+                          style: TextStyle(
+                            fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                            fontSize: 12,
+                            color: const Color(0xFF868E96),
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -134,15 +160,17 @@ class _EmployeeProjectsPageState extends State<EmployeeProjectsPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF212529) : const Color(0xFFF1F5F9),
+          color: isSelected ? const Color(0xFF212529) : const Color(0xFFF1F3F5),
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? const Color(0xFF212529) : const Color(0xFFE9ECEF)),
         ),
         child: Text(
           '$label ($count)',
           style: TextStyle(
+            fontFamily: GoogleFonts.instrumentSans().fontFamily,
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
+            color: isSelected ? Colors.white : const Color(0xFF495057),
           ),
         ),
       ),

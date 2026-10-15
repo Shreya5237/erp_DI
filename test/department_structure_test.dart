@@ -12,16 +12,16 @@ void main() {
       final names = departments.map((d) => d.title).toSet();
       expect(
         names,
-        equals({'Finance', 'Sales', 'Marketing', 'HR', 'Technical'}),
+        equals({'Sales & Marketing', 'Digital Marketing', 'Technical', 'HR', 'Finance'}),
       );
     });
 
     test('Each top-level department has defined subcategories', () {
-      expect(CompanyDepartment.finance.subcategories, containsAll(['Accounts', 'Payroll', 'Budgeting', 'Invoicing']));
-      expect(CompanyDepartment.sales.subcategories, containsAll(['Business Development', 'Lead Management', 'Client Acquisition', 'Account Management']));
-      expect(CompanyDepartment.marketing.subcategories, containsAll(['Digital Marketing', 'SEO', 'Social Media', 'Content Marketing', 'Branding']));
-      expect(CompanyDepartment.hr.subcategories, containsAll(['Recruitment', 'Onboarding', 'Training', 'Leave Management', 'Performance Management']));
-      expect(CompanyDepartment.technical.subcategories, containsAll(['Frontend', 'Backend', 'Full-stack', 'Mobile Development', 'UI/UX', 'QA', 'DevOps', 'AI/ML']));
+      expect(CompanyDepartment.finance.subcategories, containsAll(['Accounts & Ledger', 'Payroll', 'Budgeting & Auditing', 'Invoicing & Billing']));
+      expect(CompanyDepartment.sales.subcategories, containsAll(['Business Development', 'Client Outreach', 'Account Management', 'Enterprise Sales']));
+      expect(CompanyDepartment.marketing.subcategories, containsAll(['Performance Marketing', 'SEO & SEM', 'Social Media Marketing', 'Content Strategy']));
+      expect(CompanyDepartment.hr.subcategories, containsAll(['Talent Acquisition', 'Onboarding', 'Leave Management', 'Performance Management']));
+      expect(CompanyDepartment.technical.subcategories, containsAll(['Frontend', 'Backend', 'Full-stack', 'Mobile Development', 'UI/UX', 'QA / Testing', 'DevOps / Cloud', 'AI / ML']));
     });
 
     test('All employees in ErpProvider have valid primary departments and subcategories', () {
@@ -29,8 +29,8 @@ void main() {
       final employees = provider.allEmployees;
 
       expect(employees.isNotEmpty, isTrue);
-      final validDepartmentNames = {'Finance', 'Sales', 'Marketing', 'HR', 'Technical'};
-      final validDepartmentIds = {'DEPT-FIN', 'DEPT-SAL', 'DEPT-MKT', 'DEPT-HR', 'DEPT-TECH'};
+      final validDepartmentNames = {'Finance', 'Sales & Marketing', 'Digital Marketing', 'HR', 'Technical'};
+      final validDepartmentIds = {'DEPT-FIN', 'DEPT-SM', 'DEPT-DM', 'DEPT-HR', 'DEPT-TECH'};
 
       for (final emp in employees) {
         expect(validDepartmentNames.contains(emp.department), isTrue,
@@ -127,8 +127,8 @@ void main() {
 
       final finSubs = provider.departmentSubcategories['Finance'];
       expect(finSubs, isNotNull);
-      expect(finSubs, contains('Accounts'));
-      expect(finSubs, contains('Payroll'));
+      expect(finSubs!.any((s) => s.contains('Accounts')), isTrue);
+      expect(finSubs.contains('Payroll'), isTrue);
     });
   });
 }

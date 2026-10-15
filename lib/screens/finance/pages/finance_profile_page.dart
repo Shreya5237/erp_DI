@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_role.dart';
 import '../../../providers/erp_provider.dart';
 import '../../auth/login_screen.dart';
 
-/// Page 6: Finance Profile
-/// Personal employee information for Siddharth Roy, synchronized central leave management, and contact details
+/// Page 5: Finance Profile
+/// Minimalist employee profile for Siddharth Roy (EMP-115)
+/// Charcoal #212529, soft gray #F5F6F7, and white #FFFFFF cards.
 class FinanceProfilePage extends StatefulWidget {
   const FinanceProfilePage({super.key});
 
@@ -14,8 +16,8 @@ class FinanceProfilePage extends StatefulWidget {
 }
 
 class _FinanceProfilePageState extends State<FinanceProfilePage> {
-  String _phone = '+91 98300 88710';
-  String _deskLocation = 'Finance Bay 3F, Corporate Tower';
+  final String _phone = '+91 98300 88710';
+  final String _deskLocation = 'Finance Bay 3F, Corporate Tower';
 
   @override
   Widget build(BuildContext context) {
@@ -25,25 +27,26 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
       backgroundColor: const Color(0xFFF5F6F7),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
           children: [
-            // Header Profile Card
+            // 1. Employee Identity Card (Squircle avatar, Name, Role, Full-time tag)
             _buildProfileHeader(erp),
             const SizedBox(height: 16),
 
-            // Available Leave Balance Section (Synchronized with Central Leave System)
-            _buildLeaveBalanceSection(),
+            // 2. Dark Leave Balance Card (18 Days, Synced with Central HR, Annual, Sick, Casual)
+            _buildLeaveBalanceCard(),
             const SizedBox(height: 16),
 
-            // Company & Employment Details (Locked / Central HR Synced)
+            // 3. Employment Details Card (Locked / Company Managed)
             _buildCompanyDetailsSection(erp),
             const SizedBox(height: 16),
 
-            // Contact Information (Editable by employee)
+            // 4. Contact Information Card
             _buildContactSection(erp),
             const SizedBox(height: 24),
 
-            // Sign Out Button
+            // 5. Sign Out Button
             _buildSignOutButton(context, erp),
             const SizedBox(height: 30),
           ],
@@ -52,88 +55,274 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
     );
   }
 
+  /// 1. Profile Header matching Image 2 squircle style
   Widget _buildProfileHeader(ErpProvider erp) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
       ),
       child: Row(
         children: [
-          // Avatar
+          // Charcoal Squircle Avatar
           Container(
-            width: 60,
-            height: 60,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              color: const Color(0xFF212529),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              'SR',
+              style: GoogleFonts.instrumentSans(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
               ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0284C7).withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Name & Designation
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Siddharth Roy',
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFF212529),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Lead Financial Analyst & Controller',
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFF868E96),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F3F5),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Full-time employee',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF495057),
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: const Center(
-              child: Text(
-                'SR',
-                style: TextStyle(
-                  color: Color(0xFF212529),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 2. Dark Leave Balance Card (Charcoal #212529)
+  Widget _buildLeaveBalanceCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF212529),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'Available Leave Balance',
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFFADB5BD),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.calendar_month_outlined, color: Colors.white, size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '18 Days',
+            style: GoogleFonts.instrumentSans(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
             ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Synced with Central HR',
+            style: GoogleFonts.instrumentSans(
+              color: const Color(0xFFADB5BD),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+          const SizedBox(height: 14),
+
+          // Categories: Annual / Earned, Sick Leave, Casual Leave
+          Row(
+            children: [
+              Expanded(
+                child: _buildLeaveCategoryColumn('Annual / Earned', '12 days'),
+              ),
+              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.12)),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: _buildLeaveCategoryColumn('Sick Leave', '4 days'),
+                ),
+              ),
+              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.12)),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: _buildLeaveCategoryColumn('Casual Leave', '2 days'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaveCategoryColumn(String title, String count) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 10.5, fontWeight: FontWeight.w500),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 3),
+        Text(
+          count,
+          style: GoogleFonts.instrumentSans(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+
+  /// 3. Company & Employment Details Card
+  Widget _buildCompanyDetailsSection(ErpProvider erp) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
+      ),
+      child: Column(
+        children: [
+          _buildDetailRow(icon: Icons.badge_outlined, label: 'EMPLOYEE ID', value: 'EMP-115'),
+          const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
+          _buildDetailRow(icon: Icons.work_outline_rounded, label: 'DESIGNATION', value: 'Lead Financial Analyst & Controller'),
+          const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
+          _buildDetailRow(icon: Icons.apartment_rounded, label: 'DEPARTMENT', value: 'Finance & Accounts'),
+          const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
+          _buildDetailRow(icon: Icons.supervisor_account_outlined, label: 'REPORTING MANAGER', value: 'Marcus Chen (Finance Director)'),
+          const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
+          _buildDetailRow(icon: Icons.mail_outline_rounded, label: 'OFFICIAL EMAIL', value: 'siddharth.roy@digitalinertia.com'),
+        ],
+      ),
+    );
+  }
+
+  /// 4. Contact Details
+  Widget _buildContactSection(ErpProvider erp) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE9ECEF)),
+      ),
+      child: Column(
+        children: [
+          _buildDetailRow(icon: Icons.phone_outlined, label: 'PHONE NUMBER', value: _phone),
+          const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
+          _buildDetailRow(icon: Icons.pin_drop_outlined, label: 'DESK LOCATION', value: _deskLocation),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow({required IconData icon, required String label, required String value}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: const Color(0xFF212529), size: 18),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        erp.currentUserName,
-                        style: const TextStyle(
-                          color: Color(0xFF212529),
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'Finance',
-                        style: TextStyle(color: Color(0xFF34D399), fontSize: 9.5, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                const Text(
-                  'Finance / Accounts Lead (Senior Financial Analyst)',
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  'ID: ${erp.currentUserId} • Permanent Full-Time',
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                  label,
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFF868E96),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFF212529),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -143,320 +332,60 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
     );
   }
 
-  Widget _buildLeaveBalanceSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.beach_access_rounded, color: Color(0xFF38BDF8), size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Available Leave Balance',
-                    style: TextStyle(color: Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.sync_rounded, color: Color(0xFF10B981), size: 11),
-                    SizedBox(width: 4),
-                    Text(
-                      'Synced with Central HR',
-                      style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Total leave days highlighted
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFF212529),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Total Available Leaves', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
-                    SizedBox(height: 4),
-                    Text(
-                      '18 Days',
-                      style: TextStyle(color: Color(0xFF212529), fontSize: 20, fontWeight: FontWeight.w800),
-                    ),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Leave portal: Central HR synchronization active (0 pending leaves)'),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.add_rounded, size: 14),
-                  label: const Text('Apply Leave', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0284C7),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Breakdown pills
-          Row(
-            children: [
-              Expanded(
-                child: _buildLeaveTypePill('Annual / Earned', '12 Days', const Color(0xFF38BDF8)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildLeaveTypePill('Sick Leave', '4 Days', const Color(0xFF10B981)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildLeaveTypePill('Casual Leave', '2 Days', const Color(0xFFF59E0B)),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeaveTypePill(String type, String count, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(type, style: const TextStyle(color: Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 4),
-          Text(count, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompanyDetailsSection(ErpProvider erp) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.badge_rounded, color: Color(0xFFF59E0B), size: 18),
-              SizedBox(width: 8),
-              Text(
-                'Company & Employment Records',
-                style: TextStyle(color: Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow('Employee ID', erp.currentUserId, isLocked: true),
-          _buildInfoRow('Department', 'Finance & Accounts', isLocked: true),
-          _buildInfoRow('Team', 'Financial & Business Ops', isLocked: true),
-          _buildInfoRow('Designation', 'Finance / Accounts Lead', isLocked: true),
-          _buildInfoRow('Reporting Manager', 'Laven Lokesh (CEO)', isLocked: true),
-          _buildInfoRow('Employment Type', 'Permanent Full-Time', isLocked: true),
-          _buildInfoRow('Joining Date', '15 March 2022', isLocked: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactSection(ErpProvider erp) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.contact_phone_rounded, color: Color(0xFF10B981), size: 18),
-                  SizedBox(width: 8),
-                  Text(
-                    'Contact Information',
-                    style: TextStyle(color: Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, color: Color(0xFF38BDF8), size: 18),
-                onPressed: _showEditContactDialog,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildInfoRow('Work Email', erp.currentUserEmail, isLocked: true),
-          _buildInfoRow('Phone', _phone),
-          _buildInfoRow('Office Location', _deskLocation),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, {bool isLocked = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-          Row(
-            children: [
-              Text(
-                value,
-                style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600),
-              ),
-              if (isLocked) ...[
-                const SizedBox(width: 6),
-                const Icon(Icons.lock_rounded, color: Color(0xFF64748B), size: 12),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditContactDialog() {
-    final phoneCtrl = TextEditingController(text: _phone);
-    final locationCtrl = TextEditingController(text: _deskLocation);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Edit Contact Information', style: TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w700)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: phoneCtrl,
-                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                decoration: InputDecoration(
-                  labelText: 'Phone',
-                  labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6F7),
-                  contentPadding: const EdgeInsets.all(10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: locationCtrl,
-                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                decoration: InputDecoration(
-                  labelText: 'Desk Location',
-                  labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6F7),
-                  contentPadding: const EdgeInsets.all(10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _phone = phoneCtrl.text.trim();
-                _deskLocation = locationCtrl.text.trim();
-              });
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Contact information updated')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF212529),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
+  /// 5. Sign Out Button
   Widget _buildSignOutButton(BuildContext context, ErpProvider erp) {
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: OutlinedButton.icon(
         onPressed: () {
-          erp.setRole(UserRole.ceo);
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-            (route) => false,
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text('Sign Out', style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w800)),
+              content: Text(
+                'Are you sure you want to sign out from the Finance Portal?',
+                style: GoogleFonts.instrumentSans(fontSize: 13),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Cancel', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96))),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    erp.setRole(UserRole.employee);
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF212529),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: Text('Sign Out', style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
           );
         },
-        icon: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 18),
-        label: const Text('Sign Out of Finance Portal', style: TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.w700)),
+        icon: const Icon(Icons.logout_rounded, color: Color(0xFF212529), size: 18),
+        label: Text(
+          'Sign Out of Finance Portal',
+          style: GoogleFonts.instrumentSans(
+            color: const Color(0xFF212529),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFEF4444)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: const BorderSide(color: Color(0xFFCED4DA)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),
     );

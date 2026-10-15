@@ -215,6 +215,8 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
       displayedTasks = displayedTasks.take(widget.maxTasksToShow!).toList();
     }
 
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -228,7 +230,7 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 14 : 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -275,10 +277,10 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 450;
+            final titleWidget = Row(
               children: [
                 Container(
                   width: 36,
@@ -294,31 +296,37 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF212529),
-                        letterSpacing: -0.3,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF212529),
+                          letterSpacing: -0.3,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      weekRange,
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                      Text(
+                        weekRange,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
-            ),
-            Row(
+            );
+
+            final actionsWidget = Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 if (widget.onAddTask != null)
                   IconButton(
@@ -340,16 +348,17 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                 TextButton(
                   onPressed: () => _openFullWeeklyList(context),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         'View All',
                         style: GoogleFonts.instrumentSans(
-                          fontSize: 13,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF212529),
                         ),
@@ -360,8 +369,28 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                   ),
                 ),
               ],
-            ),
-          ],
+            );
+
+            if (isNarrow) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  titleWidget,
+                  const SizedBox(height: 8),
+                  Align(alignment: Alignment.centerRight, child: actionsWidget),
+                ],
+              );
+            }
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: titleWidget),
+                const SizedBox(width: 8),
+                actionsWidget,
+              ],
+            );
+          },
         ),
         const SizedBox(height: 14),
 
@@ -376,27 +405,62 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'WEEKLY PROGRESS',
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF64748B),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  Text(
-                    '$completedCount of $totalDue completed (${completionRate.toStringAsFixed(0)}%)',
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF212529),
-                    ),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxWidth < 295;
+                  if (isCompact) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'WEEKLY PROGRESS',
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF64748B),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$completedCount of $totalDue completed (${completionRate.toStringAsFixed(0)}%)',
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF212529),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'WEEKLY PROGRESS',
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF64748B),
+                            letterSpacing: 0.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$completedCount of $totalDue completed (${completionRate.toStringAsFixed(0)}%)',
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF212529),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 8),
               ClipRRect(
@@ -778,8 +842,11 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
   }
 
   Widget _buildFooterActions(BuildContext context, int totalCount) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 6,
       children: [
         Text(
           'Showing tasks for current active week',

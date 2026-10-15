@@ -1,30 +1,18 @@
-/// Represents the 5 approved primary operating departments of Digital Inertia
+/// Represents the 5 primary operating departments of Digital Inertia
 enum CompanyDepartment {
-  finance('Finance', 'Finance', 'DEPT-FIN', [
-    'Accounts',
-    'Payroll',
-    'Budgeting',
-    'Invoicing',
-  ]),
-  sales('Sales', 'Sales', 'DEPT-SAL', [
+  salesMarketing('Sales & Marketing', 'Sales & Mktg', 'DEPT-SM', [
+    'Enterprise Sales',
     'Business Development',
-    'Lead Management',
-    'Client Acquisition',
+    'Client Outreach',
     'Account Management',
+    'B2B Partnerships',
   ]),
-  marketing('Marketing', 'Marketing', 'DEPT-MKT', [
-    'Digital Marketing',
-    'SEO',
-    'Social Media',
-    'Content Marketing',
-    'Branding',
-  ]),
-  hr('HR', 'HR', 'DEPT-HR', [
-    'Recruitment',
-    'Onboarding',
-    'Training',
-    'Leave Management',
-    'Performance Management',
+  digitalMarketing('Digital Marketing', 'Digital Mktg', 'DEPT-DM', [
+    'SEO & SEM',
+    'Performance Marketing',
+    'Social Media Marketing',
+    'Content Strategy',
+    'Brand & Copywriting',
   ]),
   technical('Technical', 'Technical', 'DEPT-TECH', [
     'Frontend',
@@ -32,11 +20,31 @@ enum CompanyDepartment {
     'Full-stack',
     'Mobile Development',
     'UI/UX',
-    'QA',
-    'DevOps',
-    'AI/ML',
+    'QA / Testing',
+    'DevOps / Cloud',
+    'AI / ML',
+    'Data Engineering',
+    'Cybersecurity',
+  ]),
+  hr('HR', 'HR', 'DEPT-HR', [
+    'Talent Acquisition',
+    'Campus Recruitment',
+    'Onboarding',
+    'Leave Management',
+    'Performance Management',
+    'Employee Relations',
+  ]),
+  finance('Finance', 'Finance', 'DEPT-FIN', [
+    'Financial Planning',
+    'Accounts & Ledger',
+    'Invoicing & Billing',
+    'Budgeting & Auditing',
+    'Payroll',
   ]);
 
+  // Backward compatibility aliases
+  static const CompanyDepartment sales = CompanyDepartment.salesMarketing;
+  static const CompanyDepartment marketing = CompanyDepartment.digitalMarketing;
   static const CompanyDepartment engineering = CompanyDepartment.technical;
 
   final String title;
@@ -51,10 +59,18 @@ enum CompanyDepartment {
 
   static CompanyDepartment fromName(String name) {
     final lower = name.toLowerCase();
-    if (lower.contains('hr') || lower.contains('human') || lower.contains('people')) return CompanyDepartment.hr;
-    if (lower.contains('sales') || lower.contains('business') || lower.contains('growth')) return CompanyDepartment.sales;
-    if (lower.contains('finance') || lower.contains('account')) return CompanyDepartment.finance;
-    if (lower.contains('marketing') || lower.contains('content')) return CompanyDepartment.marketing;
+    if (lower.contains('hr') || lower.contains('human') || lower.contains('people')) {
+      return CompanyDepartment.hr;
+    }
+    if (lower.contains('digital') || (lower.contains('marketing') && !lower.contains('sales'))) {
+      return CompanyDepartment.digitalMarketing;
+    }
+    if (lower.contains('sales') || lower.contains('business') || lower.contains('growth')) {
+      return CompanyDepartment.salesMarketing;
+    }
+    if (lower.contains('finance') || lower.contains('account') || lower.contains('budget')) {
+      return CompanyDepartment.finance;
+    }
     return CompanyDepartment.technical;
   }
 }

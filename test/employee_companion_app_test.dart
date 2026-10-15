@@ -8,8 +8,8 @@ import 'package:digital_inertia_erp/screens/employee/employee_navigation_screen.
 import 'package:digital_inertia_erp/screens/employee/pages/employee_dashboard_page.dart';
 import 'package:digital_inertia_erp/screens/employee/pages/employee_profile_page.dart';
 import 'package:digital_inertia_erp/screens/employee/pages/employee_projects_page.dart';
-import 'package:digital_inertia_erp/screens/employee/pages/employee_tasks_page.dart';
 import 'package:digital_inertia_erp/screens/employee/pages/employee_calendar_page.dart';
+import 'package:digital_inertia_erp/screens/employee/widgets/employee_task_detail_modal.dart';
 
 void main() {
   group('Employee Companion Mobile App Tests', () {
@@ -85,7 +85,7 @@ void main() {
       expect(updated.reportingManager, equals(employee.reportingManager));
     });
 
-    testWidgets('EmployeeNavigationScreen renders all 5 bottom navigation tabs', (tester) async {
+    testWidgets('EmployeeNavigationScreen renders exactly 4 bottom navigation destinations', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<ErpProvider>.value(
@@ -96,15 +96,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Check BottomNavigationBar items
+      // Check 4 BottomNavigationBar items (Home, Projects, Calendar, Profile)
       expect(find.text('Home'), findsOneWidget);
       expect(find.text('Projects'), findsOneWidget);
-      expect(find.text('Tasks'), findsOneWidget);
-      expect(find.text('Calendar'), findsOneWidget);
+      expect(find.text('Calendar'), findsWidgets);
       expect(find.text('Profile'), findsOneWidget);
 
       // Check top branding and notification bell
-      expect(find.text('Digital Inertia'), findsOneWidget);
+      expect(find.text('DIGITAL INERTIA'), findsOneWidget);
       expect(find.byIcon(Icons.notifications_none_rounded), findsOneWidget);
 
       // Verify no CEO or Sales crossover controls exist
@@ -112,7 +111,7 @@ void main() {
       expect(find.text('CEO / Administrator'), findsNothing);
     });
 
-    testWidgets('EmployeeDashboardPage renders leave balance, meetings, and progress', (tester) async {
+    testWidgets('EmployeeDashboardPage renders 6 black background overview metrics matching hand-drawn sketch', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<ErpProvider>.value(
@@ -123,10 +122,60 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Leave Balance'), findsOneWidget);
-      expect(find.textContaining('14 Days Available'), findsOneWidget);
-      expect(find.text('Progress Overview'), findsOneWidget);
-      expect(find.text("This Week's Tasks"), findsOneWidget);
+      // Verify 6 sub widgets in black bg with white text:
+      // 1. Date & Time
+      expect(find.text('DATE & TIME'), findsOneWidget);
+      // 2. Reporting Manager
+      expect(find.text('REPORTING MGR'), findsOneWidget);
+      expect(find.text('Rajesh Kumar'), findsOneWidget);
+      // 3. Leave Balance
+      expect(find.text('LEAVE BALANCE'), findsOneWidget);
+      expect(find.textContaining('14 Days'), findsOneWidget);
+      // 4. Active Projects
+      expect(find.text('ACTIVE PROJECTS'), findsOneWidget);
+      expect(find.textContaining('Projs'), findsWidgets);
+      // 5. Upcoming Deadline
+      expect(find.text('DEADLINE'), findsOneWidget);
+      // 6. Target
+      expect(find.text('TARGET'), findsOneWidget);
+      expect(find.textContaining('% Met'), findsOneWidget);
+
+      // Sections matching hand-drawn sketch
+      expect(find.text('Todays tasks'), findsOneWidget);
+      expect(find.text('Proj Assigned'), findsOneWidget);
+      expect(find.text('Upcoming meeting'), findsOneWidget);
+      expect(find.text('Join'), findsOneWidget);
+
+      // Branding tagline
+      expect(find.text('“COZ’ EVERYONE NEEDS A PUSH”'), findsOneWidget);
+      expect(find.text('STRATEGIC CONSULTING'), findsOneWidget);
+    });
+
+    testWidgets('Tapping task opens slide-up EmployeeTaskDetailModal matching Image 2', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChangeNotifierProvider<ErpProvider>.value(
+            value: erp,
+            child: const Scaffold(body: EmployeeDashboardPage()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final todayTasks = erp.myEmployeeTasks.where((t) => !t.isCompleted).take(3).toList();
+      final targetTask = todayTasks.isNotEmpty ? todayTasks.first : erp.myEmployeeTasks.first;
+      final taskTitle = find.text(targetTask.title);
+      expect(taskTitle, findsOneWidget);
+      await tester.ensureVisible(taskTitle);
+      await tester.tap(taskTitle);
+      await tester.pumpAndSettle();
+
+      // Modal is displayed with Image 2 components
+      expect(find.byType(EmployeeTaskDetailModal), findsOneWidget);
+      expect(find.text('Your responsibilities'), findsOneWidget);
+      expect(find.text('PROJECT MANAGER'), findsOneWidget);
+      expect(find.text('YOUR ROLE & TEAM'), findsOneWidget);
+      expect(find.text('Submit / Complete Task'), findsOneWidget);
     });
 
     testWidgets('EmployeeProfilePage renders details, locked fields, and sign out', (tester) async {
@@ -157,28 +206,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('In Progress (4)'), findsOneWidget);
+      expect(find.textContaining('In Progress'), findsWidgets);
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('EmployeeTasksPage renders daily work planner and filter tabs', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ChangeNotifierProvider<ErpProvider>.value(
-            value: erp,
-            child: const Scaffold(body: EmployeeTasksPage()),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Daily Work Planner'), findsOneWidget);
-      expect(find.text('Add Task'), findsOneWidget);
-      expect(find.textContaining('Today'), findsOneWidget);
-      expect(find.textContaining('Tomorrow'), findsOneWidget);
-    });
-
-    testWidgets('EmployeeCalendarPage renders monthly grid and day agenda', (tester) async {
+    testWidgets('EmployeeCalendarPage renders monthly grid, tags bar and day agenda', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: ChangeNotifierProvider<ErpProvider>.value(
@@ -192,7 +224,11 @@ void main() {
       expect(find.text('Today'), findsOneWidget);
       expect(find.text('Month'), findsOneWidget);
       expect(find.text('Week'), findsOneWidget);
+      expect(find.text('Day'), findsOneWidget);
+
+      // Tags filter bar
+      expect(find.textContaining('All Events'), findsOneWidget);
+      expect(find.textContaining('Tasks Breakdown'), findsOneWidget);
     });
   });
 }
-

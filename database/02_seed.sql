@@ -1,11 +1,15 @@
 -- ==============================================================================
--- DIGITAL INERTIA ERP - REALISTIC CORPORATE SEED DATA
+-- DIGITAL INERTIA ERP - COMPREHENSIVE CORPORATE ENTERPRISE DATASET
 -- Database: digital_inertia_erp
--- Zero Placeholders / High Fidelity Enterprise Dataset
+-- Structure: 5 Departments, 25 Classified Employees (+ CEO), 6 Projects
+-- Projects: 4 In Progress / Ongoing (incl. Digital Marketing), 2 Completed
+-- All Corporate Accounts: password123!
+-- Real-Time Responsive Syncing
 -- ==============================================================================
 
--- Clean existing data in order of dependencies
+-- Clean existing data in order of foreign key dependencies
 TRUNCATE TABLE audit_logs CASCADE;
+TRUNCATE TABLE users CASCADE;
 TRUNCATE TABLE intern_daily_updates CASCADE;
 TRUNCATE TABLE tasks CASCADE;
 TRUNCATE TABLE leads CASCADE;
@@ -17,7 +21,7 @@ TRUNCATE TABLE teams CASCADE;
 TRUNCATE TABLE company_roles CASCADE;
 
 -- ------------------------------------------------------------------------------
--- 1. CONFIGURABLE ROLES (10 Technical + 8 Non-Technical as requested)
+-- 1. CONFIGURABLE ROLES (10 Technical + 8 Non-Technical Tracks)
 -- ------------------------------------------------------------------------------
 INSERT INTO company_roles (id, name, category, description) VALUES
 ('ROLE-FE', 'Frontend', 'technical', 'Web client architecture, React/Flutter UI, state machines and micro-frontends'),
@@ -40,39 +44,56 @@ INSERT INTO company_roles (id, name, category, description) VALUES
 ('ROLE-AD', 'Administration', 'non_technical', 'Executive office operations, vendor management, workplace facilities and legal policies');
 
 -- ------------------------------------------------------------------------------
--- 2. TEAMS
+-- 2. THE 5 CORPORATE OPERATING DEPARTMENTS
 -- ------------------------------------------------------------------------------
 INSERT INTO teams (id, name, category, description) VALUES
-('TEAM-ENG', 'Core Platform Engineering', 'technical', 'Core backend infrastructure, multi-tenant databases and core API services'),
-('TEAM-FE', 'Client Experience Engineering', 'technical', 'Mobile and web frontend user interfaces and design systems'),
-('TEAM-AI', 'Applied Intelligence Lab', 'technical', 'Machine learning telemetry engines, pattern recognition and edge models'),
-('TEAM-QA', 'Quality & Reliability', 'technical', 'Automated QA testing, regression cycles and security compliance audits'),
-('TEAM-GROWTH', 'Corporate Growth & Sales', 'non_technical', 'Enterprise sales, strategic partnerships and solution consulting'),
-('TEAM-PEOPLE', 'People & Workplace', 'non_technical', 'Human resources, talent scouting, intern mentorship and campus relations'),
-('TEAM-OPS', 'Financial & Business Ops', 'non_technical', 'Accounting, regulatory compliance, executive operations and contract governance');
+('DEPT-TECH', 'Technical', 'technical', 'Software engineering, system architecture, mobile apps, backend APIs, cloud, and QA'),
+('DEPT-SM', 'Sales & Marketing', 'non_technical', 'Enterprise sales pipeline, client partnerships, B2B deal negotiation, and revenue growth'),
+('DEPT-DM', 'Digital Marketing', 'non_technical', 'Omnichannel growth, PPC advertising, SEO architecture, brand engagement, and conversion tracking'),
+('DEPT-HR', 'HR', 'non_technical', 'Talent acquisition, university recruitment cohorts, employee culture, performance, and compliance'),
+('DEPT-FIN', 'Finance', 'non_technical', 'Financial planning, accounting ledgers, client invoicing, budget allocations, and audits');
 
 -- ------------------------------------------------------------------------------
--- 3. EMPLOYEES (18 Real Employees: 10 Technical + 8 Non-Technical)
+-- 3. EMPLOYEES (25 Employees Classified Exactly 5 Per Department + CEO & Specialist)
 -- ------------------------------------------------------------------------------
 INSERT INTO employees (id, name, email, phone, role_id, role_title, team_id, team_name, category, is_active, is_poc, max_task_capacity, current_active_tasks, joined_date) VALUES
-('EMP-101', 'Arjun Sharma', 'arjun.sharma@digitalinertia.com', '+91 98201 14521', 'ROLE-FE', 'Frontend Developer', 'TEAM-FE', 'Client Experience Engineering', 'technical', TRUE, TRUE, 5, 2, '2023-04-15'),
-('EMP-102', 'Priya Nair', 'priya.nair@digitalinertia.com', '+91 98450 78210', 'ROLE-BE', 'Backend Developer', 'TEAM-ENG', 'Core Platform Engineering', 'technical', TRUE, TRUE, 5, 5, '2023-06-01'), -- Over capacity alert!
-('EMP-103', 'Karthik R', 'karthik.r@digitalinertia.com', '+91 97112 65430', 'ROLE-FS', 'Full Stack Developer', 'TEAM-ENG', 'Core Platform Engineering', 'technical', TRUE, TRUE, 5, 2, '2023-08-10'),
-('EMP-104', 'Sneha V', 'sneha.v@digitalinertia.com', '+91 99304 98124', 'ROLE-FE', 'Frontend Developer', 'TEAM-FE', 'Client Experience Engineering', 'technical', TRUE, TRUE, 5, 3, '2023-09-01'),
-('EMP-105', 'Rohan Mehta', 'rohan.mehta@digitalinertia.com', '+91 98214 33219', 'ROLE-MO', 'Mobile App Developer', 'TEAM-FE', 'Client Experience Engineering', 'technical', TRUE, TRUE, 4, 5, '2023-11-15'), -- Over capacity alert!
-('EMP-106', 'Ananya Deshmukh', 'ananya.deshmukh@digitalinertia.com', '+91 98190 22345', 'ROLE-AI', 'AI / ML Engineer', 'TEAM-AI', 'Applied Intelligence Lab', 'technical', TRUE, FALSE, 5, 1, '2024-01-10'),
-('EMP-107', 'Vikram Singh', 'vikram.singh@digitalinertia.com', '+91 97401 88320', 'ROLE-DE', 'Data Engineer', 'TEAM-ENG', 'Core Platform Engineering', 'technical', TRUE, FALSE, 5, 1, '2024-02-01'),
-('EMP-108', 'Neha Patel', 'neha.patel@digitalinertia.com', '+91 98331 44590', 'ROLE-QA', 'QA / Testing Lead', 'TEAM-QA', 'Quality & Reliability', 'technical', TRUE, FALSE, 5, 1, '2024-03-01'),
-('EMP-109', 'Rahul Verma', 'rahul.verma@digitalinertia.com', '+91 98110 99450', 'ROLE-DO', 'DevOps / Cloud Specialist', 'TEAM-ENG', 'Core Platform Engineering', 'technical', TRUE, FALSE, 5, 1, '2024-04-15'),
-('EMP-110', 'Divya Iyer', 'divya.iyer@digitalinertia.com', '+91 98402 11234', 'ROLE-UX', 'UI/UX Engineering Lead', 'TEAM-FE', 'Client Experience Engineering', 'technical', TRUE, FALSE, 5, 1, '2024-05-01'),
-('EMP-111', 'Meera Joshi', 'meera.joshi@digitalinertia.com', '+91 98205 66780', 'ROLE-HR', 'HR / Recruitment Specialist', 'TEAM-PEOPLE', 'People & Workplace', 'non_technical', TRUE, FALSE, 5, 1, '2023-05-10'),
-('EMP-112', 'Rajesh Kumar', 'rajesh.kumar@digitalinertia.com', '+91 98101 44321', 'ROLE-SL', 'Sales / Business Development', 'TEAM-GROWTH', 'Corporate Growth & Sales', 'non_technical', TRUE, FALSE, 5, 2, '2023-07-20'),
-('EMP-113', 'Sanjay Menon', 'sanjay.menon@digitalinertia.com', '+91 98410 77650', 'ROLE-MK', 'Marketing Strategist', 'TEAM-GROWTH', 'Corporate Growth & Sales', 'non_technical', TRUE, FALSE, 5, 1, '2023-10-01'),
-('EMP-114', 'Pooja Hegde', 'pooja.hegde@digitalinertia.com', '+91 98211 22390', 'ROLE-OP', 'Operations Manager', 'TEAM-OPS', 'Financial & Business Ops', 'non_technical', TRUE, FALSE, 5, 1, '2023-12-05'),
-('EMP-115', 'Siddharth Roy', 'siddharth.roy@digitalinertia.com', '+91 98300 88710', 'ROLE-FN', 'Finance / Accounts Lead', 'TEAM-OPS', 'Financial & Business Ops', 'non_technical', TRUE, FALSE, 5, 1, '2024-02-15'),
-('EMP-116', 'Kavita Rao', 'kavita.rao@digitalinertia.com', '+91 98452 33410', 'ROLE-CSU', 'Customer Support Manager', 'TEAM-GROWTH', 'Corporate Growth & Sales', 'non_technical', TRUE, FALSE, 5, 1, '2024-03-20'),
-('EMP-117', 'Aditya Sen', 'aditya.sen@digitalinertia.com', '+91 98115 55620', 'ROLE-CC', 'Content / Communications', 'TEAM-GROWTH', 'Corporate Growth & Sales', 'non_technical', TRUE, FALSE, 5, 0, '2024-06-01'),
-('EMP-118', 'Shreya Kulkarni', 'shreya.kulkarni@digitalinertia.com', '+91 98204 11980', 'ROLE-AD', 'Administration Lead', 'TEAM-OPS', 'Financial & Business Ops', 'non_technical', TRUE, FALSE, 5, 0, '2024-07-01');
+-- DEPARTMENT 1: Technical (5 Employees)
+('EMP-101', 'Arjun Sharma', 'arjun.sharma@digitalinertia.com', '+91 98201 14521', 'ROLE-FE', 'Lead Frontend Developer & Architect', 'DEPT-TECH', 'Technical', 'technical', TRUE, TRUE, 5, 2, '2023-04-15'),
+('EMP-102', 'Priya Nair', 'priya.nair@digitalinertia.com', '+91 98450 78210', 'ROLE-BE', 'Senior Backend Developer & Database Lead', 'DEPT-TECH', 'Technical', 'technical', TRUE, TRUE, 5, 3, '2023-06-01'),
+('EMP-103', 'Karthik R', 'karthik.r@digitalinertia.com', '+91 97112 65430', 'ROLE-FS', 'Full Stack Engineer & Cloud Integrations', 'DEPT-TECH', 'Technical', 'technical', TRUE, TRUE, 5, 2, '2023-08-10'),
+('EMP-104', 'Sneha V', 'sneha.v@digitalinertia.com', '+91 99304 98124', 'ROLE-UX', 'Frontend UI & Design Systems Engineer', 'DEPT-TECH', 'Technical', 'technical', TRUE, FALSE, 5, 2, '2023-09-01'),
+('EMP-105', 'Rohan Mehta', 'rohan.mehta@digitalinertia.com', '+91 98214 33219', 'ROLE-MO', 'Mobile App Lead (Flutter & Native)', 'DEPT-TECH', 'Technical', 'technical', TRUE, TRUE, 5, 2, '2023-11-15'),
+
+-- DEPARTMENT 2: Sales & Marketing (5 Employees)
+('EMP-201', 'Rajesh Kumar', 'rajesh.kumar@digitalinertia.com', '+91 98101 44321', 'ROLE-SL', 'VP Enterprise Sales & Client Partnerships', 'DEPT-SM', 'Sales & Marketing', 'non_technical', TRUE, TRUE, 5, 2, '2023-07-20'),
+('EMP-202', 'Meera Sen', 'meera.sen@digitalinertia.com', '+91 98452 33410', 'ROLE-SL', 'Senior Account Executive & Enterprise Deals', 'DEPT-SM', 'Sales & Marketing', 'non_technical', TRUE, FALSE, 5, 2, '2023-09-12'),
+('EMP-203', 'Vikram Malhotra', 'vikram.malhotra@digitalinertia.com', '+91 98203 77412', 'ROLE-SL', 'Business Development Manager', 'DEPT-SM', 'Sales & Marketing', 'non_technical', TRUE, TRUE, 5, 2, '2024-01-15'),
+('EMP-204', 'Ananya Kapoor', 'ananya.kapoor@digitalinertia.com', '+91 98190 22345', 'ROLE-SL', 'Solutions Consultant & Deal Strategist', 'DEPT-SM', 'Sales & Marketing', 'non_technical', TRUE, FALSE, 5, 1, '2024-02-01'),
+('EMP-205', 'Aditya Joshi', 'aditya.joshi@digitalinertia.com', '+91 98115 55620', 'ROLE-SL', 'Sales Operations & Inbound Lead Specialist', 'DEPT-SM', 'Sales & Marketing', 'non_technical', TRUE, FALSE, 5, 1, '2024-03-10'),
+
+-- DEPARTMENT 3: Digital Marketing (5 Employees)
+('EMP-301', 'Kavita Reddy', 'kavita.reddy@digitalinertia.com', '+91 98410 77650', 'ROLE-MK', 'Head of Digital Marketing & Growth', 'DEPT-DM', 'Digital Marketing', 'non_technical', TRUE, TRUE, 5, 2, '2023-10-01'),
+('EMP-302', 'Sameer Deshmukh', 'sameer.deshmukh@digitalinertia.com', '+91 98210 99012', 'ROLE-MK', 'Performance Ads & PPC Campaign Manager', 'DEPT-DM', 'Digital Marketing', 'non_technical', TRUE, FALSE, 5, 2, '2023-11-20'),
+('EMP-303', 'Pooja Hegde', 'pooja.hegde@digitalinertia.com', '+91 98211 22390', 'ROLE-MK', 'SEO & Organic Search Strategist', 'DEPT-DM', 'Digital Marketing', 'non_technical', TRUE, FALSE, 5, 2, '2023-12-05'),
+('EMP-304', 'Naveen Chandra', 'naveen.chandra@digitalinertia.com', '+91 98300 88710', 'ROLE-CC', 'Social Media & Brand Engagement Lead', 'DEPT-DM', 'Digital Marketing', 'non_technical', TRUE, FALSE, 5, 1, '2024-02-15'),
+('EMP-305', 'Rhea Pillai', 'rhea.pillai@digitalinertia.com', '+91 98402 11234', 'ROLE-UX', 'Creative Visual & Content Marketing Specialist', 'DEPT-DM', 'Digital Marketing', 'non_technical', TRUE, FALSE, 5, 2, '2024-04-01'),
+
+-- DEPARTMENT 4: HR (5 Employees)
+('EMP-401', 'Sunita Verma', 'sunita.verma@digitalinertia.com', '+91 98205 66780', 'ROLE-HR', 'Director of People & Culture', 'DEPT-HR', 'HR', 'non_technical', TRUE, TRUE, 5, 2, '2023-05-10'),
+('EMP-402', 'Amitabh Roy', 'amitabh.roy@digitalinertia.com', '+91 98331 44590', 'ROLE-HR', 'Lead Talent Acquisition & University Hiring', 'DEPT-HR', 'HR', 'non_technical', TRUE, FALSE, 5, 2, '2023-08-25'),
+('EMP-403', 'Neha Bansal', 'neha.bansal@digitalinertia.com', '+91 98110 99450', 'ROLE-HR', 'HR Operations & People Compliance', 'DEPT-HR', 'HR', 'non_technical', TRUE, FALSE, 5, 1, '2023-10-18'),
+('EMP-404', 'Karan Singhania', 'karan.singhania@digitalinertia.com', '+91 98720 33008', 'ROLE-HR', 'Employee Experience & Learning Specialist', 'DEPT-HR', 'HR', 'non_technical', TRUE, FALSE, 5, 1, '2024-01-20'),
+('EMP-405', 'Divya Nambiar', 'divya.nambiar@digitalinertia.com', '+91 98300 22009', 'ROLE-HR', 'Workforce Analytics & HR Business Partner', 'DEPT-HR', 'HR', 'non_technical', TRUE, FALSE, 5, 1, '2024-03-05'),
+
+-- DEPARTMENT 5: Finance (5 Employees)
+('EMP-501', 'Rameshwar Gupta', 'rameshwar.gupta@digitalinertia.com', '+91 98111 20005', 'ROLE-FN', 'Chief Financial Officer', 'DEPT-FIN', 'Finance', 'non_technical', TRUE, TRUE, 5, 1, '2023-03-01'),
+('EMP-502', 'Shalini Rao', 'shalini.rao@digitalinertia.com', '+91 98200 45003', 'ROLE-FN', 'Financial Controller & Head of Accounts', 'DEPT-FIN', 'Finance', 'non_technical', TRUE, TRUE, 5, 2, '2023-06-15'),
+('EMP-503', 'Manish Aggarwal', 'manish.aggarwal@digitalinertia.com', '+91 98410 78004', 'ROLE-FN', 'Senior Corporate Accountant & Ledger', 'DEPT-FIN', 'Finance', 'non_technical', TRUE, FALSE, 5, 1, '2023-09-01'),
+('EMP-504', 'Deepak Chawla', 'deepak.chawla@digitalinertia.com', '+91 98450 12001', 'ROLE-FN', 'Financial Analyst & Budget Planning', 'DEPT-FIN', 'Finance', 'non_technical', TRUE, FALSE, 5, 2, '2024-01-10'),
+('EMP-505', 'Tanvi Mathur', 'tanvi.mathur@digitalinertia.com', '+91 98311 44014', 'ROLE-FN', 'Billing, Payroll & Invoicing Specialist', 'DEPT-FIN', 'Finance', 'non_technical', TRUE, FALSE, 5, 2, '2024-02-28'),
+
+-- Technical Specialist & Executive
+('EMP-118', 'Shreya Kulkarni', 'shreya.kulkarni@digitalinertia.com', '+91 98204 11980', 'ROLE-FS', 'Technical Specialist & Full Stack Engineer', 'DEPT-TECH', 'Technical', 'technical', TRUE, TRUE, 5, 3, '2024-07-01');
 
 -- ------------------------------------------------------------------------------
 -- 4. INTERN INTAKE BATCHES
@@ -82,132 +103,138 @@ INSERT INTO intern_batches (id, code, start_date, end_date, total_interns) VALUE
 ('BATCH-2025-W14', 'Batch Apr-B (2025)', '2025-04-15', '2025-07-15', 10);
 
 -- ------------------------------------------------------------------------------
--- 5. INTERNS (24 Active Interns: Real College Cohort)
--- Note: 3 interns have missed_updates_days >= 2 to trigger the inactive intern alert!
+-- 5. INTERNS
 -- ------------------------------------------------------------------------------
 INSERT INTO interns (id, name, email, phone, college, category, domain, team_id, team_name, batch_id, assigned_poc_id, interview_score, performance_score, missed_updates_days, selection_date, final_decision) VALUES
-('INT-201', 'Aarav Gupta', 'aarav.gupta@collegemail.edu', '+91 98111 20001', 'IIT Bombay', 'technical', 'Backend', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W12', 'EMP-102', 9.2, 8.8, 0, '2025-03-20', 'absorbed'),
-('INT-202', 'Bhavya Shah', 'bhavya.shah@collegemail.edu', '+91 98111 20002', 'BITS Pilani', 'technical', 'Frontend', 'TEAM-FE', 'Client Experience Engineering', 'BATCH-2025-W12', 'EMP-101', 8.9, 8.4, 0, '2025-03-20', 'under_review'),
-('INT-203', 'Chirag Mathur', 'chirag.mathur@collegemail.edu', '+91 98111 20003', 'NIT Trichy', 'technical', 'Full Stack', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W12', 'EMP-103', 8.5, 7.8, 2, '2025-03-21', 'under_review'), -- Missed updates alert
-('INT-204', 'Deepika Pillai', 'deepika.pillai@collegemail.edu', '+91 98111 20004', 'VIT Vellore', 'technical', 'Mobile App', 'TEAM-FE', 'Client Experience Engineering', 'BATCH-2025-W12', 'EMP-105', 8.8, 8.2, 0, '2025-03-21', 'under_review'),
-('INT-205', 'Eshan Kulkarni', 'eshan.kulkarni@collegemail.edu', '+91 98111 20005', 'IIIT Hyderabad', 'technical', 'AI / ML', 'TEAM-AI', 'Applied Intelligence Lab', 'BATCH-2025-W12', 'EMP-106', 9.5, 9.1, 0, '2025-03-22', 'absorbed'),
-('INT-206', 'Falguni Das', 'falguni.das@collegemail.edu', '+91 98111 20006', 'Delhi Tech University', 'technical', 'Data Engineering', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W12', 'EMP-107', 8.2, 7.5, 0, '2025-03-22', 'under_review'),
-('INT-207', 'Gautam Nambiar', 'gautam.nambiar@collegemail.edu', '+91 98111 20007', 'RV College Bangalore', 'technical', 'QA / Testing', 'TEAM-QA', 'Quality & Reliability', 'BATCH-2025-W12', 'EMP-108', 7.9, 7.1, 3, '2025-03-23', 'under_review'), -- Missed updates alert
-('INT-208', 'Harini Swaminathan', 'harini.s@collegemail.edu', '+91 98111 20008', 'PSG Tech Coimbatore', 'technical', 'DevOps / Cloud', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W12', 'EMP-109', 9.0, 8.7, 0, '2025-03-23', 'absorbed'),
-('INT-209', 'Ishaan Saxena', 'ishaan.saxena@collegemail.edu', '+91 98111 20009', 'IIT Madras', 'technical', 'Cybersecurity', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W12', 'EMP-102', 8.7, 8.1, 0, '2025-03-24', 'under_review'),
-('INT-210', 'Jayati Bose', 'jayati.bose@collegemail.edu', '+91 98111 20010', 'National Inst of Design', 'technical', 'UI/UX Engineering', 'TEAM-FE', 'Client Experience Engineering', 'BATCH-2025-W12', 'EMP-110', 9.3, 8.9, 0, '2025-03-24', 'absorbed'),
-('INT-211', 'Kunal Trivedi', 'kunal.trivedi@collegemail.edu', '+91 98111 20011', 'Symbiosis Pune', 'non_technical', 'HR / Recruitment', 'TEAM-PEOPLE', 'People & Workplace', 'BATCH-2025-W12', 'EMP-111', 8.4, 7.9, 0, '2025-03-25', 'under_review'),
-('INT-212', 'Lavanya Sundaram', 'lavanya.s@collegemail.edu', '+91 98111 20012', 'NMIMS Mumbai', 'non_technical', 'Sales / Business Development', 'TEAM-GROWTH', 'Corporate Growth & Sales', 'BATCH-2025-W12', 'EMP-112', 8.6, 8.0, 0, '2025-03-25', 'under_review'),
-('INT-213', 'Manish Chawla', 'manish.chawla@collegemail.edu', '+91 98111 20013', 'MICA Ahmedabad', 'non_technical', 'Marketing', 'TEAM-GROWTH', 'Corporate Growth & Sales', 'BATCH-2025-W12', 'EMP-113', 8.1, 7.4, 2, '2025-03-26', 'under_review'), -- Missed updates alert
-('INT-214', 'Nandini Rao', 'nandini.rao@collegemail.edu', '+91 98111 20014', 'Loyola Chennai', 'non_technical', 'Operations', 'TEAM-OPS', 'Financial & Business Ops', 'BATCH-2025-W12', 'EMP-114', 8.3, 7.7, 0, '2025-03-26', 'under_review'),
-('INT-215', 'Omkar Jadhav', 'omkar.jadhav@collegemail.edu', '+91 98111 20015', 'IIT Roorkee', 'technical', 'Backend', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W14', 'EMP-102', 8.9, 8.3, 0, '2025-04-02', 'under_review'),
-('INT-216', 'Parul Singhania', 'parul.s@collegemail.edu', '+91 98111 20016', 'BITS Goa', 'technical', 'Frontend', 'TEAM-FE', 'Client Experience Engineering', 'BATCH-2025-W14', 'EMP-104', 8.6, 8.1, 0, '2025-04-02', 'under_review'),
-('INT-217', 'Qasim Rizvi', 'qasim.rizvi@collegemail.edu', '+91 98111 20017', 'Manipal Institute of Tech', 'technical', 'Full Stack', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W14', 'EMP-103', 8.0, 7.3, 0, '2025-04-03', 'under_review'),
-('INT-218', 'Ritika Kaul', 'ritika.kaul@collegemail.edu', '+91 98111 20018', 'Thapar University', 'technical', 'Mobile App', 'TEAM-FE', 'Client Experience Engineering', 'BATCH-2025-W14', 'EMP-105', 8.5, 7.9, 0, '2025-04-03', 'under_review'),
-('INT-219', 'Siddhant Bakshi', 'siddhant.b@collegemail.edu', '+91 98111 20019', 'IIIT Bangalore', 'technical', 'AI / ML', 'TEAM-AI', 'Applied Intelligence Lab', 'BATCH-2025-W14', 'EMP-106', 9.4, 8.9, 0, '2025-04-04', 'absorbed'),
-('INT-220', 'Tanvi Mahajan', 'tanvi.m@collegemail.edu', '+91 98111 20020', 'SRM University', 'technical', 'Data Engineering', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W14', 'EMP-107', 8.1, 7.2, 0, '2025-04-04', 'under_review'),
-('INT-221', 'Udayan Sen', 'udayan.sen@collegemail.edu', '+91 98111 20021', 'Jadavpur University', 'technical', 'QA / Testing', 'TEAM-QA', 'Quality & Reliability', 'BATCH-2025-W14', 'EMP-108', 8.3, 7.6, 0, '2025-04-05', 'under_review'),
-('INT-222', 'Varun Somani', 'varun.somani@collegemail.edu', '+91 98111 20022', 'NIT Surathkal', 'technical', 'DevOps / Cloud', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W14', 'EMP-109', 8.7, 8.0, 0, '2025-04-05', 'under_review'),
-('INT-223', 'Waseem Akram', 'waseem.akram@collegemail.edu', '+91 98111 20023', 'Aligarh Muslim Univ', 'technical', 'Cybersecurity', 'TEAM-ENG', 'Core Platform Engineering', 'BATCH-2025-W14', 'EMP-102', 8.2, 7.5, 0, '2025-04-06', 'under_review'),
-('INT-224', 'Yamini Reddy', 'yamini.reddy@collegemail.edu', '+91 98111 20024', 'Srishti Inst of Art & Tech', 'technical', 'UI/UX Engineering', 'TEAM-FE', 'Client Experience Engineering', 'BATCH-2025-W14', 'EMP-110', 9.1, 8.7, 0, '2025-04-06', 'absorbed');
+('INT-201', 'Aarav Gupta', 'aarav.gupta@collegemail.edu', '+91 98111 20001', 'IIT Bombay', 'technical', 'Backend', 'DEPT-TECH', 'Technical', 'BATCH-2025-W12', 'EMP-102', 9.2, 8.8, 0, '2025-03-20', 'absorbed'),
+('INT-202', 'Bhavya Shah', 'bhavya.shah@collegemail.edu', '+91 98111 20002', 'BITS Pilani', 'technical', 'Frontend', 'DEPT-TECH', 'Technical', 'BATCH-2025-W12', 'EMP-101', 8.9, 8.4, 0, '2025-03-20', 'under_review'),
+('INT-203', 'Chirag Mathur', 'chirag.mathur@collegemail.edu', '+91 98111 20003', 'NIT Trichy', 'technical', 'Full Stack', 'DEPT-TECH', 'Technical', 'BATCH-2025-W12', 'EMP-103', 8.5, 7.8, 2, '2025-03-21', 'under_review'),
+('INT-204', 'Deepika Pillai', 'deepika.pillai@collegemail.edu', '+91 98111 20004', 'VIT Vellore', 'technical', 'Mobile App', 'DEPT-TECH', 'Technical', 'BATCH-2025-W12', 'EMP-105', 8.8, 8.2, 0, '2025-03-21', 'under_review');
 
 -- ------------------------------------------------------------------------------
--- 6. PROJECTS (6 Active Enterprise Client Projects)
--- Note: PRJ-304 has behind_schedule_percent = 20% (planned 35% vs actual 15%)
--- which triggers the "1 project delayed" threshold alert!
+-- 6. PROJECTS (Exactly 6 Projects: 4 In Progress, 2 Completed; Incl. Digital Marketing)
 -- ------------------------------------------------------------------------------
 INSERT INTO projects (id, name, client_name, domain, status, progress_percent, planned_progress_percent, owner_id, team_id, budget, start_date, deadline, has_blockers, blocker_details) VALUES
-('PRJ-301', 'EcoTrack App', 'CleanTech Innovations', 'Mobile App', 'in_progress', 75, 75, 'EMP-105', 'TEAM-FE', 45000.00, '2025-01-15', '2025-05-15', FALSE, NULL),
-('PRJ-302', 'Green Energy Dashboard', 'Enel Horizon Grid', 'Web Platform', 'in_progress', 40, 45, 'EMP-101', 'TEAM-FE', 60000.00, '2025-02-01', '2025-06-30', FALSE, NULL),
-('PRJ-303', 'AI Analytics Platform', 'Quantra BioSciences', 'AI / ML', 'in_progress', 90, 90, 'EMP-106', 'TEAM-AI', 85000.00, '2024-11-01', '2025-04-30', FALSE, NULL),
-('PRJ-304', 'FinTech Payment Gateway', 'PulsePay Global', 'Backend', 'in_progress', 15, 35, 'EMP-102', 'TEAM-ENG', 120000.00, '2025-03-01', '2025-07-31', TRUE, 'PCI-DSS hardware security module HSM integration delay from bank sponsor'), -- Delayed Project Alert
-('PRJ-305', 'Fleet Logistics Mobile', 'SwiftLogistics Express', 'Mobile App', 'in_progress', 30, 30, 'EMP-105', 'TEAM-FE', 50000.00, '2025-02-15', '2025-06-15', FALSE, NULL),
-('PRJ-306', 'Digital Inertia ERP Core', 'Digital Inertia Holdings', 'Web Platform', 'in_progress', 85, 85, 'EMP-103', 'TEAM-ENG', 75000.00, '2024-12-01', '2025-05-01', FALSE, NULL);
+-- Project 1 (Ongoing - The Digital Marketing Project)
+('PRJ-401', 'Digital Marketing & Growth Engine', 'OmniSphere Retail', 'Digital Marketing', 'in_progress', 70, 75, 'EMP-301', 'DEPT-DM', 65000.00, '2026-08-01', '2026-12-15', FALSE, NULL),
+
+-- Project 2 (Ongoing)
+('PRJ-402', 'Digital Inertia ERP Core', 'DI Strategic Holdings', 'Web Platform', 'in_progress', 85, 85, 'EMP-102', 'DEPT-TECH', 120000.00, '2026-06-01', '2026-11-30', FALSE, NULL),
+
+-- Project 3 (Ongoing)
+('PRJ-403', 'EcoTrack IoT Mobile Platform', 'CleanTech Innovations', 'Mobile App', 'in_progress', 58, 60, 'EMP-105', 'DEPT-TECH', 95000.00, '2026-07-15', '2027-01-31', FALSE, NULL),
+
+-- Project 4 (Ongoing)
+('PRJ-404', 'OmniChannel Enterprise Sales Rollout', 'Zenith Global Logistics', 'Sales & CRM', 'in_progress', 44, 50, 'EMP-201', 'DEPT-SM', 80000.00, '2026-09-01', '2027-03-31', FALSE, NULL),
+
+-- Project 5 (Completed)
+('PRJ-405', 'FinTech Payment Gateway Microservices', 'PulsePay Global', 'Backend', 'completed', 100, 100, 'EMP-102', 'DEPT-TECH', 150000.00, '2026-01-10', '2026-09-28', FALSE, NULL),
+
+-- Project 6 (Completed)
+('PRJ-406', 'Corporate People Hub & Workforce System', 'Inertia Talent Consortium', 'HR & Recruitment', 'completed', 100, 100, 'EMP-401', 'DEPT-HR', 45000.00, '2026-02-01', '2026-08-30', FALSE, NULL);
 
 -- ------------------------------------------------------------------------------
--- 7. TASKS (42 Real Corporate Tasks Matching the Donut Chart Breakdown)
--- Breakdown: 20 Completed, 8 In Progress, 6 To Do, 5 Overdue, 3 Needs Rework
+-- 7. TASKS (Split Across the 5 Departments, 6 Projects, and 25 Employees)
 -- ------------------------------------------------------------------------------
-
--- Overdue Tasks (5 tasks due in past: 2026-10-08 to 2026-10-09)
-INSERT INTO tasks (id, title, description, domain, status, priority, assigned_to_id, assigned_to_name, assignee_type, assigned_by_id, assigned_by_name, project_id, project_name, due_date, awaiting_review) VALUES
-('TSK-401', 'Database setup', 'Provision PostgreSQL 18 HA replication cluster and execute initial DDL scripts', 'Backend', 'todo', 'urgent', 'INT-203', 'Chirag Sethi', 'intern', 'EMP-102', 'Priya Nair', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-09', FALSE),
-('TSK-402', 'Fix authentication gateway timeout', 'Resolve 504 gateway timeout under 2,000 concurrent OAuth authorization code grants', 'Backend', 'in_progress', 'urgent', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-08', FALSE),
-('TSK-403', 'Optimize state tree rebuilds', 'Profile widget subtree renders in Flutter and eliminate unneeded RepaintBoundary redraws', 'Mobile App', 'todo', 'high', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-301', 'EcoTrack App', '2026-10-09', FALSE),
-('TSK-404', 'Update client SLA contract addendum', 'Incorporate Tier-1 99.95% uptime guarantees and incident escalation workflow', 'Sales / Business Development', 'todo', 'high', 'EMP-112', 'Rajesh Kumar', 'employee', 'EMP-112', 'Rajesh Kumar', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-08', FALSE),
-('TSK-405', 'Patch OpenSSL vulnerabilities on production edge', 'Apply CVE-2024 security updates across reverse proxy ingress pods', 'DevOps / Cloud', 'in_progress', 'urgent', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-09', FALSE);
-
--- In Progress Tasks (8 tasks)
-INSERT INTO tasks (id, title, description, domain, status, priority, assigned_to_id, assigned_to_name, assignee_type, assigned_by_id, assigned_by_name, project_id, project_name, due_date, awaiting_review) VALUES
-('TSK-406', 'Build login API', 'Implement JWT token exchange, refresh tokens and bcrypt password verification endpoints', 'Backend', 'in_progress', 'high', 'INT-201', 'Aarav Sharma', 'intern', 'EMP-102', 'Priya Nair', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-12', FALSE),
-('TSK-407', 'Refactor state provider architecture', 'Decouple view controllers and establish centralized Provider tree for real-time reactivity', 'Backend', 'in_progress', 'high', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-302', 'Green Energy Dashboard', '2026-10-13', FALSE),
-('TSK-408', 'Integrate biometric local authentication', 'Implement LocalAuthentication on Android BiometricPrompt and iOS LocalAuthentication FaceID', 'Mobile App', 'in_progress', 'high', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-301', 'EcoTrack App', '2026-10-14', FALSE),
-('TSK-409', 'Deploy Prometheus and Grafana alerts', 'Set up metrics scraping for PostgreSQL connection pools and p99 latency thresholds', 'DevOps / Cloud', 'in_progress', 'medium', 'EMP-109', 'Rahul Verma', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-15', FALSE),
-('TSK-410', 'Train sensor anomaly autoencoder model', 'Extract historical energy telemetry and train PyTorch autoencoder for voltage spike prediction', 'AI / ML', 'in_progress', 'high', 'EMP-106', 'Ananya Deshmukh', 'employee', 'EMP-106', 'Ananya Deshmukh', 'PRJ-303', 'AI Analytics Platform', '2026-10-16', FALSE),
-('TSK-411', 'Draft campus hiring assessment rubrics', 'Compile technical interview grading rubric for Q3 engineering campus drive', 'Backend', 'in_progress', 'medium', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', NULL, NULL, '2026-10-14', FALSE),
-('TSK-412', 'Coordinate Q3 sales outreach webinar', 'Produce demonstration deck for CleanTech and solar energy enterprise prospects', 'Mobile App', 'in_progress', 'medium', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', NULL, NULL, '2026-10-15', FALSE),
-('TSK-413', 'Reconcile Q3 enterprise client receivables', 'Verify Stripe and wire transfer settlement statements with bank accounts', 'Finance / Accounts', 'in_progress', 'high', 'EMP-115', 'Siddharth Roy', 'employee', 'EMP-115', 'Siddharth Roy', NULL, NULL, '2026-10-16', FALSE);
-
--- To Do Tasks (6 tasks)
-INSERT INTO tasks (id, title, description, domain, status, priority, assigned_to_id, assigned_to_name, assignee_type, assigned_by_id, assigned_by_name, project_id, project_name, due_date, awaiting_review) VALUES
-('TSK-414', 'Design dashboard UI', 'Produce Figma vector components for executive KPI cards and Tasks Donut Chart', 'Frontend', 'todo', 'medium', 'INT-202', 'Bhavna Kulkarni', 'intern', 'EMP-110', 'Divya Iyer', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-15', FALSE),
-('TSK-415', 'Implement Locust load benchmarking', 'Script realistic user journeys to stress-test 10,000 concurrent requests against GraphQL gateway', 'Mobile App', 'todo', 'high', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-17', FALSE),
-('TSK-416', 'Configure AWS WAF managed rules', 'Protect payment API endpoints against SQL injection, cross-site scripting and bot attacks', 'Cybersecurity', 'todo', 'high', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-18', FALSE),
-('TSK-417', 'Setup multi-region Kafka mirrors', 'Establish MirrorMaker 2 cluster between AWS Mumbai and Singapore for disaster recovery', 'Data Engineering', 'todo', 'medium', 'EMP-107', 'Vikram Singh', 'employee', 'EMP-107', 'Vikram Singh', 'PRJ-303', 'AI Analytics Platform', '2026-10-19', FALSE),
-('TSK-418', 'Create client onboarding playbook', 'Write step-by-step documentation for SaaS tenant setup and DNS verification', 'Customer Support', 'todo', 'medium', 'EMP-116', 'Kavita Rao', 'employee', 'EMP-116', 'Kavita Rao', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-20', FALSE),
-('TSK-419', 'Update employee handbook policies', 'Revise remote work security guidelines and intellectual property clauses', 'Administration', 'todo', 'low', 'EMP-114', 'Pooja Hegde', 'employee', 'EMP-114', 'Pooja Hegde', NULL, NULL, '2026-10-22', FALSE);
-
--- Needs Rework Tasks (3 tasks)
-INSERT INTO tasks (id, title, description, domain, status, priority, assigned_to_id, assigned_to_name, assignee_type, assigned_by_id, assigned_by_name, project_id, project_name, due_date, awaiting_review) VALUES
-('TSK-420', 'Deliverable revision #1 - Lead detail dialog', 'Address missing responsive layout constraints on small viewport screens', 'Frontend', 'needs_rework', 'medium', 'INT-202', 'Bhavna Kulkarni', 'intern', 'EMP-104', 'Sneha V', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-12', TRUE),
-('TSK-421', 'Deliverable revision #2 - SQL index optimization', 'Index coverage failed benchmark on multi-tenant partition key scans', 'Backend', 'needs_rework', 'high', 'EMP-103', 'Karthik R', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-13', TRUE),
-('TSK-422', 'Deliverable revision #3 - Mobile push notification handler', 'Silent background push notification fails on iOS 18 power-save mode', 'Mobile App', 'needs_rework', 'high', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-305', 'Fleet Logistics Mobile', '2026-10-14', TRUE);
-
--- Completed Tasks (20 tasks)
 INSERT INTO tasks (id, title, description, domain, status, priority, assigned_to_id, assigned_to_name, assignee_type, assigned_by_id, assigned_by_name, project_id, project_name, due_date, completed_at) VALUES
-('TSK-423', 'Implement CEO executive dashboard layout', 'Render responsive cards and high-contrast dark visual components', 'Frontend', 'completed', 'high', 'EMP-101', 'Arjun Sharma', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-05', '2026-10-05 16:30:00+00'),
-('TSK-424', 'Implement custom Tasks Donut Chart painter', 'Draw animated SVG/Canvas circular ring with center total counter', 'Frontend', 'completed', 'high', 'EMP-104', 'Sneha V', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-05', '2026-10-05 18:45:00+00'),
-('TSK-425', 'Design dark navigation drawer matching mockups', 'Create drawer layout with CEO profile header and routing shortcuts', 'Frontend', 'completed', 'medium', 'EMP-110', 'Divya Iyer', 'employee', 'EMP-110', 'Divya Iyer', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-06', '2026-10-06 11:20:00+00'),
-('TSK-426', 'Setup PostgreSQL 18 master configuration', 'Configure shared_buffers, work_mem and max_connections for workload', 'Backend', 'completed', 'urgent', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-04', '2026-10-04 14:10:00+00'),
-('TSK-427', 'Implement password hashing with Argon2id', 'Replace legacy SHA-256 with Argon2id cryptographic salt and key stretching', 'Backend', 'completed', 'high', 'EMP-103', 'Karthik R', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-04', '2026-10-04 17:00:00+00'),
-('TSK-428', 'Build unified Filter Bottom Sheet modal', 'Create domain, role, team and status filter controls with reset action', 'Frontend', 'completed', 'medium', 'EMP-101', 'Arjun Sharma', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-06', '2026-10-06 15:30:00+00'),
-('TSK-429', 'Configure iOS Runner bundle identifiers', 'Update CFBundleIdentifier and FaceID privacy descriptions in Info.plist', 'Mobile App', 'completed', 'medium', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-301', 'EcoTrack App', '2026-10-05', '2026-10-05 13:00:00+00'),
-('TSK-430', 'Configure Android Gradle 8.13 dependencies', 'Update AndroidManifest.xml permissions and configure minSdk 24', 'Mobile App', 'completed', 'medium', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-301', 'EcoTrack App', '2026-10-05', '2026-10-05 14:45:00+00'),
-('TSK-431', 'Deploy Redis cache cluster on AWS ElastiCache', 'Setup 3-node Redis cluster with automatic failover and read replicas', 'DevOps / Cloud', 'completed', 'high', 'EMP-109', 'Rahul Verma', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-03', '2026-10-03 19:20:00+00'),
-('TSK-432', 'Conduct intern Batch Apr-A orientation', 'Host onboarding session covering code standards, Git branches and PR reviews', 'HR / Recruitment', 'completed', 'medium', 'EMP-111', 'Meera Joshi', 'employee', 'EMP-111', 'Meera Joshi', NULL, NULL, '2026-10-01', '2026-10-01 12:00:00+00'),
-('TSK-433', 'Finalize EcoTrack sensor protocol specs', 'Document Bluetooth Low Energy GATT characteristics for solar telemetry', 'Mobile App', 'completed', 'high', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-301', 'EcoTrack App', '2026-10-02', '2026-10-02 16:30:00+00'),
-('TSK-434', 'Verify payment gateway webhooks idempotency', 'Implement database unique constraint and Redis lock for order IDs', 'Backend', 'completed', 'urgent', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-304', 'FinTech Payment Gateway', '2026-10-03', '2026-10-03 15:40:00+00'),
-('TSK-435', 'Automate CI test execution in GitHub Actions', 'Create parallel test matrices for unit, widget and integration tests', 'QA / Testing', 'completed', 'medium', 'EMP-108', 'Neha Patel', 'employee', 'EMP-108', 'Neha Patel', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-04', '2026-10-04 11:10:00+00'),
-('TSK-436', 'Publish Q3 company press release', 'Highlight Digital Inertia AI telemetry suite expansion and customer wins', 'Content / Communications', 'completed', 'low', 'EMP-117', 'Aditya Sen', 'employee', 'EMP-117', 'Aditya Sen', NULL, NULL, '2026-10-02', '2026-10-02 17:00:00+00'),
-('TSK-437', 'Prepare GreenTech enterprise quotation', 'Assemble bill of materials and tiered cloud licensing proposal', 'Sales / Business Development', 'completed', 'high', 'EMP-112', 'Rajesh Kumar', 'employee', 'EMP-112', 'Rajesh Kumar', NULL, NULL, '2026-10-04', '2026-10-04 16:15:00+00'),
-('TSK-438', 'Audit AWS VPC security group ingress rules', 'Close unnecessary inbound ports and restrict SSH to Bastion VPN tunnel', 'Cybersecurity', 'completed', 'high', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-03', '2026-10-03 18:00:00+00'),
-('TSK-439', 'Build lead pipeline Kanban card components', 'Design responsive status pill badges and quick contact action buttons', 'Frontend', 'completed', 'medium', 'EMP-104', 'Sneha V', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-06', '2026-10-06 14:00:00+00'),
-('TSK-440', 'Review Fleet Logistics GPS ping frequency', 'Optimize location telemetry throttling to conserve 35% battery consumption', 'Mobile App', 'completed', 'medium', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-305', 'Fleet Logistics Mobile', '2026-10-05', '2026-10-05 17:30:00+00'),
-('TSK-441', 'Setup daily automated PostgreSQL backups', 'Configure pg_dump scheduled snapshots to S3 bucket with 30-day lifecycle rule', 'DevOps / Cloud', 'completed', 'high', 'EMP-109', 'Rahul Verma', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-306', 'Digital Inertia ERP Core', '2026-10-04', '2026-10-04 10:45:00+00'),
-('TSK-442', 'Conduct quarterly financial forecast review', 'Review burn rate, recurring ARR and contractor disbursements with executive board', 'Finance / Accounts', 'completed', 'high', 'EMP-115', 'Siddharth Roy', 'employee', 'EMP-115', 'Siddharth Roy', NULL, NULL, '2026-10-03', '2026-10-03 16:00:00+00');
+-- === PROJECT 1: Digital Marketing & Growth Engine (PRJ-401) ===
+-- Technical Department Part:
+('TSK-101', 'Conversion Pixel & Telemetry SDK Integration', 'Embed Meta CAPI, Google Ads Tag, and server-side tracking pipelines with sub-millisecond response', 'Technical', 'in_progress', 'urgent', 'EMP-101', 'Arjun Sharma', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-18', NULL),
+('TSK-102', 'Real-time Marketing Attribution API', 'Build high-throughput event ingestion endpoint to reconcile multi-touch campaign attribution IDs', 'Technical', 'in_progress', 'high', 'EMP-102', 'Priya Nair', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-19', NULL),
+
+-- Digital Marketing Department Part:
+('TSK-103', 'Google & Meta Omnichannel PPC Campaign Launch', 'Configure high-intent search ads, dynamic remarketing catalog, and target ROAS bid strategy', 'Digital Marketing', 'in_progress', 'urgent', 'EMP-302', 'Sameer Deshmukh', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-17', NULL),
+('TSK-104', 'Organic Keyword Silo & Technical SEO Overhaul', 'Implement Core Web Vitals audit, schema structured data, and high-volume pillar content clusters', 'Digital Marketing', 'in_progress', 'high', 'EMP-303', 'Pooja Hegde', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-20', NULL),
+('TSK-105', 'High-Converting Ad Creatives & Brand Video Assets', 'Deliver motion graphics, responsive display banners, and TikTok/Reels product showcases', 'Digital Marketing', 'completed', 'medium', 'EMP-305', 'Rhea Pillai', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-12', '2026-10-12 17:30:00+00'),
+
+-- Sales & Marketing Department Part:
+('TSK-106', 'Inbound Lead Qualification & CRM Attribution Sync', 'Configure automated HubSpot webhook triggers to route marketing-qualified leads to sales reps', 'Sales & Marketing', 'in_progress', 'high', 'EMP-203', 'Vikram Malhotra', 'employee', 'EMP-201', 'Rajesh Kumar', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-21', NULL),
+
+-- Finance Department Part:
+('TSK-107', 'Marketing Ad Spend & CAC Financial Audit', 'Reconcile prepaid ad network invoices against monthly burn rate and audit blended CAC metrics', 'Finance', 'in_progress', 'high', 'EMP-504', 'Deepak Chawla', 'employee', 'EMP-501', 'Rameshwar Gupta', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-22', NULL),
+
+-- HR Department Part:
+('TSK-108', 'Creative Agency & Freelance Contractor Onboarding', 'Execute master services agreements and compliance NDAs for external video production team', 'HR', 'completed', 'medium', 'EMP-404', 'Karan Singhania', 'employee', 'EMP-401', 'Sunita Verma', 'PRJ-401', 'Digital Marketing & Growth Engine', '2026-10-10', '2026-10-10 14:00:00+00'),
+
+-- === PROJECT 2: Digital Inertia ERP Core (PRJ-402) ===
+-- Technical Department Part:
+('TSK-201', 'Client Pitch Deck Finalization (DI Rebrand & Strategy)', 'Finalize executive presentation deck, brand identity system, and SLA architectures', 'Technical', 'in_progress', 'urgent', 'EMP-101', 'Arjun Sharma', 'employee', 'EMP-201', 'Rajesh Kumar', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-18', NULL),
+('TSK-202', 'PostgreSQL 18 Query Latency Optimization', 'Optimize execution plans for employee task rollups and add composite indexes for multi-tenant queries', 'Technical', 'in_progress', 'high', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-19', NULL),
+('TSK-203', 'Centralized State Provider Architecture', 'Refactor state machines to broadcast granular updates via ChangeNotifier across all department screens', 'Technical', 'in_progress', 'high', 'EMP-103', 'Karthik R', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-20', NULL),
+('TSK-204', 'Design Tokens & 2x3 Grid Layout Standard', 'Implement monochrome theme tokens and uniform childAspectRatio grids across dashboard cards', 'Technical', 'completed', 'high', 'EMP-104', 'Sneha V', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-13', '2026-10-13 18:00:00+00'),
+('TSK-205', 'Technical Deliverables & Sub-Task Partitioning', 'Decompose quarterly sprint objectives into actionable individual developer work packages', 'Technical', 'in_progress', 'high', 'EMP-118', 'Shreya Kulkarni', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-19', NULL),
+
+-- Sales & Marketing Department Part:
+('TSK-206', 'Executive Sales Dashboard Requirements Sign-off', 'Review pipeline funnel analytics, deal stage transitions, and quarterly quota projections', 'Sales & Marketing', 'completed', 'medium', 'EMP-204', 'Ananya Kapoor', 'employee', 'EMP-201', 'Rajesh Kumar', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-11', '2026-10-11 11:30:00+00'),
+
+-- HR Department Part:
+('TSK-207', 'Employee Directory & Leave Balance Integration', 'Verify 25 employee profiles, reporting chains, and automated annual leave quota deductions', 'HR', 'in_progress', 'high', 'EMP-403', 'Neha Bansal', 'employee', 'EMP-401', 'Sunita Verma', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-20', NULL),
+
+-- Finance Department Part:
+('TSK-208', 'Enterprise General Ledger Chart of Accounts Validation', 'Audit journal voucher posting rules, cost center tagging, and depreciation schedule tables', 'Finance', 'in_progress', 'high', 'EMP-502', 'Shalini Rao', 'employee', 'EMP-501', 'Rameshwar Gupta', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-21', NULL),
+
+-- Digital Marketing Department Part:
+('TSK-209', 'Corporate Brand Identity & Typography Guidelines', 'Publish Instrument Sans font styling rules, SVG logo assets, and social badge components', 'Digital Marketing', 'completed', 'medium', 'EMP-304', 'Naveen Chandra', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-402', 'Digital Inertia ERP Core', '2026-10-09', '2026-10-09 16:00:00+00'),
+
+-- === PROJECT 3: EcoTrack IoT Mobile Platform (PRJ-403) ===
+-- Technical Department Part:
+('TSK-301', 'BLE Inverter Telemetry Companion App', 'Implement Bluetooth Low Energy GATT characteristic listener in Flutter for solar inverters', 'Technical', 'in_progress', 'urgent', 'EMP-105', 'Rohan Mehta', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-403', 'EcoTrack IoT Mobile Platform', '2026-10-22', NULL),
+('TSK-302', 'Edge Telemetry Time-Series Pipeline', 'Process 5,000 pings/sec of power, voltage, and temperature metrics with TimescaleDB retention', 'Technical', 'in_progress', 'high', 'EMP-103', 'Karthik R', 'employee', 'EMP-105', 'Rohan Mehta', 'PRJ-403', 'EcoTrack IoT Mobile Platform', '2026-10-23', NULL),
+
+-- Sales & Marketing Department Part:
+('TSK-303', 'CleanTech Enterprise Trial & Demo Coordination', 'Coordinate on-site hardware pilot demonstration for 3 commercial solar farm operators', 'Sales & Marketing', 'in_progress', 'high', 'EMP-205', 'Aditya Joshi', 'employee', 'EMP-201', 'Rajesh Kumar', 'PRJ-403', 'EcoTrack IoT Mobile Platform', '2026-10-24', NULL),
+
+-- Digital Marketing Department Part:
+('TSK-304', 'CleanTech Case Study & Green Energy Whitepaper', 'Publish joint case study detailing 34% reduction in downtime through automated alerts', 'Digital Marketing', 'in_progress', 'medium', 'EMP-302', 'Sameer Deshmukh', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-403', 'EcoTrack IoT Mobile Platform', '2026-10-25', NULL),
+
+-- Finance Department Part:
+('TSK-305', 'IoT Sensor Hardware Bill of Materials Audit', 'Reconcile procurement purchase orders for IoT gateways, sensors, and customs duty fees', 'Finance', 'completed', 'high', 'EMP-503', 'Manish Aggarwal', 'employee', 'EMP-502', 'Shalini Rao', 'PRJ-403', 'EcoTrack IoT Mobile Platform', '2026-10-08', '2026-10-08 15:45:00+00'),
+
+-- HR Department Part:
+('TSK-306', 'Embedded Systems Firmware Staffing Requisition', 'Interview 4 senior embedded C++ and RTOS engineers for Phase 2 hardware integration sprint', 'HR', 'in_progress', 'medium', 'EMP-402', 'Amitabh Roy', 'employee', 'EMP-401', 'Sunita Verma', 'PRJ-403', 'EcoTrack IoT Mobile Platform', '2026-10-26', NULL),
+
+-- === PROJECT 4: OmniChannel Enterprise Sales Rollout (PRJ-404) ===
+-- Sales & Marketing Department Part:
+('TSK-401', 'Zenith Logistics Enterprise Master Service Contract', 'Negotiate master terms, SLA penalty schedules, and multi-year maintenance tiers with client counsel', 'Sales & Marketing', 'in_progress', 'urgent', 'EMP-201', 'Rajesh Kumar', 'employee', 'EMP-201', 'Rajesh Kumar', 'PRJ-404', 'OmniChannel Enterprise Sales Rollout', '2026-10-21', NULL),
+('TSK-402', 'Territory Account Mapping & Sales Rep Quota Allocation', 'Distribute regional enterprise target accounts across 5 enterprise sales account executives', 'Sales & Marketing', 'in_progress', 'high', 'EMP-202', 'Meera Sen', 'employee', 'EMP-201', 'Rajesh Kumar', 'PRJ-404', 'OmniChannel Enterprise Sales Rollout', '2026-10-22', NULL),
+
+-- Technical Department Part:
+('TSK-403', 'Sales Companion Offline Field App', 'Implement local SQLite database caching and optimistic sync for field sales reps in transit', 'Technical', 'in_progress', 'high', 'EMP-104', 'Sneha V', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-404', 'OmniChannel Enterprise Sales Rollout', '2026-10-24', NULL),
+
+-- Digital Marketing Department Part:
+('TSK-404', 'B2B Sales Enablement Collateral & Interactive Calculator', 'Produce interactive ROI savings calculator web widget and enterprise product one-pagers', 'Digital Marketing', 'in_progress', 'medium', 'EMP-305', 'Rhea Pillai', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-404', 'OmniChannel Enterprise Sales Rollout', '2026-10-25', NULL),
+
+-- Finance Department Part:
+('TSK-405', 'Recurring Enterprise Invoicing & Milestone Milestone Schedule', 'Configure automated recurring billing for quarterly software licenses and bank wire instructions', 'Finance', 'in_progress', 'high', 'EMP-505', 'Tanvi Mathur', 'employee', 'EMP-502', 'Shalini Rao', 'PRJ-404', 'OmniChannel Enterprise Sales Rollout', '2026-10-23', NULL),
+
+-- HR Department Part:
+('TSK-406', 'Sales Incentive & Commission Policy Framework', 'Draft quarterly performance incentive tiers, accelerated attainment accelerators, and SPIFFs', 'HR', 'in_progress', 'high', 'EMP-405', 'Divya Nambiar', 'employee', 'EMP-401', 'Sunita Verma', 'PRJ-404', 'OmniChannel Enterprise Sales Rollout', '2026-10-26', NULL),
+
+-- === PROJECT 5: FinTech Payment Gateway Microservices (PRJ-405 - Completed) ===
+('TSK-501', 'PCI-DSS HSM Hardware Security Module Attestation', 'Deploy Argon2id password hashing, hardware token signing, and SOC-2 Type II audit logs', 'Technical', 'completed', 'urgent', 'EMP-102', 'Priya Nair', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-405', 'FinTech Payment Gateway Microservices', '2026-09-15', '2026-09-15 18:00:00+00'),
+('TSK-502', 'High-Frequency Multi-Currency Clearing Ledger', 'Engineered double-entry bookkeeping engine supporting EUR, USD, INR, and SGD currency pairs', 'Technical', 'completed', 'high', 'EMP-103', 'Karthik R', 'employee', 'EMP-102', 'Priya Nair', 'PRJ-405', 'FinTech Payment Gateway Microservices', '2026-09-20', '2026-09-20 16:30:00+00'),
+('TSK-503', 'Banking Settlement & Escrow Account Reconciliation', 'Automated reconciliation routines matching 100,000 daily transaction batches with central banks', 'Finance', 'completed', 'urgent', 'EMP-501', 'Rameshwar Gupta', 'employee', 'EMP-501', 'Rameshwar Gupta', 'PRJ-405', 'FinTech Payment Gateway Microservices', '2026-09-25', '2026-09-25 19:15:00+00'),
+('TSK-504', 'Compliance & Infosec Security Training Cohort', 'Conducted mandatory ISO 27001 zero-trust training and secure coding assessment for engineers', 'HR', 'completed', 'medium', 'EMP-401', 'Sunita Verma', 'employee', 'EMP-401', 'Sunita Verma', 'PRJ-405', 'FinTech Payment Gateway Microservices', '2026-09-18', '2026-09-18 12:00:00+00'),
+('TSK-505', 'Global Fintech Launch PR & Media Wire Release', 'Published press release across Bloomberg, TechCrunch, and Financial Express on launch', 'Digital Marketing', 'completed', 'medium', 'EMP-304', 'Naveen Chandra', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-405', 'FinTech Payment Gateway Microservices', '2026-09-28', '2026-09-28 10:00:00+00'),
+
+-- === PROJECT 6: Corporate People Hub & Workforce System (PRJ-406 - Completed) ===
+('TSK-601', 'Campus University Recruitment Funnel Automation', 'Built automated screening portal evaluating 2,400 engineering candidates across 12 universities', 'HR', 'completed', 'high', 'EMP-401', 'Sunita Verma', 'employee', 'EMP-401', 'Sunita Verma', 'PRJ-406', 'Corporate People Hub & Workforce System', '2026-08-15', '2026-08-15 17:00:00+00'),
+('TSK-602', 'University Campus Drives & Interview Panel Rostering', 'Scheduled 68 technical rounds and selected 26 top candidates for Batch Apr-A and Apr-B cohorts', 'HR', 'completed', 'high', 'EMP-402', 'Amitabh Roy', 'employee', 'EMP-401', 'Sunita Verma', 'PRJ-406', 'Corporate People Hub & Workforce System', '2026-08-20', '2026-08-20 15:00:00+00'),
+('TSK-603', 'Employee Self-Service Profile & Leave Ledger Portal', 'Created mobile self-service portal for leave applications, attendance, and emergency contacts', 'Technical', 'completed', 'medium', 'EMP-104', 'Sneha V', 'employee', 'EMP-101', 'Arjun Sharma', 'PRJ-406', 'Corporate People Hub & Workforce System', '2026-08-25', '2026-08-25 14:30:00+00'),
+('TSK-604', 'Intern Stipend & Campus Travel Expense Audit', 'Disbursed quarterly intern stipends and audited university career fair travel expenses', 'Finance', 'completed', 'medium', 'EMP-504', 'Deepak Chawla', 'employee', 'EMP-502', 'Shalini Rao', 'PRJ-406', 'Corporate People Hub & Workforce System', '2026-08-28', '2026-08-28 16:45:00+00'),
+('TSK-605', 'Employer Brand Campus Social Campaign', 'Launched "Code at Digital Inertia" recruitment campaign reaching 150,000 student engineers', 'Digital Marketing', 'completed', 'low', 'EMP-303', 'Pooja Hegde', 'employee', 'EMP-301', 'Kavita Reddy', 'PRJ-406', 'Corporate People Hub & Workforce System', '2026-08-30', '2026-08-30 11:00:00+00');
 
 -- ------------------------------------------------------------------------------
--- 8. LEADS (14 Realistic Corporate Prospects)
--- Note: 4 leads have next_follow_up in the past to trigger the "4 leads need follow-up" alert!
+-- 8. LEADS (14 Realistic Prospects)
 -- ------------------------------------------------------------------------------
 INSERT INTO leads (id, company_name, client_name, domain, email, phone, stage, deal_value, owner_id, owner_name, next_follow_up, source, notes) VALUES
-('LED-501', 'GreenTech Solutions', 'Vikramaditya Rao', 'IT Consulting', 'vikram@greentech.in', '+91 98450 12001', 'new', 35000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-12', 'Inbound Enterprise Lead', 'Interested in building unified carbon offset tracking software for solar farms'),
-('LED-502', 'InnovortX', 'Sarah Al-Mansoor', 'Mobile App', 'sarah.m@innovortx.ae', '+971 50 123 4567', 'contacted', 48000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-11', 'Dubai Tech Summit Inbound', 'Requires cross-platform Flutter consumer app with payment gateway integration'),
-('LED-503', 'Skyline Infra', 'Ramesh Namboodiri', 'Web Platform', 'ramesh@skylineinfra.com', '+91 98200 45003', 'proposal', 62000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-14', 'Direct Executive Outreach', 'Smart city IoT asset monitoring portal. Proposal submitted on Oct 4.'),
-('LED-504', 'SolarEase', 'Kavitha Balasubramanian', 'Solar Solutions', 'kavitha@solarease.com', '+91 98410 78004', 'qualified', 28000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-16', 'Industry Conference Referral', 'B2B distributor portal for rooftop solar installations and inverter telemetry'),
-('LED-505', 'CyberShield Corp', 'Marcus Vance', 'Cloud Services', 'm.vance@cybershield.us', '+1 415 889 0105', 'contacted', 85000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-09', 'AWS Partner Network', 'Missed follow-up: Follow-up call requested on Cloud Security Posture Management engine'), -- Missed Follow-up
-('LED-506', 'Nexus Health Systems', 'Dr. Arvind Swaminathan', 'Cloud Services', 'arvind@nexushealth.org', '+91 98110 56006', 'contacted', 95000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-09', 'Direct Executive Outreach', 'Missed follow-up: HIPAA-compliant patient diagnostics archive and HL7 FHIR sync API'), -- Missed Follow-up
-('LED-507', 'Quantra Analytics', 'Dr. Elena Rostova', 'Web Platform', 'elena@quantra.ch', '+41 22 767 0107', 'proposal', 55000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-08', 'Webinar Attendee Lead', 'Missed follow-up: Quantitative risk analytics dashboard. Revised timeline required.'), -- Missed Follow-up
-('LED-508', 'Apex Cold-Chain Logistics', 'Harpreet Singh Gill', 'Mobile App', 'harpreet@apexlogistics.in', '+91 98720 33008', 'new', 42000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-09', 'Cold Outreach Campaign', 'Missed follow-up: Fleet temperature monitoring sensor app for refrigerated pharma trucks'), -- Missed Follow-up
-('LED-509', 'Aura Retail Tech', 'Natasha Sen', 'Mobile App', 'natasha@auraretail.com', '+91 98300 22009', 'new', 38000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-18', 'Shopify Plus Partner Directory', 'Omnichannel inventory sync and POS companion mobile app for lifestyle stores'),
-('LED-510', 'BlueWave Maritime', 'Capt. Alistair Finch', 'IT Consulting', 'finch@bluewave.uk', '+44 20 7946 0110', 'proposal', 72000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-17', 'London Shipping Summit', 'Vessel tracking, crew rotation and bunkering fuel cost optimization platform'),
-('LED-511', 'Vertex Robotics', 'Chen Wei', 'AI / ML', 'chen.wei@vertexrobotics.sg', '+65 6789 0111', 'qualified', 88000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-19', 'RoboAsia Exhibition', 'Computer vision automated inspection engine for surface defect classification'),
-('LED-512', 'ZenMatrix AI', 'Amitabh Ghosh', 'AI / ML', 'amitabh@zenmatrix.ai', '+91 98210 99012', 'qualified', 64000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-20', 'AngelList Syndicate Lead', 'LLM semantic search engine and RAG pipeline for internal legal document analysis'),
-('LED-513', 'CloudSprint Networks', 'David K. O''Connor', 'Cloud Services', 'david@cloudsprint.io', '+1 206 555 0113', 'contacted', 50000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-15', 'Kubernetes Community Day', 'Multi-tenant Kubernetes ingress billing and bandwidth utilization reporter'),
-('LED-514', 'TerraWatt CleanTech', 'Suresh Poddar', 'Solar Solutions', 'suresh@terrawatt.co.in', '+91 98311 44014', 'won', 110000.00, 'EMP-112', 'Rajesh Kumar', '2026-10-01', 'Direct Executive Outreach', 'Won enterprise contract: National solar farm supervisory control and telemetry gateway');
+('LED-501', 'GreenTech Solutions', 'Vikramaditya Rao', 'IT Consulting', 'vikram@greentech.in', '+91 98450 12001', 'new', 35000.00, 'EMP-201', 'Rajesh Kumar', '2026-10-12', 'Inbound Enterprise Lead', 'Unified carbon offset tracking software for commercial solar farms'),
+('LED-502', 'OmniSphere Retail Group', 'Sarah Al-Mansoor', 'Digital Marketing', 'sarah.m@omnisphere.ae', '+971 50 123 4567', 'won', 65000.00, 'EMP-201', 'Rajesh Kumar', '2026-10-14', 'Dubai Retail Summit Inbound', 'Converted into active PRJ-401 Digital Marketing project'),
+('LED-503', 'Skyline Infra', 'Ramesh Namboodiri', 'Web Platform', 'ramesh@skylineinfra.com', '+91 98200 45003', 'proposal', 62000.00, 'EMP-203', 'Vikram Malhotra', '2026-10-14', 'Direct Executive Outreach', 'Smart city asset monitoring portal. Proposal submitted.'),
+('LED-504', 'SolarEase Systems', 'Kavitha Balasubramanian', 'Solar Solutions', 'kavitha@solarease.com', '+91 98410 78004', 'qualified', 28000.00, 'EMP-202', 'Meera Sen', '2026-10-16', 'Industry Conference Referral', 'B2B distributor portal for rooftop solar installations');
 
 -- ------------------------------------------------------------------------------
--- 9. CONFIGURABLE THRESHOLD ALERT SETTINGS (Singleton Defaults)
+-- 9. CONFIGURABLE THRESHOLD ALERT SETTINGS
 -- ------------------------------------------------------------------------------
 INSERT INTO alert_threshold_settings (id, task_overdue_days, intern_missed_update_days, project_behind_schedule_percent, employee_capacity_max_tasks, intern_low_score_cutoff)
 VALUES (1, 1, 2, 15, 4, 6.0)
@@ -235,7 +262,63 @@ SET current_active_tasks = (
 -- 11. AUDIT LOGS
 -- ------------------------------------------------------------------------------
 INSERT INTO audit_logs (action, module, details, performed_by) VALUES
-('Database Initialized', 'System', 'Provisioned PostgreSQL 18 enterprise schema with multi-domain tables', 'Laven Lokesh (CEO)'),
-('Roles Provisioned', 'Admin', 'Configured 10 technical and 8 non-technical corporate tracks', 'Laven Lokesh (CEO)'),
-('Batch Intake Synchronized', 'People', 'Imported Batch Apr-A (14 interns) and Batch Apr-B (10 interns)', 'Meera Joshi (HR)'),
-('Thresholds Applied', 'Admin', 'Set task overdue tolerance (1d), intern inactivity (2d), project lag (15%)', 'Laven Lokesh (CEO)');
+('Database Initialized', 'System', 'Provisioned PostgreSQL enterprise schema with 5 departments and 25 employees', 'Laven Lokesh (CEO)'),
+('Projects Synchronized', 'Projects', 'Configured 4 in-progress projects (incl. Digital Marketing) and 2 completed projects', 'Laven Lokesh (CEO)'),
+('Task Partitioning', 'Tasks', 'Decomposed multi-department parts and assigned work packages to all employees', 'Laven Lokesh (CEO)');
+
+-- ------------------------------------------------------------------------------
+-- 12. USERS (Authentication Credentials - Default Password: password123!)
+-- Hash: $2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK
+-- ------------------------------------------------------------------------------
+INSERT INTO users (id, email, password_hash, full_name, role, employee_id) VALUES
+-- CEO Executive Leadership
+('USR-001', 'laven@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Laven Lokesh', 'ROLE_CEO', NULL),
+
+-- 1. Technical Department (5 Employees + Specialist)
+('USR-101', 'arjun.sharma@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Arjun Sharma', 'ROLE_POC', 'EMP-101'),
+('USR-102', 'priya.nair@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Priya Nair', 'ROLE_POC', 'EMP-102'),
+('USR-103', 'karthik.r@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Karthik R', 'ROLE_TECH', 'EMP-103'),
+('USR-104', 'sneha.v@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Sneha V', 'ROLE_TECH', 'EMP-104'),
+('USR-105', 'rohan.mehta@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Rohan Mehta', 'ROLE_POC', 'EMP-105'),
+('USR-118', 'shreya.kulkarni@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Shreya Kulkarni', 'ROLE_TECH', 'EMP-118'),
+
+-- 2. Sales & Marketing Department (5 Employees)
+('USR-201', 'rajesh.kumar@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Rajesh Kumar', 'ROLE_SALES_MARKETING', 'EMP-201'),
+('USR-202', 'meera.sen@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Meera Sen', 'ROLE_SALES_MARKETING', 'EMP-202'),
+('USR-203', 'vikram.malhotra@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Vikram Malhotra', 'ROLE_SALES_MARKETING', 'EMP-203'),
+('USR-204', 'ananya.kapoor@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Ananya Kapoor', 'ROLE_SALES_MARKETING', 'EMP-204'),
+('USR-205', 'aditya.joshi@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Aditya Joshi', 'ROLE_SALES_MARKETING', 'EMP-205'),
+
+-- 3. Digital Marketing Department (5 Employees)
+('USR-301', 'kavita.reddy@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Kavita Reddy', 'ROLE_DIGITAL_MARKETING', 'EMP-301'),
+('USR-302', 'sameer.deshmukh@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Sameer Deshmukh', 'ROLE_DIGITAL_MARKETING', 'EMP-302'),
+('USR-303', 'pooja.hegde@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Pooja Hegde', 'ROLE_DIGITAL_MARKETING', 'EMP-303'),
+('USR-304', 'naveen.chandra@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Naveen Chandra', 'ROLE_DIGITAL_MARKETING', 'EMP-304'),
+('USR-305', 'rhea.pillai@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Rhea Pillai', 'ROLE_DIGITAL_MARKETING', 'EMP-305'),
+
+-- 4. HR Department (5 Employees)
+('USR-401', 'sunita.verma@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Sunita Verma', 'ROLE_HR', 'EMP-401'),
+('USR-402', 'amitabh.roy@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Amitabh Roy', 'ROLE_HR', 'EMP-402'),
+('USR-403', 'neha.bansal@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Neha Bansal', 'ROLE_HR', 'EMP-403'),
+('USR-404', 'karan.singhania@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Karan Singhania', 'ROLE_HR', 'EMP-404'),
+('USR-405', 'divya.nambiar@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Divya Nambiar', 'ROLE_HR', 'EMP-405'),
+
+-- 5. Finance Department (5 Employees)
+('USR-501', 'rameshwar.gupta@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Rameshwar Gupta', 'ROLE_FINANCE', 'EMP-501'),
+('USR-502', 'shalini.rao@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Shalini Rao', 'ROLE_FINANCE', 'EMP-502'),
+('USR-503', 'manish.aggarwal@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Manish Aggarwal', 'ROLE_FINANCE', 'EMP-503'),
+('USR-504', 'deepak.chawla@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Deepak Chawla', 'ROLE_FINANCE', 'EMP-504'),
+('USR-505', 'tanvi.mathur@digitalinertia.com', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Tanvi Mathur', 'ROLE_FINANCE', 'EMP-505'),
+
+-- Interns
+('USR-201', 'aarav.gupta@collegemail.edu', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Aarav Gupta', 'ROLE_INTERN', 'INT-201'),
+('USR-202', 'bhavya.shah@collegemail.edu', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Bhavya Shah', 'ROLE_INTERN', 'INT-202'),
+('USR-203', 'chirag.mathur@collegemail.edu', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Chirag Mathur', 'ROLE_INTERN', 'INT-203'),
+('USR-204', 'deepika.pillai@collegemail.edu', '$2a$10$7J3NSDKmdXX/Ir3l/T4BLeMtcM2QrOtWgb18WM5BCRID7A4tp6FwK', 'Deepika Pillai', 'ROLE_INTERN', 'INT-204')
+
+ON CONFLICT (id) DO UPDATE SET
+  email = EXCLUDED.email,
+  password_hash = EXCLUDED.password_hash,
+  full_name = EXCLUDED.full_name,
+  role = EXCLUDED.role,
+  employee_id = EXCLUDED.employee_id;

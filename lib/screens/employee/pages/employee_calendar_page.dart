@@ -9,7 +9,7 @@ import '../../../models/task.dart';
 import '../../../models/sales_call.dart';
 import '../widgets/meeting_details_dialog.dart';
 import '../widgets/create_task_dialog.dart';
-import '../../tasks/task_detail_dialog.dart';
+import '../widgets/employee_task_detail_modal.dart';
 
 /// Screen 5: Unified Employee Calendar
 /// Adhering strictly to PRD Section 10 & Multi-Department Calendar Requirements:
@@ -29,7 +29,7 @@ class EmployeeCalendarPage extends StatefulWidget {
     this.employee,
     this.employeeId,
     this.showAppBar = false,
-    this.allowEmployeeSwitching = true,
+    this.allowEmployeeSwitching = false,
   });
 
   @override
@@ -40,6 +40,7 @@ class _EmployeeCalendarPageState extends State<EmployeeCalendarPage> {
   DateTime _focusedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
   DateTime _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   String _viewMode = 'Month'; // 'Day', 'Week', 'Month'
+  String _selectedTag = 'All'; // 'All', 'Tasks', 'Deadlines', 'Meetings', 'Task Breakdown'
   Employee? _selectedEmployee;
 
   @override
@@ -48,33 +49,7 @@ class _EmployeeCalendarPageState extends State<EmployeeCalendarPage> {
     _selectedEmployee = widget.employee;
   }
 
-  void _previousPeriod() {
-    setState(() {
-      if (_viewMode == 'Day') {
-        _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-        _focusedMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-      } else if (_viewMode == 'Week') {
-        _selectedDate = _selectedDate.subtract(const Duration(days: 7));
-        _focusedMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-      } else {
-        _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1, 1);
-      }
-    });
-  }
 
-  void _nextPeriod() {
-    setState(() {
-      if (_viewMode == 'Day') {
-        _selectedDate = _selectedDate.add(const Duration(days: 1));
-        _focusedMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-      } else if (_viewMode == 'Week') {
-        _selectedDate = _selectedDate.add(const Duration(days: 7));
-        _focusedMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-      } else {
-        _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1, 1);
-      }
-    });
-  }
 
   void _goToToday() {
     final now = DateTime.now();
@@ -361,10 +336,27 @@ class _EmployeeCalendarPageState extends State<EmployeeCalendarPage> {
           c.nextFollowUpDate!.day == _selectedDate.day;
     }).toList();
 
-    final totalDayEvents = selectedDayTasks.length + selectedDayMeetings.length + selectedDayCalls.length;
+    final selectedDayDeadlines = selectedDayTasks.where((t) => t.isOverdue || t.isDueToday).toList();
+
+    List<CompanyTask> displayedTasks = selectedDayTasks;
+    List<Meeting> displayedMeetings = selectedDayMeetings;
+    List<SalesCall> displayedCalls = selectedDayCalls;
+
+    if (_selectedTag == 'Tasks') {
+      displayedMeetings = [];
+      displayedCalls = [];
+    } else if (_selectedTag == 'Deadlines') {
+      displayedTasks = selectedDayDeadlines;
+      displayedMeetings = [];
+      displayedCalls = [];
+    } else if (_selectedTag == 'Meetings') {
+      displayedTasks = [];
+      displayedCalls = [];
+    }
+
+    final totalDisplayedEvents = displayedTasks.length + displayedMeetings.length + displayedCalls.length;
     final monthHeaderFormat = DateFormat('MMMM yyyy');
     final selectedDayHeaderFormat = DateFormat('EEEE, MMM d, yyyy');
-    final deptColor = _getDepartmentColor(activeEmp.department);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F7),
@@ -418,108 +410,78 @@ class _EmployeeCalendarPageState extends State<EmployeeCalendarPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Employee Banner & Switching Header
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: deptColor.withValues(alpha: 0.12),
-                    child: Text(
-                      activeEmp.name.substring(0, 1),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: deptColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                activeEmp.name,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF212529),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: deptColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                activeEmp.department,
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: deptColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          '${activeEmp.id} • ${activeEmp.role}',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.allowEmployeeSwitching)
-                    InkWell(
-                      onTap: () => _showEmployeePickerSheet(context, erp, activeEmp),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.swap_horiz_rounded, size: 16, color: Color(0xFF334155)),
-                            SizedBox(width: 4),
-                            Text(
-                              'Switch',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF334155),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-
             // Calendar Controls Bar
             Container(
               color: Colors.white,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Column(
                 children: [
+                  // Active Employee Banner with Switch Button
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor: _getDepartmentColor(activeEmp.department),
+                              child: Text(
+                                activeEmp.name.isNotEmpty ? activeEmp.name[0] : 'U',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  activeEmp.name,
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
+                                ),
+                                Text(
+                                  activeEmp.department.contains('Sales')
+                                      ? 'Sales'
+                                      : (activeEmp.department.contains('Market')
+                                          ? 'Marketing'
+                                          : activeEmp.department),
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF64748B)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        InkWell(
+                          onTap: () => _showEmployeePickerSheet(context, erp, activeEmp),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF212529),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.swap_horiz_rounded, size: 14, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Switch',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -575,23 +537,6 @@ class _EmployeeCalendarPageState extends State<EmployeeCalendarPage> {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 6),
-
-                          // Arrows
-                          IconButton(
-                            icon: const Icon(Icons.chevron_left_rounded, size: 22, color: Color(0xFF212529)),
-                            onPressed: _previousPeriod,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.chevron_right_rounded, size: 22, color: Color(0xFF212529)),
-                            onPressed: _nextPeriod,
-                            visualDensity: VisualDensity.compact,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                          ),
                         ],
                       ),
                     ],
@@ -610,15 +555,251 @@ class _EmployeeCalendarPageState extends State<EmployeeCalendarPage> {
             ),
             const Divider(height: 1, color: Color(0xFFE2E8F0)),
 
-            // View Content Body: Daily Schedule Agenda or Day Schedule List
+            // Interactive Filter Tags Row: Tasks / Deadlines / Meetings / Task Breakdown
+            _buildTagsFilterBar(selectedDayTasks, selectedDayDeadlines, selectedDayMeetings, empTasks),
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+
+            // View Content Body: Daily Schedule Agenda, Day Schedule List, or Task Breakdown View
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 80),
-              child: _viewMode == 'Day'
-                  ? _buildDailyTimelineAgenda(context, erp, selectedDayTasks, selectedDayMeetings, selectedDayCalls, selectedDayHeaderFormat)
-                  : _buildSelectedDayScheduleSection(context, erp, selectedDayTasks, selectedDayMeetings, selectedDayCalls, selectedDayHeaderFormat, totalDayEvents),
+              child: _selectedTag == 'Task Breakdown'
+                  ? _buildTaskBreakdownView(context, erp, empTasks)
+                  : (_viewMode == 'Day'
+                      ? _buildDailyTimelineAgenda(context, erp, displayedTasks, displayedMeetings, displayedCalls, selectedDayHeaderFormat)
+                      : _buildSelectedDayScheduleSection(context, erp, displayedTasks, displayedMeetings, displayedCalls, selectedDayHeaderFormat, totalDisplayedEvents)),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Interactive Schedule Filter Tags Bar
+  Widget _buildTagsFilterBar(
+    List<CompanyTask> dayTasks,
+    List<CompanyTask> dayDeadlines,
+    List<Meeting> dayMeetings,
+    List<CompanyTask> allTasks,
+  ) {
+    final tags = [
+      {'id': 'All', 'label': 'All Events', 'count': dayTasks.length + dayMeetings.length},
+      {'id': 'Tasks', 'label': 'Tasks', 'count': dayTasks.length},
+      {'id': 'Deadlines', 'label': 'Deadlines', 'count': dayDeadlines.length},
+      {'id': 'Meetings', 'label': 'Meetings', 'count': dayMeetings.length},
+      {'id': 'Task Breakdown', 'label': 'Tasks Breakdown', 'count': allTasks.length},
+    ];
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: tags.map((t) {
+            final id = t['id'] as String;
+            final label = t['label'] as String;
+            final count = t['count'] as int;
+            final isSel = _selectedTag == id;
+            final isDeadline = id == 'Deadlines';
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: InkWell(
+                onTap: () => setState(() => _selectedTag = id),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isSel
+                        ? const Color(0xFF212529)
+                        : (isDeadline && count > 0 ? const Color(0xFFFFF1F2) : const Color(0xFFF1F5F9)),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSel
+                          ? const Color(0xFF212529)
+                          : (isDeadline && count > 0 ? const Color(0xFFFECDD3) : const Color(0xFFE2E8F0)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      if (isDeadline && count > 0 && !isSel)
+                        Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.only(right: 6),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE11D48),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      Text(
+                        '$label ($count)',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                          color: isSel
+                              ? Colors.white
+                              : (isDeadline && count > 0 ? const Color(0xFFE11D48) : const Color(0xFF475569)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // Tasks Breakdown & Planner Section
+  Widget _buildTaskBreakdownView(BuildContext context, ErpProvider erp, List<CompanyTask> allTasks) {
+    final completedTasks = allTasks.where((t) => t.isCompleted).toList();
+    final inProgressTasks = allTasks.where((t) => !t.isCompleted && t.status == TaskStatus.inProgress).toList();
+    final deadlineTasks = allTasks.where((t) => !t.isCompleted && (t.isOverdue || t.isDueToday)).toList();
+    final completionRate = allTasks.isNotEmpty ? (completedTasks.length / allTasks.length) : 1.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Breakdown Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Task Breakdown & Planner',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF212529),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                Text(
+                  '${allTasks.length} Assigned Tasks • ${(completionRate * 100).toInt()}% Met',
+                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                ),
+              ],
+            ),
+            IconButton(
+              icon: const Icon(Icons.add_task_rounded, size: 20, color: Color(0xFF212529)),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const CreateTaskDialog(),
+                );
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // 4 KPI Summary Cards
+        Row(
+          children: [
+            Expanded(
+              child: _buildBreakdownKpiTile('Total', '${allTasks.length}', const Color(0xFF212529), const Color(0xFFF1F5F9)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildBreakdownKpiTile('Ongoing', '${inProgressTasks.length}', const Color(0xFF0284C7), const Color(0xFFE0F2FE)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildBreakdownKpiTile('Deadlines', '${deadlineTasks.length}', const Color(0xFFE11D48), const Color(0xFFFFF1F2)),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildBreakdownKpiTile('Completed', '${completedTasks.length}', const Color(0xFF059669), const Color(0xFFECFDF5)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // Progress Card
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Overall Delivery Progress',
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+                  ),
+                  Text(
+                    '${(completionRate * 100).toInt()}% Done',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF212529)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: completionRate,
+                  backgroundColor: const Color(0xFFE2E8F0),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF212529)),
+                  minHeight: 6,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Task List
+        const Text(
+          'ASSIGNED TASKS & ACTION ITEMS',
+          style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.6),
+        ),
+        const SizedBox(height: 10),
+
+        if (allTasks.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: const Center(
+              child: Text('No assigned tasks available', style: TextStyle(color: Color(0xFF94A3B8))),
+            ),
+          )
+        else
+          ...allTasks.map((t) => _buildTaskCard(context, t, erp)),
+      ],
+    );
+  }
+
+  Widget _buildBreakdownKpiTile(String label, String value, Color textColor, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: textColor.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: textColor),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: textColor.withValues(alpha: 0.85)),
+          ),
+        ],
       ),
     );
   }
@@ -1445,12 +1626,7 @@ class _EmployeeCalendarPageState extends State<EmployeeCalendarPage> {
   // Task Card in Schedule
   Widget _buildTaskCard(BuildContext context, CompanyTask task, ErpProvider erp) {
     return InkWell(
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (_) => TaskDetailDialog(task: task),
-        );
-      },
+      onTap: () => EmployeeTaskDetailModal.show(context, task),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),

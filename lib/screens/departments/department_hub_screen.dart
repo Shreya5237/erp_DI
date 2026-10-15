@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/erp_provider.dart';
 import '../../models/department.dart';
@@ -310,13 +310,13 @@ class _DepartmentHubScreenState extends State<DepartmentHubScreen> {
     switch (dept) {
       case CompanyDepartment.hr:
         return Icons.people_alt_rounded;
-      case CompanyDepartment.sales:
+      case CompanyDepartment.salesMarketing:
         return Icons.trending_up_rounded;
+      case CompanyDepartment.digitalMarketing:
+        return Icons.campaign_rounded;
       case CompanyDepartment.finance:
         return Icons.account_balance_wallet_rounded;
-      case CompanyDepartment.marketing:
-        return Icons.campaign_rounded;
-      case CompanyDepartment.engineering:
+      case CompanyDepartment.technical:
         return Icons.code_rounded;
     }
   }

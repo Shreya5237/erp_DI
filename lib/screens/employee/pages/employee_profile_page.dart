@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/erp_provider.dart';
@@ -49,7 +50,7 @@ class EmployeeProfilePage extends StatelessWidget {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
+                      color: const Color(0xFFDEE2E6),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -58,78 +59,131 @@ class EmployeeProfilePage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Edit Contact & Bio',
                       style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF212529),
+                        color: const Color(0xFF212529),
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
+                        color: const Color(0xFFF1F3F5),
                         borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFE9ECEF)),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Permitted Fields Only',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF059669)),
+                        style: TextStyle(
+                          fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF495057),
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Company policy restricts direct editing of designation, manager, and department.',
-                  style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 11.5,
+                    color: const Color(0xFF6C757D),
+                  ),
                 ),
                 const SizedBox(height: 16),
 
                 // Phone
-                const Text('Phone Number *', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                Text(
+                  'Phone Number *',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF212529),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: phoneController,
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 13,
+                    color: const Color(0xFF212529),
+                  ),
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.phone_outlined, size: 18, color: Color(0xFF64748B)),
+                    prefixIcon: const Icon(Icons.phone_outlined, size: 18, color: Color(0xFF6C757D)),
                     filled: true,
                     fillColor: const Color(0xFFF5F6F7),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF212529), width: 1.5)),
                   ),
                 ),
                 const SizedBox(height: 14),
 
                 // Emergency Contact
-                const Text('Emergency Contact *', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                Text(
+                  'Emergency Contact *',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF212529),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: emergencyController,
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 13,
+                    color: const Color(0xFF212529),
+                  ),
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.contact_phone_outlined, size: 18, color: Color(0xFF64748B)),
+                    prefixIcon: const Icon(Icons.contact_phone_outlined, size: 18, color: Color(0xFF6C757D)),
                     filled: true,
                     fillColor: const Color(0xFFF5F6F7),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF212529), width: 1.5)),
                   ),
                 ),
                 const SizedBox(height: 14),
 
                 // Bio
-                const Text('Professional Bio', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
+                Text(
+                  'Professional Bio',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF212529),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: bioController,
                   maxLines: 3,
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 13,
+                    color: const Color(0xFF212529),
+                  ),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: const Color(0xFFF5F6F7),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF212529), width: 1.5)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -150,16 +204,25 @@ class EmployeeProfilePage extends StatelessWidget {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          backgroundColor: Color(0xFF059669),
+                          backgroundColor: Color(0xFF10B981),
                           content: Text('Contact details successfully updated'),
                         ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF212529),
+                      elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Save Changes', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Colors.white)),
+                    child: Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -238,7 +301,7 @@ class EmployeeProfilePage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.03),
@@ -256,15 +319,11 @@ class EmployeeProfilePage extends StatelessWidget {
                         width: 76,
                         height: 76,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF212529), Color(0xFF334155)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: const Color(0xFF212529),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF212529).withValues(alpha: 0.25),
+                              color: const Color(0xFF212529).withValues(alpha: 0.2),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -273,7 +332,8 @@ class EmployeeProfilePage extends StatelessWidget {
                         child: Center(
                           child: Text(
                             employee.name.split(' ').map((n) => n[0]).take(2).join(),
-                            style: const TextStyle(
+                            style: TextStyle(
+                              fontFamily: GoogleFonts.instrumentSans().fontFamily,
                               color: Colors.white,
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
@@ -302,10 +362,11 @@ class EmployeeProfilePage extends StatelessWidget {
                   // Name
                   Text(
                     employee.name,
-                    style: const TextStyle(
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
                       fontSize: 19,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF212529),
+                      color: const Color(0xFF212529),
                       letterSpacing: -0.3,
                     ),
                   ),
@@ -314,18 +375,20 @@ class EmployeeProfilePage extends StatelessWidget {
                   // Designation & Department
                   Text(
                     employee.role,
-                    style: const TextStyle(
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0284C7),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF495057),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     employee.department,
-                    style: const TextStyle(
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
                       fontSize: 12,
-                      color: Color(0xFF64748B),
+                      color: const Color(0xFF6C757D),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -337,15 +400,17 @@ class EmployeeProfilePage extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: const Color(0xFFF1F3F5),
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE9ECEF)),
                         ),
                         child: Text(
                           'ID: ${employee.id}',
-                          style: const TextStyle(
+                          style: TextStyle(
+                            fontFamily: GoogleFonts.instrumentSans().fontFamily,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF334155),
+                            color: const Color(0xFF495057),
                           ),
                         ),
                       ),
@@ -359,10 +424,11 @@ class EmployeeProfilePage extends StatelessWidget {
                         ),
                         child: Text(
                           employee.employmentType,
-                          style: const TextStyle(
+                          style: TextStyle(
+                            fontFamily: GoogleFonts.instrumentSans().fontFamily,
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF065F46),
+                            color: const Color(0xFF065F46),
                           ),
                         ),
                       ),
@@ -373,45 +439,14 @@ class EmployeeProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Restricted Edit Notice Banner
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFBEB),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFDE68A)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.shield_outlined, color: Color(0xFFD97706), size: 18),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Official employment details are company-locked. Contact information and bio can be updated by employee.',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF92400E), height: 1.3),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  TextButton(
-                    onPressed: () => _openEditPermittedModal(context, employee),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    child: const Text('Edit', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFFB45309))),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
             // Section 1: Employment Details (Locked / Company Managed)
-            const Text(
+            Text(
               'Company & Reporting Details',
               style: TextStyle(
+                fontFamily: GoogleFonts.instrumentSans().fontFamily,
                 fontSize: 13.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF212529),
+                color: const Color(0xFF212529),
               ),
             ),
             const SizedBox(height: 8),
@@ -420,7 +455,7 @@ class EmployeeProfilePage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
               ),
               child: Column(
                 children: [
@@ -476,19 +511,25 @@ class EmployeeProfilePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Contact & Personal Details',
                   style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF212529),
+                    color: const Color(0xFF212529),
                   ),
                 ),
                 GestureDetector(
                   onTap: () => _openEditPermittedModal(context, employee),
-                  child: const Text(
+                  child: Text(
                     'Edit Details',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF0284C7)),
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF212529),
+                    ),
                   ),
                 ),
               ],
@@ -499,7 +540,7 @@ class EmployeeProfilePage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
               ),
               child: Column(
                 children: [
@@ -509,21 +550,21 @@ class EmployeeProfilePage extends StatelessWidget {
                     value: employee.email,
                     isLocked: true,
                   ),
-                  const Divider(height: 18, color: Color(0xFFF1F5F9)),
+                  const Divider(height: 18, color: Color(0xFFF1F3F5)),
                   _buildDetailRow(
                     icon: Icons.phone_outlined,
                     label: 'Phone Number',
                     value: employee.phone,
                     isLocked: false,
                   ),
-                  const Divider(height: 18, color: Color(0xFFF1F5F9)),
+                  const Divider(height: 18, color: Color(0xFFF1F3F5)),
                   _buildDetailRow(
                     icon: Icons.contact_emergency_outlined,
                     label: 'Emergency Contact',
                     value: employee.emergencyContact,
                     isLocked: false,
                   ),
-                  const Divider(height: 18, color: Color(0xFFF1F5F9)),
+                  const Divider(height: 18, color: Color(0xFFF1F3F5)),
                   _buildDetailRow(
                     icon: Icons.location_on_outlined,
                     label: 'Office Base',
@@ -536,12 +577,13 @@ class EmployeeProfilePage extends StatelessWidget {
             const SizedBox(height: 18),
 
             // Professional Bio & Skills
-            const Text(
+            Text(
               'Professional Bio & Skills',
               style: TextStyle(
+                fontFamily: GoogleFonts.instrumentSans().fontFamily,
                 fontSize: 13.5,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF212529),
+                color: const Color(0xFF212529),
               ),
             ),
             const SizedBox(height: 8),
@@ -551,17 +593,30 @@ class EmployeeProfilePage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     employee.bio,
-                    style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.4),
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      fontSize: 12.5,
+                      color: const Color(0xFF495057),
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  const Text('Technical Skills:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                  Text(
+                    'Technical Skills:',
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF6C757D),
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,
@@ -570,10 +625,19 @@ class EmployeeProfilePage extends StatelessWidget {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: const Color(0xFFF1F3F5),
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE9ECEF)),
                         ),
-                        child: Text(s, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2B3035))),
+                        child: Text(
+                          s,
+                          style: TextStyle(
+                            fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF212529),
+                          ),
+                        ),
                       );
                     }).toList(),
                   ),
@@ -588,11 +652,19 @@ class EmployeeProfilePage extends StatelessWidget {
               height: 48,
               child: OutlinedButton.icon(
                 onPressed: () => _handleSignOut(context),
-                icon: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFEF4444)),
-                label: const Text('Sign Out of Employee Portal', style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w700, fontSize: 13.5)),
+                icon: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFF212529)),
+                label: Text(
+                  'Sign Out of Employee Portal',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    color: const Color(0xFF212529),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                  ),
+                ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFFCA5A5)),
-                  backgroundColor: const Color(0xFFFEF2F2),
+                  side: const BorderSide(color: Color(0xFF212529)),
+                  backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -614,10 +686,11 @@ class EmployeeProfilePage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: const Color(0xFFF1F3F5),
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE9ECEF)),
           ),
-          child: Icon(icon, size: 16, color: const Color(0xFF475569)),
+          child: Icon(icon, size: 16, color: const Color(0xFF212529)),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -626,12 +699,21 @@ class EmployeeProfilePage extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                style: TextStyle(
+                  fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                  fontSize: 11,
+                  color: const Color(0xFF6C757D),
+                ),
               ),
               const SizedBox(height: 1),
               Text(
                 value,
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
+                style: TextStyle(
+                  fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF212529),
+                ),
               ),
             ],
           ),
@@ -640,14 +722,23 @@ class EmployeeProfilePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: const Color(0xFFF1F3F5),
               borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0xFFE9ECEF)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.lock_outline_rounded, size: 11, color: Color(0xFF94A3B8)),
-                SizedBox(width: 3),
-                Text('Locked', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+                const Icon(Icons.lock_outline_rounded, size: 11, color: Color(0xFF6C757D)),
+                const SizedBox(width: 3),
+                Text(
+                  'Locked',
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF6C757D),
+                  ),
+                ),
               ],
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/finance_models.dart';
 import '../../../providers/erp_provider.dart';
@@ -77,17 +78,17 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Adjust Project Budget',
-                            style: TextStyle(
-                              color: Color(0xFF212529),
+                            style: GoogleFonts.instrumentSans(
+                              color: const Color(0xFF212529),
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                           Text(
                             '${widget.project.projectName} (${widget.project.projectId})',
-                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                            style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -95,7 +96,7 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF868E96), size: 20),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -106,9 +107,9 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6F7),
+                    color: const Color(0xFFF8F9FA),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: const Color(0xFFE9ECEF)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -116,23 +117,23 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Current Approved', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                          Text('Current Approved', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11)),
                           const SizedBox(height: 4),
                           Text(
                             '₹${widget.project.approvedBudget.toStringAsFixed(0)}',
-                            style: const TextStyle(color: Color(0xFF212529), fontSize: 15, fontWeight: FontWeight.w700),
+                            style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 15, fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Total Spent', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                          Text('Total Spent', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11)),
                           const SizedBox(height: 4),
                           Text(
                             '₹${widget.project.spentAmount.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              color: widget.project.isExceeded ? const Color(0xFFEF4444) : const Color(0xFF212529),
+                            style: GoogleFonts.instrumentSans(
+                              color: const Color(0xFF212529),
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),
@@ -142,18 +143,14 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('Utilization', style: TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                          Text('Utilization', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11)),
                           const SizedBox(height: 4),
                           Text(
                             '${(widget.project.utilizationPercentage * 100).toStringAsFixed(1)}%',
-                            style: TextStyle(
-                              color: widget.project.isExceeded
-                                  ? const Color(0xFFEF4444)
-                                  : widget.project.isApproachingLimit
-                                      ? const Color(0xFFF59E0B)
-                                      : const Color(0xFF10B981),
+                            style: GoogleFonts.instrumentSans(
+                              color: const Color(0xFF212529),
                               fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
@@ -161,12 +158,12 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
 
-                // Adjustment Type Selector
-                const Text(
+                // Adjustment Direction
+                Text(
                   'Adjustment Direction',
-                  style: TextStyle(color: Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -178,25 +175,21 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: _isIncrease
-                                ? const Color(0xFFECFDF5)
-                                : const Color(0xFFF5F6F7),
+                            color: _isIncrease ? const Color(0xFF212529) : const Color(0xFFF8F9FA),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: _isIncrease ? const Color(0xFF10B981) : const Color(0xFFE2E8F0),
-                            ),
+                            border: Border.all(color: _isIncrease ? const Color(0xFF212529) : const Color(0xFFE9ECEF)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_circle_outline_rounded, color: _isIncrease ? const Color(0xFF10B981) : const Color(0xFF64748B), size: 16),
+                              Icon(Icons.arrow_upward_rounded, color: _isIncrease ? Colors.white : const Color(0xFF495057), size: 16),
                               const SizedBox(width: 6),
                               Text(
                                 'Increase (+)',
-                                style: TextStyle(
-                                  color: _isIncrease ? const Color(0xFF10B981) : const Color(0xFF64748B),
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
+                                style: GoogleFonts.instrumentSans(
+                                  color: _isIncrease ? Colors.white : const Color(0xFF495057),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -212,25 +205,21 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: !_isIncrease
-                                ? const Color(0xFFFEF2F2)
-                                : const Color(0xFFF5F6F7),
+                            color: !_isIncrease ? const Color(0xFF212529) : const Color(0xFFF8F9FA),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: !_isIncrease ? const Color(0xFFEF4444) : const Color(0xFFE2E8F0),
-                            ),
+                            border: Border.all(color: !_isIncrease ? const Color(0xFF212529) : const Color(0xFFE9ECEF)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.remove_circle_outline_rounded, color: !_isIncrease ? const Color(0xFFEF4444) : const Color(0xFF64748B), size: 16),
+                              Icon(Icons.arrow_downward_rounded, color: !_isIncrease ? Colors.white : const Color(0xFF495057), size: 16),
                               const SizedBox(width: 6),
                               Text(
                                 'Decrease (-)',
-                                style: TextStyle(
-                                  color: !_isIncrease ? const Color(0xFFEF4444) : const Color(0xFF64748B),
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
+                                style: GoogleFonts.instrumentSans(
+                                  color: !_isIncrease ? Colors.white : const Color(0xFF495057),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -242,64 +231,59 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                 ),
                 const SizedBox(height: 16),
 
-                // Amount Field
-                const Text(
-                  'Adjustment Amount (₹)',
-                  style: TextStyle(color: Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w600),
+                // Amount Input Field
+                Text(
+                  'Adjustment Amount (₹) *',
+                  style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _amountController,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Color(0xFF212529), fontSize: 14),
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.currency_rupee_rounded, color: Color(0xFF64748B), size: 18),
-                    hintText: 'e.g. 15000',
-                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F6F7),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                  ),
+                  style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w700),
                   onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    prefixText: '₹ ',
+                    prefixStyle: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontWeight: FontWeight.w700),
+                    hintText: 'e.g. 15000',
+                    hintStyle: GoogleFonts.instrumentSans(color: const Color(0xFFADB5BD), fontSize: 13),
+                    filled: true,
+                    fillColor: const Color(0xFFF8F9FA),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                  ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) return 'Enter adjustment amount';
-                    final num = double.tryParse(val.trim());
-                    if (num == null || num <= 0) return 'Enter a valid positive number';
-                    if (!_isIncrease && (widget.project.approvedBudget - num) < 0) {
-                      return 'Budget cannot be negative';
+                    final numVal = double.tryParse(val.trim());
+                    if (numVal == null || numVal <= 0) return 'Enter a valid positive amount';
+                    if (!_isIncrease && (widget.project.approvedBudget - numVal < widget.project.spentAmount)) {
+                      return 'Cannot reduce budget below current spending (₹${widget.project.spentAmount.toStringAsFixed(0)})';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
-                // Preview Box
+                // Preview New Budget
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6F7),
+                    color: const Color(0xFFF8F9FA),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: const Color(0xFFE9ECEF)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Resulting Approved Budget:',
-                        style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                      Text(
+                        'Projected New Budget:',
+                        style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                       Text(
                         '₹${_previewBudget.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          color: Color(0xFF212529),
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF212529),
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                         ),
@@ -310,28 +294,28 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                 const SizedBox(height: 16),
 
                 // Justification Field
-                const Text(
+                Text(
                   'Reason / Audit Justification *',
-                  style: TextStyle(color: Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _reasonController,
                   maxLines: 2,
-                  style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
+                  style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'e.g. Scope expansion approved by CEO: Added mobile telemetry module',
-                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                    hintStyle: GoogleFonts.instrumentSans(color: const Color(0xFFADB5BD), fontSize: 12),
                     filled: true,
-                    fillColor: const Color(0xFFF5F6F7),
+                    fillColor: const Color(0xFFF8F9FA),
                     contentPadding: const EdgeInsets.all(12),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderSide: const BorderSide(color: Color(0xFFE9ECEF)),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderSide: const BorderSide(color: Color(0xFFE9ECEF)),
                     ),
                   ),
                   validator: (val) {
@@ -349,11 +333,13 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
                     onPressed: _handleSubmit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF212529),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Record Budget Adjustment',
-                      style: TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.instrumentSans(fontSize: 13.5, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -382,9 +368,10 @@ class _AdjustBudgetDialogState extends State<AdjustBudgetDialog> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF10B981),
+        backgroundColor: const Color(0xFF212529),
         content: Text(
           'Budget for ${widget.project.projectName} adjusted by ₹${delta.toStringAsFixed(0)}',
+          style: GoogleFonts.instrumentSans(),
         ),
       ),
     );

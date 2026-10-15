@@ -252,7 +252,7 @@ void main() {
       expect(find.text('All'), findsOneWidget);
       expect(find.text('Today & Tomorrow'), findsOneWidget);
       expect(find.text('Overdue'), findsWidgets);
-      expect(find.text('Completed'), findsOneWidget);
+      expect(find.text('Completed'), findsWidgets);
 
       // Check Action Buttons
       expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);

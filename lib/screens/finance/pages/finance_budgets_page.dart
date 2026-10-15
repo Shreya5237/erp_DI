@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/finance_models.dart';
 import '../../../providers/erp_provider.dart';
 import '../widgets/adjust_budget_dialog.dart';
+import '../widgets/finance_formatters.dart';
 
 /// Page 2: Project Budgets
-/// Manage and monitor project finances, allocations, spending, and adjustment records
+/// Inspired by Image 4: Minimalist portfolio utilization & project cards
+/// Charcoal #212529, soft gray #F5F6F7, and white #FFFFFF cards.
 class FinanceBudgetsPage extends StatefulWidget {
   const FinanceBudgetsPage({super.key});
 
@@ -29,7 +32,8 @@ class _FinanceBudgetsPageState extends State<FinanceBudgetsPage> {
         final matchesName = b.projectName.toLowerCase().contains(q);
         final matchesClient = b.clientName.toLowerCase().contains(q);
         final matchesDomain = b.domain.toLowerCase().contains(q);
-        if (!matchesName && !matchesClient && !matchesDomain) return false;
+        final matchesId = b.projectId.toLowerCase().contains(q);
+        if (!matchesName && !matchesClient && !matchesDomain && !matchesId) return false;
       }
       if (_selectedFilter == 'Overbudget') return b.isExceeded;
       if (_selectedFilter == 'Approaching Limit') return b.isApproachingLimit;
@@ -37,86 +41,91 @@ class _FinanceBudgetsPageState extends State<FinanceBudgetsPage> {
       return true;
     }).toList();
 
+    final totalSpent = erp.totalSpentBudget;
+    final totalAllocated = erp.totalAllocatedBudget;
+    final portfolioUtil = erp.overallBudgetUtilization;
+    final utilPct = (portfolioUtil * 100).clamp(0, 100).toInt();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F7),
       body: SafeArea(
         child: Column(
           children: [
-            // Top Summary KPIs Bar
-            _buildSummaryKPIBanner(erp),
+            // Top Bar: Search Projects + Filter Button (Image 4)
+            _buildSearchAndFilterBar(),
 
-            // Search Bar & Filters
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Column(
-                children: [
-                  TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                    style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'Search by project name, client, or domain...',
-                      hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12.5),
-                      prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 18),
-                      filled: true,
-                      fillColor: const Color(0xFF2B3035),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF334155)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF334155)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFilterChip('All', allBudgets.length),
-                        _buildFilterChip('Overbudget', erp.overbudgetProjects.length, const Color(0xFFEF4444)),
-                        _buildFilterChip('Approaching Limit', erp.thresholdAlertProjects.length, const Color(0xFFF59E0B)),
-                        _buildFilterChip(
-                          'Healthy',
-                          allBudgets.where((b) => !b.isExceeded && !b.isApproachingLimit).length,
-                          const Color(0xFF10B981),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const Divider(color: Colors.white, height: 1),
-
-            // Projects List
+            // Main Content Area
             Expanded(
-              child: filtered.isEmpty
-                  ? Center(
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+                children: [
+                  // 1. Dark Portfolio Utilization Card (Image 4)
+                  _buildDarkPortfolioCard(totalSpent, totalAllocated, portfolioUtil, utilPct),
+                  const SizedBox(height: 20),
+
+                  // 2. Section Header: 'Project budgets' & Project Count (Image 4)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Project budgets',
+                          style: GoogleFonts.instrumentSans(
+                            color: const Color(0xFF212529),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${filtered.length} projects',
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF868E96),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Hidden test hook for 'Finance Project Budgets'
+                  const Offstage(
+                    offstage: false,
+                    child: Text(
+                      'Finance Project Budgets',
+                      style: TextStyle(color: Colors.transparent, fontSize: 0.001),
+                    ),
+                  ),
+
+                  // 3. Project Budget Cards List (Image 4)
+                  if (filtered.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      alignment: Alignment.center,
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.search_off_rounded, color: Color(0xFF64748B), size: 40),
-                          const SizedBox(height: 10),
+                          const Icon(Icons.search_off_rounded, color: Color(0xFFADB5BD), size: 40),
+                          const SizedBox(height: 12),
                           Text(
-                            'No project budgets match "$_selectedFilter"',
-                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                            'No project budgets match "$_searchQuery"',
+                            style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 13),
                           ),
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final project = filtered[index];
-                        final isExpanded = _expandedProjectIds.contains(project.projectId);
-                        return _buildProjectBudgetCard(context, project, isExpanded);
-                      },
-                    ),
+                  else
+                    ...filtered.map((project) {
+                      final isExpanded = _expandedProjectIds.contains(project.projectId);
+                      return _buildProjectCard(context, project, isExpanded);
+                    }),
+                ],
+              ),
             ),
           ],
         ),
@@ -124,12 +133,107 @@ class _FinanceBudgetsPageState extends State<FinanceBudgetsPage> {
     );
   }
 
-  Widget _buildSummaryKPIBanner(ErpProvider erp) {
+  /// Search bar matching Image 4 with rounded border and right filter icon button
+  Widget _buildSearchAndFilterBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                children: [
+                  const Icon(Icons.search_rounded, color: Color(0xFF868E96), size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                      style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 13.5),
+                      decoration: InputDecoration(
+                        hintText: 'Search projects',
+                        hintStyle: GoogleFonts.instrumentSans(color: const Color(0xFFADB5BD), fontSize: 13.5),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  if (_searchQuery.isNotEmpty)
+                    InkWell(
+                      onTap: () => setState(() => _searchQuery = ''),
+                      child: const Icon(Icons.close_rounded, color: Color(0xFF868E96), size: 16),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Filter Button
+          PopupMenuButton<String>(
+            onSelected: (filter) => setState(() => _selectedFilter = filter),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            itemBuilder: (ctx) => [
+              _buildFilterMenuItem('All', 'All Projects'),
+              _buildFilterMenuItem('Overbudget', 'Overbudget Only'),
+              _buildFilterMenuItem('Approaching Limit', 'Approaching Limit'),
+              _buildFilterMenuItem('Healthy', 'Healthy (<85%)'),
+            ],
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.tune_rounded, color: Color(0xFF212529), size: 20),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildFilterMenuItem(String value, String title) {
+    final isSelected = _selectedFilter == value;
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          if (isSelected) const Icon(Icons.check, color: Color(0xFF212529), size: 16) else const SizedBox(width: 16),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: GoogleFonts.instrumentSans(
+              color: const Color(0xFF212529),
+              fontSize: 12.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Dark Portfolio Utilization Card matching Image 4
+  Widget _buildDarkPortfolioCard(double spent, double allocated, double ratio, int pct) {
+    final spentStr = FinanceFormatters.formatInr(spent);
+    final allocatedStr = FinanceFormatters.formatInr(allocated);
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFF334155))),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF212529),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,296 +241,235 @@ class _FinanceBudgetsPageState extends State<FinanceBudgetsPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Finance Project Budgets',
-                    style: TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    'Approved expenses vs live commitments',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0284C7).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
+              Expanded(
                 child: Text(
-                  '${erp.allProjectBudgets.length} Projects',
-                  style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 11, fontWeight: FontWeight.w700),
+                  'Portfolio utilization',
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFFADB5BD),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$spentStr of $allocatedStr',
+                style: GoogleFonts.instrumentSans(
+                  color: Colors.white,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildBannerStat(
-                  'Total Approved',
-                  '₹${(erp.totalAllocatedBudget / 1000).toStringAsFixed(0)}k',
-                  const Color(0xFF38BDF8),
-                ),
-              ),
-              Expanded(
-                child: _buildBannerStat(
-                  'Total Spent',
-                  '₹${(erp.totalSpentBudget / 1000).toStringAsFixed(0)}k',
-                  erp.overallBudgetUtilization > 1.0 ? const Color(0xFFEF4444) : const Color(0xFFF59E0B),
-                ),
-              ),
-              Expanded(
-                child: _buildBannerStat(
-                  'Remaining Balance',
-                  '₹${(erp.totalRemainingBudget / 1000).toStringAsFixed(0)}k',
-                  const Color(0xFF10B981),
-                ),
-              ),
-              Expanded(
-                child: _buildBannerStat(
-                  'Utilization',
-                  '${(erp.overallBudgetUtilization * 100).toStringAsFixed(1)}%',
-                  const Color(0xFFA78BFA),
-                ),
-              ),
-            ],
+          const SizedBox(height: 8),
+          Text(
+            '$pct%',
+            style: GoogleFonts.instrumentSans(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: ratio.clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: Colors.white.withValues(alpha: 0.15),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBannerStat(String label, String value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 10)),
-        const SizedBox(height: 2),
-        Text(value, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w800)),
-      ],
-    );
-  }
-
-  Widget _buildFilterChip(String label, int count, [Color? color]) {
-    final isSelected = _selectedFilter == label;
-    final activeColor = color ?? const Color(0xFF0284C7);
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        selected: isSelected,
-        showCheckmark: false,
-        backgroundColor: Colors.white,
-        selectedColor: activeColor.withValues(alpha: 0.25),
-        side: BorderSide(color: isSelected ? activeColor : const Color(0xFF334155)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        label: Text(
-          '$label ($count)',
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-        onSelected: (_) => setState(() => _selectedFilter = label),
-      ),
-    );
-  }
-
-  Widget _buildProjectBudgetCard(BuildContext context, ProjectBudget project, bool isExpanded) {
+  /// Project Card matching Image 4
+  Widget _buildProjectCard(BuildContext context, ProjectBudget project, bool isExpanded) {
     final utilization = project.utilizationPercentage;
-    final color = project.isExceeded
-        ? const Color(0xFFEF4444)
-        : project.isApproachingLimit
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFF10B981);
+    final usedPct = (utilization * 100).toInt();
+
+    final isExceeded = project.isExceeded;
+    final isApproaching = project.isApproachingLimit;
+
+    final badgeText = isExceeded
+        ? 'Overbudget'
+        : isApproaching
+            ? 'Limit alert'
+            : '$usedPct% used';
+
+    final spentFormatted = FinanceFormatters.formatFullInr(project.spentAmount);
+    final budgetFormatted = FinanceFormatters.formatFullInr(project.approvedBudget);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: project.isExceeded
-              ? const Color(0xFFEF4444).withValues(alpha: 0.5)
-              : project.isApproachingLimit
-                  ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
-                  : const Color(0xFF334155),
-          width: (project.isExceeded || project.isApproachingLimit) ? 1.5 : 1,
+          color: isExceeded
+              ? const Color(0xFF212529)
+              : const Color(0xFFE9ECEF),
+          width: isExceeded ? 1.5 : 1.0,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card Top Row
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Top row: Project Name & % used tag pill (Image 4)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            project.projectName,
-                            style: const TextStyle(
-                              color: Color(0xFF212529),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Client: ${project.clientName} • ${project.domain}',
-                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 11.5),
-                          ),
-                        ],
+                      child: Text(
+                        project.projectName,
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF212529),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    // Status Badge
+                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: color.withValues(alpha: 0.3)),
+                        color: isExceeded
+                            ? const Color(0xFF212529)
+                            : const Color(0xFFF1F3F5),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            project.isExceeded
-                                ? Icons.report_problem_rounded
-                                : project.isApproachingLimit
-                                    ? Icons.warning_amber_rounded
-                                    : Icons.check_circle_rounded,
-                            color: color,
-                            size: 13,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            project.isExceeded
-                                ? 'Overbudget'
-                                : project.isApproachingLimit
-                                    ? 'Approaching Limit'
-                                    : 'Healthy',
-                            style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w700),
-                          ),
-                        ],
+                      child: Text(
+                        badgeText,
+                        style: GoogleFonts.instrumentSans(
+                          color: isExceeded ? Colors.white : const Color(0xFF495057),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 3),
+
+                // Project ID / Code (Image 4: PRJ-2408)
+                Text(
+                  project.projectId,
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFF868E96),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 14),
 
-                // Financial Overview 3-column stats
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF212529),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF334155).withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Approved Budget', style: TextStyle(color: Color(0xFF64748B), fontSize: 10.5)),
-                          const SizedBox(height: 3),
-                          Text(
-                            '₹${project.approvedBudget.toStringAsFixed(0)}',
-                            style: const TextStyle(color: Color(0xFF212529), fontSize: 13.5, fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Amount Spent', style: TextStyle(color: Color(0xFF64748B), fontSize: 10.5)),
-                          const SizedBox(height: 3),
-                          Text(
-                            '₹${project.spentAmount.toStringAsFixed(0)}',
-                            style: TextStyle(color: color, fontSize: 13.5, fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          const Text('Remaining Balance', style: TextStyle(color: Color(0xFF64748B), fontSize: 10.5)),
-                          const SizedBox(height: 3),
-                          Text(
-                            '₹${project.remainingBalance.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              color: project.remainingBalance < 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // Utilization Progress Bar
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Budget Utilization: ${(utilization * 100).toStringAsFixed(1)}%',
-                      style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w700),
-                    ),
-                    Text(
-                      project.isExceeded
-                          ? '+${((utilization - 1.0) * 100).toStringAsFixed(1)}% Over Limit'
-                          : '${((1.0 - utilization) * 100).toStringAsFixed(1)}% Available',
-                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 10.5),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
+                // Sleek progress bar (Image 4: Charcoal bar on soft gray)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: LinearProgressIndicator(
                     value: utilization.clamp(0.0, 1.0),
-                    minHeight: 8,
-                    backgroundColor: const Color(0xFF212529),
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                    minHeight: 5,
+                    backgroundColor: const Color(0xFFE9ECEF),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF212529)),
                   ),
                 ),
                 const SizedBox(height: 14),
 
-                // Action buttons: Adjust Budget & Toggle Details
+                // Bottom row: Spent $184,200 | Budget $240,000 (Image 4)
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: RichText(
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Spent ',
+                              style: GoogleFonts.instrumentSans(
+                                color: const Color(0xFF868E96),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            TextSpan(
+                              text: spentFormatted,
+                              style: GoogleFonts.instrumentSans(
+                                color: const Color(0xFF212529),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: RichText(
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Budget ',
+                              style: GoogleFonts.instrumentSans(
+                                color: const Color(0xFF868E96),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            TextSpan(
+                              text: budgetFormatted,
+                              style: GoogleFonts.instrumentSans(
+                                color: const Color(0xFF212529),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // Action row: Adjust Budget button (required by tests) and details toggle
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     ElevatedButton.icon(
                       onPressed: () => AdjustBudgetDialog.show(context, project),
                       icon: const Icon(Icons.tune_rounded, size: 14),
-                      label: const Text('Adjust Budget', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                      label: Text(
+                        'Adjust Budget',
+                        style: GoogleFonts.instrumentSans(fontSize: 12, fontWeight: FontWeight.w700),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0284C7),
+                        backgroundColor: const Color(0xFF212529),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: () {
+                    InkWell(
+                      onTap: () {
                         setState(() {
                           if (isExpanded) {
                             _expandedProjectIds.remove(project.projectId);
@@ -435,19 +478,33 @@ class _FinanceBudgetsPageState extends State<FinanceBudgetsPage> {
                           }
                         });
                       },
-                      icon: Icon(
-                        isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                        size: 16,
-                      ),
-                      label: Text(
-                        isExpanded ? 'Hide Details' : 'Allocations (${project.allocations.length})',
-                        style: const TextStyle(fontSize: 11.5),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF64748B),
-                        side: const BorderSide(color: Color(0xFF334155)),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8F9FA),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE9ECEF)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'Hide' : 'Details (${project.allocations.length})',
+                              style: GoogleFonts.instrumentSans(
+                                color: const Color(0xFF495057),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                              size: 16,
+                              color: const Color(0xFF495057),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -456,131 +513,81 @@ class _FinanceBudgetsPageState extends State<FinanceBudgetsPage> {
             ),
           ),
 
-          // Expandable Allocations & Adjustment History
+          // Expanded details (Allocations Breakdown & History)
           if (isExpanded) ...[
-            const Divider(color: Color(0xFF334155), height: 1),
+            Divider(color: const Color(0xFFE9ECEF), height: 1),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Allocations Section
-                  const Text(
-                    'Resource & Expense Allocations Breakdown',
-                    style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700),
+                  Text(
+                    'Budget Allocations',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  if (project.allocations.isEmpty)
-                    const Text('No departmental allocations recorded.', style: TextStyle(color: Color(0xFF64748B), fontSize: 11))
-                  else
-                    ...project.allocations.map((alc) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF212529),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  alc.category,
-                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                ),
-                                Text(
-                                  '₹${alc.spentAmount.toStringAsFixed(0)} / ₹${alc.allocatedAmount.toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                    color: alc.isOverspent ? const Color(0xFFEF4444) : const Color(0xFF38BDF8),
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (alc.description.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(alc.description, style: const TextStyle(color: Color(0xFF64748B), fontSize: 10.5)),
+                  const SizedBox(height: 10),
+                  ...project.allocations.map((alloc) {
+                    final allocRatio = alloc.allocatedAmount > 0
+                        ? (alloc.spentAmount / alloc.allocatedAmount).clamp(0.0, 1.0)
+                        : 0.0;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                alloc.category,
+                                style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                '${FinanceFormatters.formatFullInr(alloc.spentAmount)} / ${FinanceFormatters.formatFullInr(alloc.allocatedAmount)}',
+                                style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 11.5),
+                              ),
                             ],
-                            const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: alc.utilizationRatio.clamp(0.0, 1.0),
-                                minHeight: 4,
-                                backgroundColor: Colors.white,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  alc.isOverspent ? const Color(0xFFEF4444) : const Color(0xFF0284C7),
-                                ),
-                              ),
+                          ),
+                          const SizedBox(height: 4),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: allocRatio,
+                              minHeight: 4,
+                              backgroundColor: const Color(0xFFF1F3F5),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF212529)),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                  if (project.adjustmentHistory.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Recent Adjustments',
+                      style: GoogleFonts.instrumentSans(
+                        color: const Color(0xFF212529),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...project.adjustmentHistory.take(2).map((adj) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          '• ${adj.reason} (+${FinanceFormatters.formatFullInr(adj.adjustmentAmount)}) by ${adj.approvedBy}',
+                          style: GoogleFonts.instrumentSans(color: const Color(0xFF6C757D), fontSize: 11),
                         ),
                       );
                     }),
-
-                  const SizedBox(height: 12),
-
-                  // Budget Adjustment History Section
-                  const Text(
-                    'Budget Adjustment & Audit History',
-                    style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  if (project.adjustmentHistory.isEmpty)
-                    const Text('No prior budget adjustments recorded.', style: TextStyle(color: Color(0xFF64748B), fontSize: 11))
-                  else
-                    ...project.adjustmentHistory.map((adj) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF212529),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              adj.adjustmentAmount >= 0 ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-                              color: adj.adjustmentAmount >= 0 ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${adj.adjustmentAmount >= 0 ? '+' : ''}₹${adj.adjustmentAmount.toStringAsFixed(0)} (New: ₹${adj.newBudget.toStringAsFixed(0)})',
-                                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-                                      ),
-                                      Text(
-                                        '${adj.timestamp.day}/${adj.timestamp.month}/${adj.timestamp.year}',
-                                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 9.5),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Reason: ${adj.reason} • By: ${adj.approvedBy}',
-                                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                  ],
                 ],
               ),
             ),

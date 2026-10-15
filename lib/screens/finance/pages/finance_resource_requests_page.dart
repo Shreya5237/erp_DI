@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/finance_models.dart';
 import '../../../providers/erp_provider.dart';
+import '../widgets/finance_formatters.dart';
+import '../widgets/finance_lead_review_sheet.dart';
 import 'finance_leads_pipeline_page.dart';
 
-/// Page 3: Resource Requests
-/// Review requests submitted by HR, Sales, Engineering, UI/UX, and verify cost & budget availability
+/// Page 3: Resource & Deal Reviews
+/// Clean, minimalist procurement review and deal feasibility sign-off
+/// Charcoal #212529, soft gray #F5F6F7, and white #FFFFFF.
 class FinanceResourceRequestsPage extends StatefulWidget {
   const FinanceResourceRequestsPage({super.key});
 
@@ -14,6 +18,7 @@ class FinanceResourceRequestsPage extends StatefulWidget {
 }
 
 class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPage> {
+  int _activeTabIndex = 0; // 0 = Resource Requests, 1 = Deal Reviews
   String _selectedFilter = 'All'; // 'All', 'Pending', 'Approved', 'Clarification', 'Rejected', 'Fulfilled'
   String _searchQuery = '';
 
@@ -21,8 +26,9 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
   Widget build(BuildContext context) {
     final erp = context.watch<ErpProvider>();
     final allRequests = erp.allResourceRequests;
+    final allLeads = erp.financeReviewLeads;
 
-    final filtered = allRequests.where((r) {
+    final filteredRequests = allRequests.where((r) {
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
         final matchesResource = r.requestedResource.toLowerCase().contains(q);
@@ -44,79 +50,25 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
       body: SafeArea(
         child: Column(
           children: [
-            // Header Banner & Leads Pipeline Shortcut (as required by prompt)
+            // Top Header Banner with title and pipeline shortcut
             _buildHeaderBanner(context, erp),
 
-            // Search Bar & Filter Chips
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Column(
-                children: [
-                  TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                    style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'Search by resource, department, requester, project...',
-                      hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
-                      prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B), size: 18),
-                      filled: true,
-                      fillColor: const Color(0xFF2B3035),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF334155))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF334155))),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFilterChip('All', allRequests.length),
-                        _buildFilterChip('Pending', erp.pendingResourceRequests.length, const Color(0xFFF59E0B)),
-                        _buildFilterChip('Approved', erp.approvedResourceRequests.length, const Color(0xFF10B981)),
-                        _buildFilterChip(
-                          'Clarification',
-                          allRequests.where((r) => r.isClarificationRequested).length,
-                          const Color(0xFF8B5CF6),
-                        ),
-                        _buildFilterChip('Rejected', erp.rejectedResourceRequests.length, const Color(0xFFEF4444)),
-                        _buildFilterChip(
-                          'Fulfilled',
-                          allRequests.where((r) => r.status == ResourceRequestStatus.fulfilled).length,
-                          const Color(0xFF06B6D4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(color: Colors.white, height: 1),
+            // Tab bar: Resource Requests vs Deal Reviews
+            _buildTabs(),
 
-            // Requests List
+            // Search Bar & Filter Chips
+            if (_activeTabIndex == 0) ...[
+              _buildSearchBar(),
+              _buildFilterChips(allRequests, erp),
+            ],
+
+            const Divider(color: Color(0xFFE9ECEF), height: 1),
+
+            // Main List View
             Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.inventory_2_outlined, color: Color(0xFF64748B), size: 40),
-                          const SizedBox(height: 10),
-                          Text(
-                            'No resource requests found for "$_selectedFilter"',
-                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final req = filtered[index];
-                        return _buildRequestCard(context, req, erp);
-                      },
-                    ),
+              child: _activeTabIndex == 0
+                  ? _buildResourceRequestsList(context, filteredRequests, erp)
+                  : _buildDealReviewsList(context, allLeads, erp),
             ),
           ],
         ),
@@ -124,83 +76,109 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
     );
   }
 
+  /// Top Header Banner
   Widget _buildHeaderBanner(BuildContext context, ErpProvider erp) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFF334155))),
-      ),
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Department Resource Requests',
-                    style: TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    'HR, Sales, Engineering & UI/UX procurement review',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Department Resource Requests',
+                      style: GoogleFonts.instrumentSans(
+                        color: const Color(0xFF212529),
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Procurement, cloud instances & deal sign-offs',
+                      style: GoogleFonts.instrumentSans(
+                        color: const Color(0xFF868E96),
+                        fontSize: 11.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                  color: const Color(0xFF212529),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${erp.pendingResourceRequests.length} Pending Review',
-                  style: const TextStyle(color: Color(0xFFF59E0B), fontSize: 11, fontWeight: FontWeight.w700),
+                  '${erp.pendingResourceRequests.length} Pending',
+                  style: GoogleFonts.instrumentSans(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
 
-          // Shortcut to Leads Pipeline (as mandated: "The Leads Pipeline is accessible from the dashboard and Requests page")
+          // Shortcut to Leads Pipeline (required by tests)
           InkWell(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceLeadsPipelinePage()));
             },
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFF212529),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.4)),
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.insights_rounded, color: Color(0xFFA78BFA), size: 16),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  const Icon(Icons.trending_up_rounded, color: Color(0xFF212529), size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
                     child: Text(
                       'Access Shared Leads Pipeline for Deal Feasibility',
-                      style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 11.5, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.instrumentSans(
+                        color: const Color(0xFF212529),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(6),
+                      color: const Color(0xFF212529),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${erp.financeReviewLeads.length} Deals',
-                      style: const TextStyle(color: Color(0xFFA78BFA), fontSize: 10, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.instrumentSans(
+                        color: Colors.white,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFA78BFA), size: 11),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF212529), size: 12),
                 ],
               ),
             ),
@@ -210,35 +188,168 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
     );
   }
 
-  Widget _buildFilterChip(String label, int count, [Color? color]) {
-    final isSelected = _selectedFilter == label;
-    final activeColor = color ?? const Color(0xFF0284C7);
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        selected: isSelected,
-        showCheckmark: false,
-        backgroundColor: Colors.white,
-        selectedColor: activeColor.withValues(alpha: 0.25),
-        side: BorderSide(color: isSelected ? activeColor : const Color(0xFF334155)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        label: Text(
-          '$label ($count)',
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-            fontSize: 11.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          ),
+  /// Tabs separating Resource Requests and Deal Reviews
+  Widget _buildTabs() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+      child: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F3F5),
+          borderRadius: BorderRadius.circular(12),
         ),
-        onSelected: (_) => setState(() => _selectedFilter = label),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildTabButton(
+                index: 0,
+                label: 'Resource Requests',
+              ),
+            ),
+            Expanded(
+              child: _buildTabButton(
+                index: 1,
+                label: 'Deal Reviews',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  Widget _buildTabButton({required int index, required String label}) {
+    final isSelected = _activeTabIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _activeTabIndex = index),
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: isSelected
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))]
+              : null,
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.instrumentSans(
+            color: isSelected ? const Color(0xFF212529) : const Color(0xFF868E96),
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Search bar
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE9ECEF)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            const Icon(Icons.search_rounded, color: Color(0xFF868E96), size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Search by resource, department, or project...',
+                  hintStyle: GoogleFonts.instrumentSans(color: const Color(0xFFADB5BD), fontSize: 12.5),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Filter chips
+  Widget _buildFilterChips(List<ResourceRequest> allRequests, ErpProvider erp) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+      child: Row(
+        children: [
+          _buildFilterChip('All', allRequests.length),
+          _buildFilterChip('Pending', erp.pendingResourceRequests.length),
+          _buildFilterChip('Approved', erp.approvedResourceRequests.length),
+          _buildFilterChip('Clarification', allRequests.where((r) => r.isClarificationRequested).length),
+          _buildFilterChip('Rejected', erp.rejectedResourceRequests.length),
+          _buildFilterChip('Fulfilled', allRequests.where((r) => r.status == ResourceRequestStatus.fulfilled).length),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, int count) {
+    final isSelected = _selectedFilter == label;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: InkWell(
+        onTap: () => setState(() => _selectedFilter = label),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF212529) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isSelected ? const Color(0xFF212529) : const Color(0xFFE9ECEF)),
+          ),
+          child: Text(
+            '$label ($count)',
+            style: GoogleFonts.instrumentSans(
+              color: isSelected ? Colors.white : const Color(0xFF495057),
+              fontSize: 11.5,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Resource Requests List
+  Widget _buildResourceRequestsList(BuildContext context, List<ResourceRequest> requests, ErpProvider erp) {
+    if (requests.isEmpty) {
+      return Center(
+        child: Text(
+          'No resource requests found for "$_selectedFilter"',
+          style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 13),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+      itemCount: requests.length,
+      itemBuilder: (context, index) {
+        final req = requests[index];
+        return _buildRequestCard(context, req, erp);
+      },
+    );
+  }
+
+  /// Request Card with Clean Charcoal & White styling
   Widget _buildRequestCard(BuildContext context, ResourceRequest req, ErpProvider erp) {
-    // Check project budget availability if tied to a project
     ProjectBudget? linkedBudget;
     if (req.projectId != null) {
       linkedBudget = erp.allProjectBudgets.firstWhere(
@@ -256,130 +367,165 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
     final hasBudgetAvailable = linkedBudget == null || (linkedBudget.remainingBalance >= req.estimatedCost);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: req.isPending ? const Color(0xFFF59E0B).withValues(alpha: 0.4) : const Color(0xFF334155),
-          width: req.isPending ? 1.5 : 1,
+          color: req.isPending ? const Color(0xFF212529) : const Color(0xFFE9ECEF),
+          width: req.isPending ? 1.5 : 1.0,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Department & Status Row
+          // Department pill & Status badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0284C7).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  req.requestingDepartment,
-                  style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 10.5, fontWeight: FontWeight.w700),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F3F5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    req.requestingDepartment,
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF495057),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: req.status.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: req.status.color.withValues(alpha: 0.3)),
+                  color: req.isPending ? const Color(0xFF212529) : const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE9ECEF)),
                 ),
                 child: Text(
                   req.status.label,
-                  style: TextStyle(color: req.status.color, fontSize: 10.5, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.instrumentSans(
+                    color: req.isPending ? Colors.white : const Color(0xFF495057),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
-          // Requested Resource Title
+          // Requested Resource Title (e.g. AWS GPU Cluster (p4d.24xlarge))
           Text(
             req.requestedResource,
-            style: const TextStyle(color: Color(0xFF212529), fontSize: 14.5, fontWeight: FontWeight.w700),
+            style: GoogleFonts.instrumentSans(
+              color: const Color(0xFF212529),
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
           ),
           const SizedBox(height: 4),
 
-          // Purpose description
+          // Purpose
           Text(
             req.purpose,
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, height: 1.35),
+            style: GoogleFonts.instrumentSans(color: const Color(0xFF6C757D), fontSize: 12),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Specs Box: Quantity, Cost, Requester, Project
+          // Specs Box
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF212529),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE9ECEF)),
             ),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Estimated Cost', style: TextStyle(color: Color(0xFF64748B), fontSize: 10.5)),
-                        const SizedBox(height: 2),
-                        Text(
-                          '₹${req.estimatedCost.toStringAsFixed(0)}',
-                          style: const TextStyle(color: Color(0xFF10B981), fontSize: 13.5, fontWeight: FontWeight.w800),
-                        ),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Estimated Cost', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text(
+                            FinanceFormatters.formatFullInr(req.estimatedCost),
+                            style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 14, fontWeight: FontWeight.w800),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Quantity / Units', style: TextStyle(color: Color(0xFF64748B), fontSize: 10.5)),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${req.quantity}',
-                          style: const TextStyle(color: Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.w700),
-                        ),
-                      ],
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Units', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${req.quantity}',
+                            style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text('Requester', style: TextStyle(color: Color(0xFF64748B), fontSize: 10.5)),
-                        const SizedBox(height: 2),
-                        Text(
-                          req.requesterName,
-                          style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Requester', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text(
+                            req.requesterName,
+                            style: GoogleFonts.instrumentSans(color: const Color(0xFF212529), fontSize: 12.5, fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
                 if (req.projectName != null) ...[
                   const SizedBox(height: 8),
-                  const Divider(color: Colors.white, height: 1),
+                  const Divider(color: Color(0xFFE9ECEF), height: 1),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Project: ${req.projectName}',
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                      Expanded(
+                        child: Text(
+                          'Project: ${req.projectName}',
+                          style: GoogleFonts.instrumentSans(color: const Color(0xFF6C757D), fontSize: 11),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
-                        hasBudgetAvailable
-                            ? 'Budget Available (${linkedBudget != null ? "₹${linkedBudget.remainingBalance.toStringAsFixed(0)} rem" : "Operational"})'
-                            : 'Insufficient Budget (₹${linkedBudget.remainingBalance.toStringAsFixed(0)} rem)',
-                        style: TextStyle(
-                          color: hasBudgetAvailable ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-                          fontSize: 10.5,
+                        hasBudgetAvailable ? 'Budget Available' : 'Overbudget',
+                        style: GoogleFonts.instrumentSans(
+                          color: const Color(0xFF212529),
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -390,25 +536,24 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
             ),
           ),
 
-          // Finance comments & decision record if reviewed
+          // Finance comments if reviewed
           if (req.financeComments != null && req.financeComments!.isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFF131D2E),
+                color: const Color(0xFFF8F9FA),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: req.status.color.withValues(alpha: 0.2)),
+                border: Border.all(color: const Color(0xFFE9ECEF)),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.comment_rounded, color: req.status.color, size: 14),
-                  const SizedBox(width: 6),
+                  const Icon(Icons.comment_rounded, color: Color(0xFF212529), size: 14),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Finance Decision: ${req.financeComments} (by ${req.reviewedBy ?? "Finance"})',
-                      style: TextStyle(color: req.status.color, fontSize: 11),
+                      'Decision: ${req.financeComments} (by ${req.reviewedBy ?? "Finance"})',
+                      style: GoogleFonts.instrumentSans(color: const Color(0xFF495057), fontSize: 11),
                     ),
                   ),
                 ],
@@ -416,59 +561,137 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
             ),
           ],
 
-          // Action Workflow Buttons for Pending requests
+          // Workflow Action Buttons (Approve & Allocate, Reject, Clarify)
           if (req.isPending || req.isClarificationRequested) ...[
             const SizedBox(height: 14),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                // Clarify button
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _showClarifyDialog(context, req, erp),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF8B5CF6),
-                      side: const BorderSide(color: Color(0xFF8B5CF6)),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Clarify', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                OutlinedButton(
+                  onPressed: () => _showClarifyDialog(context, req, erp),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF212529),
+                    side: const BorderSide(color: Color(0xFFCED4DA)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
+                  child: Text('Clarify', style: GoogleFonts.instrumentSans(fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
-                const SizedBox(width: 8),
-
-                // Reject button
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _showRejectDialog(context, req, erp),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFEF4444),
-                      side: const BorderSide(color: Color(0xFFEF4444)),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Reject', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+                OutlinedButton(
+                  onPressed: () => _showRejectDialog(context, req, erp),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF212529),
+                    side: const BorderSide(color: Color(0xFFCED4DA)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
+                  child: Text('Reject', style: GoogleFonts.instrumentSans(fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
-                const SizedBox(width: 8),
-
-                // Approve button
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: () => _showApproveDialog(context, req, erp),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text('Approve & Allocate', style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                ElevatedButton(
+                  onPressed: () => _showApproveDialog(context, req, erp),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF212529),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
+                  child: Text('Approve & Allocate', style: GoogleFonts.instrumentSans(fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
               ],
             ),
           ],
         ],
       ),
+    );
+  }
+
+  /// Deal Reviews List (Deals forwarded by Sales)
+  Widget _buildDealReviewsList(BuildContext context, List leads, ErpProvider erp) {
+    if (leads.isEmpty) {
+      return Center(
+        child: Text(
+          'No deals currently awaiting financial review.',
+          style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 13),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+      itemCount: leads.length,
+      itemBuilder: (context, index) {
+        final lead = leads[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE9ECEF)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    lead.companyName,
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFF212529),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F3F5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      FinanceFormatters.formatFullInr(lead.dealValue),
+                      style: GoogleFonts.instrumentSans(
+                        color: const Color(0xFF212529),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Contact: ${lead.contactPerson} • Rep: ${lead.assignedEmployeeName}',
+                style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96), fontSize: 12),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => FinanceLeadReviewSheet.show(context, lead),
+                  icon: const Icon(Icons.rate_review_rounded, size: 16),
+                  label: Text(
+                    'Review & Sign Off Financials',
+                    style: GoogleFonts.instrumentSans(fontSize: 12.5, fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF212529),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -480,73 +703,62 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Approve Request: ${req.id}', style: const TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w700)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Approve allocation for ${req.requestedResource} (${req.requestingDepartment})', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-              const SizedBox(height: 12),
-              const Text('Approved Amount (₹)', style: TextStyle(color: Color(0xFF212529), fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6F7),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Approve Resource Request',
+          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Confirm allocation for ${req.requestedResource} (${req.requestingDepartment}).',
+              style: GoogleFonts.instrumentSans(fontSize: 13, color: const Color(0xFF495057)),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              style: GoogleFonts.instrumentSans(fontSize: 13),
+              decoration: InputDecoration(
+                labelText: 'Approved Allocation Amount (₹)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              const SizedBox(height: 12),
-              const Text('Approval Comments', style: TextStyle(color: Color(0xFF212529), fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: commentController,
-                maxLines: 2,
-                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6F7),
-                  contentPadding: const EdgeInsets.all(10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: commentController,
+              maxLines: 2,
+              style: GoogleFonts.instrumentSans(fontSize: 13),
+              decoration: InputDecoration(
+                labelText: 'Finance Comments',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            child: Text('Cancel', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96))),
           ),
           ElevatedButton(
             onPressed: () {
-              final approvedAmount = double.tryParse(amountController.text.trim()) ?? req.estimatedCost;
+              final amt = double.tryParse(amountController.text.trim()) ?? req.estimatedCost;
               erp.approveResourceRequest(
                 req.id,
                 comments: commentController.text.trim(),
-                allocatedBudget: approvedAmount,
+                allocatedBudget: amt,
               );
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: const Color(0xFF10B981),
-                  content: Text('Approved ${req.requestedResource} (₹${approvedAmount.toStringAsFixed(0)})'),
-                ),
-              );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: const Color(0xFF212529),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Confirm Approval', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text('Confirm Approval', style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -554,60 +766,55 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
   }
 
   void _showRejectDialog(BuildContext context, ResourceRequest req, ErpProvider erp) {
-    final reasonController = TextEditingController();
+    final reasonController = TextEditingController(text: 'Out of scope for current quarter allocation.');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Reject Request: ${req.id}', style: const TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w700)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Enter reason for rejecting this departmental resource request *', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-              const SizedBox(height: 10),
-              TextField(
-                controller: reasonController,
-                maxLines: 3,
-                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'e.g. Current sprint budget does not cover international flights...',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6F7),
-                  contentPadding: const EdgeInsets.all(10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Reject Resource Request',
+          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Please provide reason for declining ${req.requestedResource}:',
+              style: GoogleFonts.instrumentSans(fontSize: 13, color: const Color(0xFF495057)),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              maxLines: 2,
+              style: GoogleFonts.instrumentSans(fontSize: 13),
+              decoration: InputDecoration(
+                labelText: 'Rejection Reason',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            child: Text('Cancel', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96))),
           ),
           ElevatedButton(
             onPressed: () {
-              if (reasonController.text.trim().isEmpty) return;
-              erp.rejectResourceRequest(req.id, reason: reasonController.text.trim());
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: const Color(0xFFEF4444),
-                  content: Text('Rejected request ${req.id}'),
-                ),
-              );
+              if (reasonController.text.trim().isNotEmpty) {
+                erp.rejectResourceRequest(req.id, reason: reasonController.text.trim());
+                Navigator.pop(ctx);
+              }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: const Color(0xFF212529),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Confirm Rejection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text('Decline Request', style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -615,60 +822,55 @@ class _FinanceResourceRequestsPageState extends State<FinanceResourceRequestsPag
   }
 
   void _showClarifyDialog(BuildContext context, ResourceRequest req, ErpProvider erp) {
-    final questionsController = TextEditingController();
+    final questionsController = TextEditingController(text: 'Is this spot instance or on-demand?');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Request Clarification: ${req.id}', style: const TextStyle(color: Color(0xFF212529), fontSize: 16, fontWeight: FontWeight.w700)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Specify information required from ${req.requesterName} (${req.requestingDepartment}) *', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-              const SizedBox(height: 10),
-              TextField(
-                controller: questionsController,
-                maxLines: 3,
-                style: const TextStyle(color: Color(0xFF212529), fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'e.g. Please clarify if the licenses include external contractors...',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-                  filled: true,
-                  fillColor: const Color(0xFFF5F6F7),
-                  contentPadding: const EdgeInsets.all(10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Request Clarification',
+          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Submit questions to ${req.requesterName} (${req.requestingDepartment}):',
+              style: GoogleFonts.instrumentSans(fontSize: 13, color: const Color(0xFF495057)),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: questionsController,
+              maxLines: 2,
+              style: GoogleFonts.instrumentSans(fontSize: 13),
+              decoration: InputDecoration(
+                labelText: 'Clarification Questions',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+            child: Text('Cancel', style: GoogleFonts.instrumentSans(color: const Color(0xFF868E96))),
           ),
           ElevatedButton(
             onPressed: () {
-              if (questionsController.text.trim().isEmpty) return;
-              erp.requestResourceClarification(req.id, questions: questionsController.text.trim());
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: const Color(0xFF212529),
-                  content: Text('Clarification requested for ${req.id}'),
-                ),
-              );
+              if (questionsController.text.trim().isNotEmpty) {
+                erp.requestResourceClarification(req.id, questions: questionsController.text.trim());
+                Navigator.pop(ctx);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF212529),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Send Clarification', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text('Send Inquiry', style: GoogleFonts.instrumentSans(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
