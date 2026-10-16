@@ -25,6 +25,20 @@ public interface LeadRepository extends JpaRepository<LeadEntity, String> {
     @Query("SELECT l FROM LeadEntity l WHERE l.stage NOT IN (com.digitalinertia.erp.entities.enums.LeadStage.won, com.digitalinertia.erp.entities.enums.LeadStage.lost) AND l.nextFollowUp < :today")
     List<LeadEntity> findMissedFollowUps(@Param("today") LocalDate today);
 
+    @Query("SELECT COUNT(l) FROM LeadEntity l WHERE l.stage NOT IN (com.digitalinertia.erp.entities.enums.LeadStage.won, com.digitalinertia.erp.entities.enums.LeadStage.lost) AND l.nextFollowUp = :today")
+    long countFollowUpsDueToday(@Param("today") LocalDate today);
+
+    boolean existsByCompanyNameIgnoreCase(String companyName);
+    boolean existsByEmailIgnoreCase(String email);
+
+    List<LeadEntity> findByCompanyNameContainingIgnoreCaseOrClientNameContainingIgnoreCase(String companyName, String clientName);
+
+    @Query("SELECT COALESCE(SUM(l.dealValue), 0) FROM LeadEntity l WHERE l.stage = com.digitalinertia.erp.entities.enums.LeadStage.won")
+    java.math.BigDecimal sumWonRevenue();
+
+    @Query("SELECT COALESCE(SUM(l.dealValue), 0) FROM LeadEntity l WHERE l.active = true AND l.stage NOT IN (com.digitalinertia.erp.entities.enums.LeadStage.won, com.digitalinertia.erp.entities.enums.LeadStage.lost)")
+    java.math.BigDecimal sumPipelineRevenue();
+
     @org.springframework.data.jpa.repository.Modifying
     @Query(value = "UPDATE leads SET stage = cast(:stage as lead_stage_enum), updated_at = NOW() WHERE id = :id", nativeQuery = true)
     int updateStageNative(@Param("id") String id, @Param("stage") String stage);

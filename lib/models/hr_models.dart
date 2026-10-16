@@ -429,3 +429,168 @@ class HrMonthlyTargets {
     );
   }
 }
+
+/// Attendance status for employee daily records
+enum AttendanceStatus {
+  present('Present', Color(0xFF10B981)),
+  absent('Absent', Color(0xFFEF4444)),
+  lateArrival('Late Arrival', Color(0xFFF59E0B)),
+  onLeave('On Leave', Color(0xFF38BDF8));
+
+  final String label;
+  final Color color;
+  const AttendanceStatus(this.label, this.color);
+}
+
+/// Daily employee attendance check-in/out record
+class DailyAttendanceRecord {
+  final String id;
+  final String employeeId;
+  final String employeeName;
+  final String department;
+  final DateTime date;
+  final String checkInTime;
+  final String? checkOutTime;
+  final AttendanceStatus status;
+  final bool hasCorrectionRequest;
+  final String? correctionNotes;
+
+  const DailyAttendanceRecord({
+    required this.id,
+    required this.employeeId,
+    required this.employeeName,
+    required this.department,
+    required this.date,
+    required this.checkInTime,
+    this.checkOutTime,
+    this.status = AttendanceStatus.present,
+    this.hasCorrectionRequest = false,
+    this.correctionNotes,
+  });
+
+  DailyAttendanceRecord copyWith({
+    String? id,
+    String? employeeId,
+    String? employeeName,
+    String? department,
+    DateTime? date,
+    String? checkInTime,
+    String? checkOutTime,
+    AttendanceStatus? status,
+    bool? hasCorrectionRequest,
+    String? correctionNotes,
+  }) {
+    return DailyAttendanceRecord(
+      id: id ?? this.id,
+      employeeId: employeeId ?? this.employeeId,
+      employeeName: employeeName ?? this.employeeName,
+      department: department ?? this.department,
+      date: date ?? this.date,
+      checkInTime: checkInTime ?? this.checkInTime,
+      checkOutTime: checkOutTime ?? this.checkOutTime,
+      status: status ?? this.status,
+      hasCorrectionRequest: hasCorrectionRequest ?? this.hasCorrectionRequest,
+      correctionNotes: correctionNotes ?? this.correctionNotes,
+    );
+  }
+}
+
+/// Recruitment Pipeline Stages (Applied -> Screening -> Interview -> Selected -> Joined)
+enum CandidateStage {
+  applied('Applied', Color(0xFF64748B)),
+  screening('Screening', Color(0xFF38BDF8)),
+  interview('Interview', Color(0xFFF59E0B)),
+  selected('Selected', Color(0xFF10B981)),
+  joined('Joined', Color(0xFF212529));
+
+  final String label;
+  final Color color;
+  const CandidateStage(this.label, this.color);
+}
+
+/// Job Opening model
+class JobOpening {
+  final String id;
+  final String title;
+  final String department;
+  final int openingsCount;
+  final String experienceRequired;
+  final bool isActive;
+  final DateTime postedDate;
+
+  const JobOpening({
+    required this.id,
+    required this.title,
+    required this.department,
+    required this.openingsCount,
+    required this.experienceRequired,
+    this.isActive = true,
+    required this.postedDate,
+  });
+}
+
+/// Candidate in recruitment pipeline
+class RecruitmentCandidate {
+  final String id;
+  final String name;
+  final String email;
+  final String phone;
+  final String openingTitle;
+  final String department;
+  final CandidateStage stage;
+  final double score;
+  final DateTime appliedDate;
+  final DateTime? interviewDate;
+  final String? interviewerFeedback;
+  final bool requiresCeoInterview;
+  final String? conversionNotes;
+
+  const RecruitmentCandidate({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.openingTitle,
+    required this.department,
+    this.stage = CandidateStage.applied,
+    this.score = 4.0,
+    required this.appliedDate,
+    this.interviewDate,
+    this.interviewerFeedback,
+    this.requiresCeoInterview = false,
+    this.conversionNotes,
+  });
+
+  RecruitmentCandidate copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phone,
+    String? openingTitle,
+    String? department,
+    CandidateStage? stage,
+    double? score,
+    DateTime? appliedDate,
+    DateTime? interviewDate,
+    String? interviewerFeedback,
+    bool? requiresCeoInterview,
+    String? conversionNotes,
+  }) {
+    return RecruitmentCandidate(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      openingTitle: openingTitle ?? this.openingTitle,
+      department: department ?? this.department,
+      stage: stage ?? this.stage,
+      score: score ?? this.score,
+      appliedDate: appliedDate ?? this.appliedDate,
+      interviewDate: interviewDate ?? this.interviewDate,
+      interviewerFeedback: interviewerFeedback ?? this.interviewerFeedback,
+      requiresCeoInterview: requiresCeoInterview ?? this.requiresCeoInterview,
+      conversionNotes: conversionNotes ?? this.conversionNotes,
+    );
+  }
+}
+

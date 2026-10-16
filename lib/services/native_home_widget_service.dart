@@ -149,38 +149,76 @@ class NativeHomeWidgetService {
       final pendingApprovals = erp.pendingApprovals.length;
       final alertsCount = erp.thresholdAlerts.isNotEmpty ? erp.thresholdAlerts.length : erp.unreadEmployeeAlertsCount;
 
-      // 2. Pick top 2 priority tasks
+      // 2. Pick top 3 priority tasks
       final prioritized = erp.currentWeekTasksPrioritized;
-      String task1Title = 'Review Q4 Plant Automation Plan';
-      String task1Badge = 'Due Today';
-      String task2Title = 'Approve Vendor Invoice #4128';
-      String task2Badge = 'High Priority';
+      String task1Title = 'No pending tasks';
+      String task1Project = '';
+      String task1Badge = 'All clear';
+      String task1Done = 'false';
+
+      String task2Title = '';
+      String task2Project = '';
+      String task2Badge = '';
+      String task2Done = 'false';
+
+      String task3Title = '';
+      String task3Project = '';
+      String task3Badge = '';
+      String task3Done = 'false';
 
       if (prioritized.isNotEmpty) {
         final t1 = prioritized[0];
         final info1 = TaskDeadlineInfo.calculate(t1);
         task1Title = t1.title;
+        task1Project = t1.projectName ?? (t1.domain.isNotEmpty ? t1.domain : 'General');
         task1Badge = info1.label;
+        task1Done = t1.isCompleted ? 'true' : 'false';
       }
       if (prioritized.length > 1) {
         final t2 = prioritized[1];
         final info2 = TaskDeadlineInfo.calculate(t2);
         task2Title = t2.title;
+        task2Project = t2.projectName ?? (t2.domain.isNotEmpty ? t2.domain : 'General');
         task2Badge = info2.label;
+        task2Done = t2.isCompleted ? 'true' : 'false';
+      }
+      if (prioritized.length > 2) {
+        final t3 = prioritized[2];
+        final info3 = TaskDeadlineInfo.calculate(t3);
+        task3Title = t3.title;
+        task3Project = t3.projectName ?? (t3.domain.isNotEmpty ? t3.domain : 'General');
+        task3Badge = info3.label;
+        task3Done = t3.isCompleted ? 'true' : 'false';
       }
 
       final formattedTime = DateFormat('hh:mm a').format(DateTime.now());
+      final todayDateStr = DateFormat('EEE, MMM d').format(DateTime.now());
+      final firstName = erp.currentUserName.isNotEmpty
+          ? erp.currentUserName.trim().split(RegExp(r'\s+')).first
+          : 'Employee';
+      final progressSummary = '${erp.currentWeekTasksCompletedCount} of ${erp.currentWeekTasksTotalCount} completed';
 
       // 3. Save atomic widget fields for Android RemoteViews
       await HomeWidget.saveWidgetData<String>('user_name', erp.currentUserName);
+      await HomeWidget.saveWidgetData<String>('first_name', firstName);
+      await HomeWidget.saveWidgetData<String>('today_date', todayDateStr);
+      await HomeWidget.saveWidgetData<String>('progress_summary', progressSummary);
       await HomeWidget.saveWidgetData<String>('active_projects', activeProjects.toString());
       await HomeWidget.saveWidgetData<String>('pending_tasks', pendingTasks.toString());
       await HomeWidget.saveWidgetData<String>('pending_approvals', pendingApprovals.toString());
       await HomeWidget.saveWidgetData<String>('critical_alerts', alertsCount.toString());
       await HomeWidget.saveWidgetData<String>('task_1_title', task1Title);
+      await HomeWidget.saveWidgetData<String>('task_1_project', task1Project);
       await HomeWidget.saveWidgetData<String>('task_1_badge', task1Badge);
+      await HomeWidget.saveWidgetData<String>('task_1_done', task1Done);
       await HomeWidget.saveWidgetData<String>('task_2_title', task2Title);
+      await HomeWidget.saveWidgetData<String>('task_2_project', task2Project);
       await HomeWidget.saveWidgetData<String>('task_2_badge', task2Badge);
+      await HomeWidget.saveWidgetData<String>('task_2_done', task2Done);
+      await HomeWidget.saveWidgetData<String>('task_3_title', task3Title);
+      await HomeWidget.saveWidgetData<String>('task_3_project', task3Project);
+      await HomeWidget.saveWidgetData<String>('task_3_badge', task3Badge);
+      await HomeWidget.saveWidgetData<String>('task_3_done', task3Done);
       await HomeWidget.saveWidgetData<String>('last_updated', formattedTime);
       await HomeWidget.saveWidgetData<String>(sharedPreferencesKey, jsonPayload);
 
@@ -205,6 +243,30 @@ class NativeHomeWidgetService {
       }
       return false;
     }
+  }
+
+  /// Clears sensitive employee widget cache on logout
+  static Future<void> clearWidgetData() async {
+    try {
+      await HomeWidget.saveWidgetData<String>('user_name', '');
+      await HomeWidget.saveWidgetData<String>('first_name', '');
+      await HomeWidget.saveWidgetData<String>('task_1_title', 'Please log in to view tasks');
+      await HomeWidget.saveWidgetData<String>('task_1_project', 'Digital Inertia ERP');
+      await HomeWidget.saveWidgetData<String>('task_1_badge', 'Signed Out');
+      await HomeWidget.saveWidgetData<String>('task_2_title', '');
+      await HomeWidget.saveWidgetData<String>('task_2_project', '');
+      await HomeWidget.saveWidgetData<String>('task_2_badge', '');
+      await HomeWidget.saveWidgetData<String>('task_3_title', '');
+      await HomeWidget.saveWidgetData<String>('task_3_project', '');
+      await HomeWidget.saveWidgetData<String>('task_3_badge', '');
+      await HomeWidget.saveWidgetData<String>('progress_summary', '0 of 0 completed');
+      await HomeWidget.saveWidgetData<String>(sharedPreferencesKey, '');
+
+      await HomeWidget.updateWidget(
+        name: androidWidgetProvider,
+        androidName: androidWidgetProvider,
+      );
+    } catch (_) {}
   }
 
   /// Requests the Android launcher to pin the widget to the home screen (Android API 26+)

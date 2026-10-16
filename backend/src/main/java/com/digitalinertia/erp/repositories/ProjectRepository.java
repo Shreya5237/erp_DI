@@ -13,6 +13,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, String> 
     List<ProjectEntity> findByStatus(ProjectStatus status);
     List<ProjectEntity> findByOwnerId(String ownerId);
     List<ProjectEntity> findByHasBlockersTrue();
+    List<ProjectEntity> findByClientNameIgnoreCase(String clientName);
     
     @Query("SELECT p FROM ProjectEntity p WHERE p.status IN ('planning', 'in_progress', 'on_hold')")
     List<ProjectEntity> findActiveProjects();

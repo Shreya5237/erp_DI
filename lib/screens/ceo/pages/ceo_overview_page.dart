@@ -38,7 +38,7 @@ class _CeoOverviewPageState extends State<CeoOverviewPage> {
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         isMobile ? 16 : 28,
-        isMobile ? 18 : 24,
+        isMobile ? 56 : 24, // Increased top padding to clear status bar/header
         isMobile ? 16 : 28,
         40,
       ),
@@ -140,8 +140,8 @@ class _CeoOverviewPageState extends State<CeoOverviewPage> {
     );
   }
 
-  // ==========================================
-  // A. COMPANY PERFORMANCE METRICS (KPIs)
+// ==========================================
+  // A. COMPANY PERFORMANCE METRICS (HORIZONTALLY SCROLLABLE 3X2 / ROW STYLE)
   // ==========================================
   Widget _buildKpiMetricsGrid(BuildContext context, ErpProvider erp) {
     final activeProjects = erp.allProjects.where((p) => p.status == ProjectStatus.inProgress).length;
@@ -153,88 +153,168 @@ class _CeoOverviewPageState extends State<CeoOverviewPage> {
     final completedTasks = erp.allTasks.where((t) => t.isCompleted).length;
     final overdueTasks = erp.allTasks.where((t) => t.isOverdue && !t.isCompleted).length;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth >= 1050
-            ? 6
-            : (constraints.maxWidth >= 720 ? 3 : 2);
-
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 14,
-          mainAxisSpacing: 14,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: constraints.maxWidth >= 1050
-              ? 1.25
-              : (constraints.maxWidth < 600 ? 1.08 : 1.3),
-          children: [
-            // 1. Revenue
-            _buildKpiCard(
-              title: 'Revenue',
-              metric: '₹38.5L',
-              target: 'Target: ₹50.0L',
-              subtext: '77% Monthly Achieved',
-              icon: Icons.payments_outlined,
-              badgeColor: const Color(0xFF2F9E44),
-              onTap: () => widget.onNavigateModule(4), // Finance & Approvals
-            ),
-            // 2. Projects
-            _buildKpiCard(
-              title: 'Projects',
-              metric: '$activeProjects Active',
-              target: '$atRiskProjects At Risk',
-              subtext: '${erp.allProjects.length} Portfolio Total',
-              icon: Icons.folder_open_outlined,
-              badgeColor: atRiskProjects > 0 ? const Color(0xFFF59F00) : const Color(0xFF2F9E44),
-              onTap: () => widget.onNavigateModule(2), // Projects & Tasks
-            ),
-            // 3. Workforce
-            _buildKpiCard(
-              title: 'Workforce',
-              metric: '${erp.allEmployees.length}',
-              target: '+${erp.allInterns.length} Trainees',
-              subtext: '94% Attendance Today',
-              icon: Icons.people_outline_rounded,
-              badgeColor: const Color(0xFF212529),
-              onTap: () => widget.onNavigateModule(1), // People & Departments
-            ),
-            // 4. Execution
-            _buildKpiCard(
-              title: 'Execution',
-              metric: '$completedTasks Done',
-              target: '$overdueTasks Overdue',
-              subtext: '${erp.allTasks.length} Total Deliverables',
-              icon: Icons.task_alt_outlined,
-              badgeColor: overdueTasks > 0 ? const Color(0xFFE03131) : const Color(0xFF2F9E44),
-              onTap: () => widget.onNavigateModule(2), // Tasks & Projects
-            ),
-            // 5. Business Pipeline
-            _buildKpiCard(
-              title: 'Business Pipeline',
-              metric: '₹${pipelineCr}Cr',
-              target: '${erp.allLeads.length} Accounts',
-              subtext: '${erp.dealsWonCount} Won • 4.5% Conv.',
-              icon: Icons.trending_up_rounded,
-              badgeColor: const Color(0xFF212529),
-              onTap: () => widget.onNavigateModule(3), // Clients & Business
-            ),
-            // 6. Financial Health
-            _buildKpiCard(
-              title: 'Budget Health',
-              metric: '$utilizationPct%',
-              target: '₹${totalSpentLakhs}L / ₹${totalAllocLakhs}L',
-              subtext: 'Optimal Burn Rate',
-              icon: Icons.account_balance_outlined,
-              badgeColor: utilizationPct > 85 ? const Color(0xFFE03131) : const Color(0xFF2F9E44),
-              onTap: () => widget.onNavigateModule(4), // Finance & Approvals
-            ),
-          ],
-        );
+    // List of KPI data items to render horizontally
+    final kpiItems = [
+      {
+        'title': 'REVENUE',
+        'metric': '₹38.5L',
+        'target': 'Target: ₹50.0L',
+        'subtext': '77% Monthly Achieved',
+        'icon': Icons.payments_outlined,
+        'badgeColor': const Color(0xFF34D399),
+        'onTap': () => widget.onNavigateModule(4),
       },
+      {
+        'title': 'PROJECTS',
+        'metric': '$activeProjects Active',
+        'target': '$atRiskProjects At Risk',
+        'subtext': '${erp.allProjects.length} Total',
+        'icon': Icons.folder_open_outlined,
+        'badgeColor': atRiskProjects > 0 ? const Color(0xFFF59F00) : const Color(0xFF34D399),
+        'onTap': () => widget.onNavigateModule(2),
+      },
+      {
+        'title': 'WORKFORCE',
+        'metric': '${erp.allEmployees.length}',
+        'target': '+${erp.allInterns.length} Trainees',
+        'subtext': '94% Attendance',
+        'icon': Icons.people_outline_rounded,
+        'badgeColor': const Color(0xFFCED4DA),
+        'onTap': () => widget.onNavigateModule(1),
+      },
+      {
+        'title': 'EXECUTION',
+        'metric': '$completedTasks Done',
+        'target': '$overdueTasks Overdue',
+        'subtext': '${erp.allTasks.length} Deliverables',
+        'icon': Icons.task_alt_outlined,
+        'badgeColor': overdueTasks > 0 ? const Color(0xFFFDA4AF) : const Color(0xFF34D399),
+        'onTap': () => widget.onNavigateModule(2),
+      },
+      {
+        'title': 'PIPELINE',
+        'metric': '₹${pipelineCr}Cr',
+        'target': '${erp.allLeads.length} Accounts',
+        'subtext': '${erp.dealsWonCount} Won • 4.5% Conv.',
+        'icon': Icons.trending_up_rounded,
+        'badgeColor': const Color(0xFFCED4DA),
+        'onTap': () => widget.onNavigateModule(3),
+      },
+      {
+        'title': 'BUDGET HEALTH',
+        'metric': '$utilizationPct%',
+        'target': '₹${totalSpentLakhs}L / ₹${totalAllocLakhs}L',
+        'subtext': 'Optimal Burn Rate',
+        'icon': Icons.account_balance_outlined,
+        'badgeColor': utilizationPct > 85 ? const Color(0xFFFDA4AF) : const Color(0xFF34D399),
+        'onTap': () => widget.onNavigateModule(4),
+      },
+    ];
+
+    return SizedBox(
+      height: 115, // Compact height for professional look
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: kpiItems.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final item = kpiItems[index];
+          return SizedBox(
+            width: 175, // Professional card width
+            child: InkWell(
+              onTap: item['onTap'] as VoidCallback,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF212529), // Black background
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFF343A40), width: 1.1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF212529).withOpacity(0.08),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item['title'] as String,
+                            style: GoogleFonts.instrumentSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFCED4DA),
+                              letterSpacing: 0.5,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 14,
+                          color: const Color(0xFFADB5BD),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item['metric'] as String,
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white, // White text
+                            letterSpacing: -0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: item['badgeColor'] as Color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                item['target'] as String,
+                                style: GoogleFonts.instrumentSans(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: item['badgeColor'] as Color,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
-
   // ==========================================
   // IMAGE 1: REVENUE TREND & DEPARTMENT ALLOCATION
   // ==========================================
@@ -603,105 +683,6 @@ class _CeoOverviewPageState extends State<CeoOverviewPage> {
     );
   }
 
-  Widget _buildKpiCard({
-    required String title,
-    required String metric,
-    required String target,
-    required String subtext,
-    required IconData icon,
-    required Color badgeColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE9ECEF), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF212529).withOpacity(0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF6C757D),
-                      letterSpacing: 0.2,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(icon, size: 18, color: const Color(0xFF212529)),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  metric,
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF212529),
-                    letterSpacing: -0.4,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(color: badgeColor, shape: BoxShape.circle),
-                    ),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        target,
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: badgeColor,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            Text(
-              subtext,
-              style: GoogleFonts.instrumentSans(
-                fontSize: 10,
-                color: const Color(0xFFADB5BD),
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ==========================================
   // C. EXECUTIVE ATTENTION QUEUE

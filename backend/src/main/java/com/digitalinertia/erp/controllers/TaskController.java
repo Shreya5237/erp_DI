@@ -34,6 +34,19 @@ public class TaskController {
                 "Tasks retrieved successfully"));
     }
 
+    @GetMapping("/my-tasks")
+    public ResponseEntity<ApiResponse<List<TaskEntity>>> getMyTasks(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.digitalinertia.erp.security.UserPrincipal principal,
+            @RequestParam(required = false) TaskStatus status) {
+        String empId = principal != null ? principal.getEmployeeId() : null;
+        if (empId == null || empId.isBlank()) {
+            return ResponseEntity.ok(ApiResponse.success(List.of(), "No employee identity linked to session"));
+        }
+        return ResponseEntity.ok(ApiResponse.success(
+                taskService.getAll(status, null, empId, null, null),
+                "Employee tasks retrieved successfully"));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TaskEntity>> getById(@PathVariable String id) {
         return ResponseEntity.ok(ApiResponse.success(taskService.getById(id), "Task retrieved"));

@@ -6,19 +6,11 @@ import '../../models/user_role.dart';
 import '../ceo/ceo_executive_shell.dart';
 import '../main_navigation_screen.dart';
 import '../employee/employee_navigation_screen.dart';
+import '../hr/hr_navigation_screen.dart';
+import '../finance/finance_navigation_screen.dart';
+import '../sales/sales_navigation_screen.dart';
 
-/// Clean & Secure CEO Login & Authentication Screen (Specification Section 2)
-/// Implements:
-/// - DI Monogram logo and company branding
-/// - Heading: "Welcome Back"
-/// - Supporting text: "Sign in to your executive workspace."
-/// - Company email or employee ID field
-/// - Password field with show/hide control
-/// - Remember email option
-/// - Forgot password and secure password reset flow
-/// - Primary Sign In button with loading state
-/// - Real backend identity authentication
-/// - Direct routing of CEO accounts to CeoExecutiveShellScreen
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -27,8 +19,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: 'laven@digitalinertia.com');
-  final _passwordController = TextEditingController(text: 'password123!');
+  final _emailController = TextEditingController(text: '');
+  final _passwordController = TextEditingController(text: '');
   bool _obscurePassword = true;
   bool _rememberEmail = true;
   bool _isLoading = false;
@@ -68,13 +60,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final Widget destination = (erp.currentRole == UserRole.ceo || erp.currentRole == UserRole.gm)
           ? const CeoExecutiveShellScreen()
-          : (erp.currentRole == UserRole.technical ||
-                 erp.currentRole == UserRole.employee ||
-                 erp.currentRole == UserRole.intern ||
-                 erp.currentRole == UserRole.deptLead ||
-                 erp.currentRole == UserRole.poc)
-              ? const EmployeeNavigationScreen()
-              : const MainNavigationScreen();
+          : (erp.currentRole == UserRole.hr)
+              ? const HrNavigationScreen()
+              : (erp.currentRole == UserRole.finance)
+                  ? const FinanceNavigationScreen()
+                  : (erp.currentRole == UserRole.sales || erp.currentRole == UserRole.salesMarketing)
+                      ? const SalesNavigationScreen()
+                      : (erp.currentRole == UserRole.technical ||
+                             erp.currentRole == UserRole.employee ||
+                             erp.currentRole == UserRole.intern ||
+                             erp.currentRole == UserRole.deptLead ||
+                             erp.currentRole == UserRole.poc)
+                          ? const EmployeeNavigationScreen()
+                          : const MainNavigationScreen();
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => destination),
@@ -283,7 +281,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         // Heading & Supporting Text
                         Text(
-                          'Welcome Back',
+                          'SIGN IN',
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.instrumentSans(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
@@ -292,20 +291,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        Text(
-                          'Sign in to your executive workspace.',
-                          style: GoogleFonts.instrumentSans(
-                            fontSize: 13,
-                            color: const Color(0xFF6C757D),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
                         const SizedBox(height: 22),
 
                         // Company Email or Employee ID Label
                         Text(
-                          'COMPANY EMAIL OR EMPLOYEE ID',
-                          style: GoogleFonts.instrumentSans(
+                          'EMAIL OR EMPLOYEE ID',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.instrumentSans(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF6C757D),
@@ -431,7 +423,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Remember email on this executive terminal',
+                                'Remember me',
                                 style: GoogleFonts.instrumentSans(
                                   fontSize: 11.5,
                                   color: const Color(0xFF495057),
@@ -468,6 +460,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   )
                                 : Text(
                                     'SIGN IN',
+                                    textAlign: TextAlign.center,
                                     style: GoogleFonts.instrumentSans(
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.w800,
@@ -489,7 +482,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       foregroundColor: const Color(0xFF6C757D),
                     ),
                     child: Text(
-                      'Forgot password? Secure recovery',
+                      'Forgot password?',
                       style: GoogleFonts.instrumentSans(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,

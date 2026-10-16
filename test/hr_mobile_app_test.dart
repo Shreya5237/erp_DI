@@ -200,8 +200,8 @@ void main() {
       // Bottom nav items
       expect(find.text('Home'), findsOneWidget);
       expect(find.text('People'), findsOneWidget);
-      expect(find.text('Trainees'), findsOneWidget);
-      expect(find.text('Calendar'), findsOneWidget);
+      expect(find.text('Attendance'), findsOneWidget);
+      expect(find.text('Recruitment'), findsOneWidget);
       expect(find.text('Profile'), findsOneWidget);
 
       // Top bar icons
@@ -219,15 +219,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Team Staffing & Resource Requests'), findsOneWidget);
 
-      // Tap Trainees tab
-      await tester.tap(find.text('Trainees'));
+      // Tap Attendance tab
+      await tester.tap(find.text('Attendance'));
+      await tester.pumpAndSettle();
+      expect(find.text('Leave Management'), findsOneWidget);
+
+      // Tap Recruitment tab
+      await tester.tap(find.text('Recruitment'));
       await tester.pumpAndSettle();
       expect(find.text('Onboarding & Trainees'), findsOneWidget);
-
-      // Tap Calendar tab
-      await tester.tap(find.text('Calendar'));
-      await tester.pumpAndSettle();
-      expect(find.text('Tasks & Calendar'), findsOneWidget);
 
       // Tap Profile tab
       await tester.tap(find.text('Profile'));

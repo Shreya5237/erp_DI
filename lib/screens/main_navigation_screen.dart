@@ -8,7 +8,6 @@ import '../widgets/common_home_screen.dart';
 import 'employees/employee_list_screen.dart';
 import 'interns/intern_list_screen.dart';
 import 'tasks/task_list_screen.dart';
-import 'tasks/task_widget_screen.dart';
 import 'projects/project_list_screen.dart';
 import 'leads/lead_list_screen.dart';
 import 'approvals/approvals_screen.dart';
@@ -17,6 +16,7 @@ import 'departments/department_hub_screen.dart';
 import 'alerts/alerts_screen.dart';
 import 'admin/admin_screen.dart';
 import 'ceo/ceo_executive_shell.dart';
+import 'hr/hr_navigation_screen.dart';
 
 /// Main Navigation Container providing role-based dynamic bottom navigation,
 /// 1-tap persona switching, and complete modular access.
@@ -96,6 +96,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (erp.currentRole == UserRole.ceo || erp.currentRole == UserRole.gm) {
       return const CeoExecutiveShellScreen();
     }
+    if (erp.currentRole == UserRole.hr) {
+      return const HrNavigationScreen();
+    }
 
     final alertCount = erp.thresholdAlerts.length;
 
@@ -167,11 +170,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         break;
       case 9:
         bodyWidget = DepartmentHubScreen(
-          onBack: () => setState(() => _currentIndex = 0),
-        );
-        break;
-      case 10:
-        bodyWidget = TaskWidgetScreen(
           onBack: () => setState(() => _currentIndex = 0),
         );
         break;
@@ -269,97 +267,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(width: 8),
-            // Distinct Mode Badge (Live API vs Demo Mode)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-              decoration: BoxDecoration(
-                color: erp.isLiveMode ? const Color(0xFFECFDF5) : const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: erp.isLiveMode ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                  width: 0.8,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: erp.isLiveMode ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    erp.isLiveMode ? 'LIVE API' : 'DEMO',
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      color: erp.isLiveMode ? const Color(0xFF065F46) : const Color(0xFF92400E),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
         actions: [
-          // 1-Tap Persona Switcher Menu in AppBar
-          PopupMenuButton<UserRole>(
-            tooltip: 'Switch Persona',
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _getRoleTagColor(erp.currentRole).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _getRoleTagColor(erp.currentRole).withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _getRoleShortTitle(erp.currentRole),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: _getRoleTagColor(erp.currentRole),
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Icon(Icons.arrow_drop_down, size: 16, color: _getRoleTagColor(erp.currentRole)),
-                ],
+          // Authenticated Role Badge (Read-only security badge)
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getRoleTagColor(erp.currentRole).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _getRoleTagColor(erp.currentRole).withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              _getRoleShortTitle(erp.currentRole),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: _getRoleTagColor(erp.currentRole),
               ),
             ),
-            onSelected: (role) {
-              erp.setRole(role);
-              setState(() => _currentIndex = 0);
-            },
-            itemBuilder: (ctx) => [
-              const PopupMenuItem(
-                value: UserRole.ceo,
-                child: Row(
-                  children: [
-                    Icon(Icons.shield_rounded, size: 16, color: Color(0xFFF59E0B)),
-                    SizedBox(width: 8),
-                    Text('CEO (Laven Lokesh)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: UserRole.sales,
-                child: Row(
-                  children: [
-                    Icon(Icons.trending_up_rounded, size: 16, color: Color(0xFF059669)),
-                    SizedBox(width: 8),
-                    Text('Sales BD (Rajesh Kumar)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),
-                  ],
-                ),
-              ),
-            ],
           ),
 
           // Notification Bell
@@ -404,7 +331,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    erp.currentUserName[0],
+                    erp.currentUserName.isNotEmpty ? erp.currentUserName[0].toUpperCase() : 'U',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -417,7 +344,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ),
         ],
       ),
-      body: bodyWidget,
+      body: SafeArea(top: false, child: bodyWidget),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -471,11 +398,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   String _getRoleShortTitle(UserRole role) {
     switch (role) {
       case UserRole.ceo:
-        return '👑 CEO';
+      case UserRole.gm:
+        return 'Executive';
       case UserRole.sales:
-        return '💼 Sales';
+      case UserRole.salesMarketing:
+        return 'Sales';
+      case UserRole.hr:
+        return 'People Operations';
+      case UserRole.finance:
+        return 'Finance';
+      case UserRole.digitalMarketing:
+        return 'Marketing';
       default:
-        return '💻 Tech';
+        return 'Engineering';
     }
   }
 
@@ -577,64 +512,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   color: const Color(0xFF212529),
                 ),
               ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: erp.isLiveMode ? const Color(0xFFEBFBEE) : const Color(0xFFFFF9DB),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  erp.isLiveMode ? 'LIVE API' : 'DEMO MODE',
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: erp.isLiveMode ? const Color(0xFF2F9E44) : const Color(0xFFF59F00),
-                  ),
-                ),
-              ),
             ],
           ),
           Row(
             children: [
-              // 1-Tap Persona Switcher
-              PopupMenuButton<UserRole>(
-                tooltip: 'Switch Persona',
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6F7),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE9ECEF)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        erp.currentRole.label.split(' / ').first,
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF212529),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_drop_down, size: 16, color: Color(0xFF212529)),
-                    ],
+              // Authenticated Role Badge (Read-only security badge)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F6F7),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE9ECEF)),
+                ),
+                child: Text(
+                  erp.currentRole.label.split(' / ').first,
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF212529),
                   ),
                 ),
-                onSelected: (role) {
-                  erp.setRole(role);
-                  setState(() => _currentIndex = 0);
-                },
-                itemBuilder: (ctx) => [
-                  const PopupMenuItem(value: UserRole.ceo, child: Text('CEO')),
-                  const PopupMenuItem(value: UserRole.technical, child: Text('Technical Lead / Eng')),
-                  const PopupMenuItem(value: UserRole.sales, child: Text('Sales & BD')),
-                  const PopupMenuItem(value: UserRole.finance, child: Text('Finance & Accounts')),
-                  const PopupMenuItem(value: UserRole.hr, child: Text('People & HR')),
-                  const PopupMenuItem(value: UserRole.intern, child: Text('Intern / Trainee')),
-                ],
               ),
               const SizedBox(width: 12),
               // Notifications Bell

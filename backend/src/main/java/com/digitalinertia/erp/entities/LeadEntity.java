@@ -51,6 +51,15 @@ public class LeadEntity {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "finance_approved", nullable = false)
+    private boolean financeApproved = false;
+
+    @Column(name = "lost_reason", columnDefinition = "TEXT")
+    private String lostReason;
+
+    @Column(name = "handover_project_id", length = 32)
+    private String handoverProjectId;
+
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
@@ -100,6 +109,15 @@ public class LeadEntity {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public boolean isFinanceApproved() { return financeApproved; }
+    public void setFinanceApproved(boolean financeApproved) { this.financeApproved = financeApproved; }
+
+    public String getLostReason() { return lostReason; }
+    public void setLostReason(String lostReason) { this.lostReason = lostReason; }
+
+    public String getHandoverProjectId() { return handoverProjectId; }
+    public void setHandoverProjectId(String handoverProjectId) { this.handoverProjectId = handoverProjectId; }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

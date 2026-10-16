@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../../models/user_role.dart';
 import '../../../providers/erp_provider.dart';
 import '../../auth/login_screen.dart';
 
@@ -57,6 +56,9 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
 
   /// 1. Profile Header matching Image 2 squircle style
   Widget _buildProfileHeader(ErpProvider erp) {
+    final displayName = erp.currentUserName.isNotEmpty ? erp.currentUserName : 'Siddharth Roy';
+    final initials = displayName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -76,7 +78,7 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
             ),
             alignment: Alignment.center,
             child: Text(
-              'SR',
+              initials.isNotEmpty ? initials : 'SR',
               style: GoogleFonts.instrumentSans(
                 color: Colors.white,
                 fontSize: 20,
@@ -93,7 +95,7 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Siddharth Roy',
+                  displayName,
                   style: GoogleFonts.instrumentSans(
                     color: const Color(0xFF212529),
                     fontSize: 18,
@@ -252,7 +254,7 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
       ),
       child: Column(
         children: [
-          _buildDetailRow(icon: Icons.badge_outlined, label: 'EMPLOYEE ID', value: 'EMP-115'),
+          _buildDetailRow(icon: Icons.badge_outlined, label: 'EMPLOYEE ID', value: erp.currentUserId.isNotEmpty ? erp.currentUserId : 'EMP-115'),
           const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
           _buildDetailRow(icon: Icons.work_outline_rounded, label: 'DESIGNATION', value: 'Lead Financial Analyst & Controller'),
           const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
@@ -260,7 +262,7 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
           const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
           _buildDetailRow(icon: Icons.supervisor_account_outlined, label: 'REPORTING MANAGER', value: 'Marcus Chen (Finance Director)'),
           const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xFFF1F3F5)),
-          _buildDetailRow(icon: Icons.mail_outline_rounded, label: 'OFFICIAL EMAIL', value: 'siddharth.roy@digitalinertia.com'),
+          _buildDetailRow(icon: Icons.mail_outline_rounded, label: 'OFFICIAL EMAIL', value: erp.currentUserEmail.isNotEmpty ? erp.currentUserEmail : 'siddharth.roy@digitalinertia.com'),
         ],
       ),
     );
@@ -357,7 +359,7 @@ class _FinanceProfilePageState extends State<FinanceProfilePage> {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    erp.setRole(UserRole.employee);
+                    erp.logout();
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
                       (route) => false,

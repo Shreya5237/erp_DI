@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/erp_provider.dart';
 import 'pages/hr_dashboard_page.dart';
-import 'pages/hr_staffing_requests_page.dart';
-import 'pages/hr_onboarding_trainees_page.dart';
-import 'pages/hr_tasks_calendar_page.dart';
+import 'pages/hr_people_interns_page.dart';
+import 'pages/hr_attendance_leave_page.dart';
+import 'pages/hr_recruitment_performance_page.dart';
 import 'pages/hr_profile_page.dart';
 import 'pages/hr_pipeline_coordination_page.dart';
 import 'pages/hr_leave_management_page.dart';
 import 'widgets/hr_notifications_sheet.dart';
 
 /// Main navigation shell for the dedicated HR Mobile App
-/// Implements 5-item bottom nav (Home, People, Trainees, Calendar, Profile),
+/// Implements 5-item bottom nav (Home, People, Attendance, Recruitment, Profile)
 /// Top bar brand, Leads Pipeline shortcut, Leave Management access, and unified Notifications Bell system.
 class HrNavigationScreen extends StatefulWidget {
   const HrNavigationScreen({super.key});
@@ -36,12 +36,12 @@ class _HrNavigationScreenState extends State<HrNavigationScreen> {
     final pages = [
       HrDashboardPage(
         onNavigateToStaffing: () => setState(() => _currentIndex = 1),
-        onNavigateToTrainees: () => setState(() => _currentIndex = 2),
-        onNavigateToCalendar: () => setState(() => _currentIndex = 3),
+        onNavigateToTrainees: () => setState(() => _currentIndex = 3),
+        onNavigateToCalendar: () => setState(() => _currentIndex = 2),
       ),
-      const HrStaffingRequestsPage(),
-      const HrOnboardingTraineesPage(),
-      const HrTasksCalendarPage(),
+      const HrPeopleInternsPage(),
+      const HrAttendanceLeavePage(),
+      const HrRecruitmentPerformancePage(),
       const HrProfilePage(),
     ];
 
@@ -209,14 +209,14 @@ class _HrNavigationScreenState extends State<HrNavigationScreen> {
               label: 'People',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.school_outlined),
-              activeIcon: Icon(Icons.school_rounded, color: Color(0xFF212529)),
-              label: 'Trainees',
+              icon: Icon(Icons.event_available_outlined),
+              activeIcon: Icon(Icons.event_available_rounded, color: Color(0xFF212529)),
+              label: 'Attendance',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month_outlined),
-              activeIcon: Icon(Icons.calendar_month_rounded, color: Color(0xFF212529)),
-              label: 'Calendar',
+              icon: Icon(Icons.work_outline_rounded),
+              activeIcon: Icon(Icons.work_rounded, color: Color(0xFF212529)),
+              label: 'Recruitment',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline_rounded),

@@ -14,6 +14,19 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
+        <!-- DI Monogram -->
+        <TextView
+            android:id="@+id/tv_di_logo"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:background="@drawable/di_date_pill_active"
+            android:text="DI"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginEnd="8dp" />
+
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -24,26 +37,28 @@
                 android:id="@+id/tv_widget_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Digital Inertia ERP"
+                android:text="MY TASKS"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05" />
 
             <TextView
                 android:id="@+id/tv_widget_subtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Executive Overview • Updated just now"
+                android:text="Today's Tasks • Updated just now"
                 android:textColor="#94A3B8"
                 android:textSize="10sp"
                 android:layout_marginTop="1dp" />
         </LinearLayout>
 
+        <!-- Refresh Button -->
         <TextView
-            android:id="@+id/tv_live_indicator"
+            android:id="@+id/btn_refresh_widget"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="● LIVE"
+            android:text="↻ Sync"
             android:textColor="#10B981"
             android:textSize="10sp"
             android:textStyle="bold"
@@ -54,146 +69,103 @@
             android:paddingBottom="3dp" />
     </LinearLayout>
 
-    <!-- Key Metrics Grid -->
+    <!-- Weekly Date Selector (Mon - Sun) -->
     <LinearLayout
+        android:id="@+id/weekly_selector_strip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="8dp"
+        android:weightSum="7">
 
-        <!-- Projects -->
-        <LinearLayout
-            android:id="@+id/card_projects"
+        <TextView
+            android:id="@+id/day_mon"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="3dp"
-            android:orientation="vertical"
-            android:background="@drawable/di_metric_card_bg"
+            android:text="M"
+            android:textColor="#94A3B8"
+            android:textSize="10sp"
             android:gravity="center"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp">
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
 
-            <TextView
-                android:id="@+id/tv_projects_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="12"
-                android:textColor="#38BDF8"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Projects"
-                android:textColor="#94A3B8"
-                android:textSize="9sp" />
-        </LinearLayout>
-
-        <!-- Tasks -->
-        <LinearLayout
-            android:id="@+id/card_tasks"
+        <TextView
+            android:id="@+id/day_tue"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="3dp"
-            android:layout_marginEnd="3dp"
-            android:orientation="vertical"
-            android:background="@drawable/di_metric_card_bg"
+            android:text="T"
+            android:textColor="#94A3B8"
+            android:textSize="10sp"
             android:gravity="center"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp">
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
 
-            <TextView
-                android:id="@+id/tv_tasks_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="28"
-                android:textColor="#A78BFA"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Tasks"
-                android:textColor="#94A3B8"
-                android:textSize="9sp" />
-        </LinearLayout>
-
-        <!-- Approvals -->
-        <LinearLayout
-            android:id="@+id/card_approvals"
+        <TextView
+            android:id="@+id/day_wed"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="3dp"
-            android:layout_marginEnd="3dp"
-            android:orientation="vertical"
-            android:background="@drawable/di_metric_card_bg"
+            android:text="W"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:background="@drawable/di_date_pill_active"
             android:gravity="center"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp">
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
 
-            <TextView
-                android:id="@+id/tv_approvals_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="5"
-                android:textColor="#FBBF24"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Approvals"
-                android:textColor="#94A3B8"
-                android:textSize="9sp" />
-        </LinearLayout>
-
-        <!-- Alerts -->
-        <LinearLayout
-            android:id="@+id/card_alerts"
+        <TextView
+            android:id="@+id/day_thu"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="3dp"
-            android:orientation="vertical"
-            android:background="@drawable/di_metric_card_bg"
+            android:text="T"
+            android:textColor="#94A3B8"
+            android:textSize="10sp"
             android:gravity="center"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp">
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
 
-            <TextView
-                android:id="@+id/tv_alerts_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="3"
-                android:textColor="#F87171"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+        <TextView
+            android:id="@+id/day_fri"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="F"
+            android:textColor="#94A3B8"
+            android:textSize="10sp"
+            android:gravity="center"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Alerts"
-                android:textColor="#94A3B8"
-                android:textSize="9sp" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/day_sat"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="S"
+            android:textColor="#64748B"
+            android:textSize="10sp"
+            android:gravity="center"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
+
+        <TextView
+            android:id="@+id/day_sun"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="S"
+            android:textColor="#64748B"
+            android:textSize="10sp"
+            android:gravity="center"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp" />
     </LinearLayout>
 
-    <!-- Priority Tasks Section -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="PRIORITY FOCUS THIS WEEK"
-        android:textColor="#64748B"
-        android:textSize="9sp"
-        android:textStyle="bold"
-        android:layout_marginTop="8dp" />
-
+    <!-- Task List Rows -->
     <!-- Task Row 1 -->
     <LinearLayout
         android:id="@+id/row_task_1"
@@ -202,19 +174,43 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/di_task_item_bg"
-        android:padding="6dp"
-        android:layout_marginTop="4dp">
+        android:padding="8dp"
+        android:layout_marginTop="8dp">
 
         <TextView
-            android:id="@+id/tv_task_1_title"
+            android:id="@+id/iv_task_1_check"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:background="@drawable/di_circle_check_pending"
+            android:layout_marginEnd="8dp" />
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Review Q4 Plant Automation Plan"
-            android:textColor="#F1F5F9"
-            android:textSize="11sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_task_1_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Review Q4 Plant Automation Plan"
+                android:textColor="#F1F5F9"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tv_task_1_project"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="EcoTrack Mobile App"
+                android:textColor="#94A3B8"
+                android:textSize="9.5sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tv_task_1_badge"
@@ -228,7 +224,7 @@
             android:paddingRight="6dp"
             android:paddingTop="2dp"
             android:paddingBottom="2dp"
-            android:layout_marginStart="4dp" />
+            android:layout_marginStart="6dp" />
     </LinearLayout>
 
     <!-- Task Row 2 -->
@@ -239,101 +235,149 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:background="@drawable/di_task_item_bg"
-        android:padding="6dp"
-        android:layout_marginTop="4dp">
+        android:padding="8dp"
+        android:layout_marginTop="5dp">
 
         <TextView
-            android:id="@+id/tv_task_2_title"
+            android:id="@+id/iv_task_2_check"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:background="@drawable/di_circle_check_pending"
+            android:layout_marginEnd="8dp" />
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Approve Vendor Invoice #4128"
-            android:textColor="#F1F5F9"
-            android:textSize="11sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_task_2_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Approve Vendor Invoice #4128"
+                android:textColor="#F1F5F9"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tv_task_2_project"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="FinTech Payment Gateway"
+                android:textColor="#94A3B8"
+                android:textSize="9.5sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tv_task_2_badge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="High Priority"
-            android:textColor="#F59E0B"
+            android:textColor="#EF4444"
             android:textSize="9sp"
             android:background="@drawable/di_badge_task_due"
             android:paddingLeft="6dp"
             android:paddingRight="6dp"
             android:paddingTop="2dp"
             android:paddingBottom="2dp"
-            android:layout_marginStart="4dp" />
+            android:layout_marginStart="6dp" />
     </LinearLayout>
 
-    <!-- Action Buttons Row -->
+    <!-- Task Row 3 -->
+    <LinearLayout
+        android:id="@+id/row_task_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/di_task_item_bg"
+        android:padding="8dp"
+        android:layout_marginTop="5dp">
+
+        <TextView
+            android:id="@+id/iv_task_3_check"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:background="@drawable/di_circle_check_pending"
+            android:layout_marginEnd="8dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_task_3_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Deploy Staging v2.4"
+                android:textColor="#F1F5F9"
+                android:textSize="11.5sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tv_task_3_project"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Digital Inertia Core"
+                android:textColor="#94A3B8"
+                android:textSize="9.5sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_task_3_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tomorrow"
+            android:textColor="#38BDF8"
+            android:textSize="9sp"
+            android:background="@drawable/di_badge_task_due"
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginStart="6dp" />
+    </LinearLayout>
+
+    <!-- Footer Summary & View All Action -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_marginTop="8dp">
 
         <TextView
-            android:id="@+id/btn_launch_app"
+            android:id="@+id/tv_progress_summary"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginEnd="2dp"
-            android:background="@drawable/di_action_btn_bg"
-            android:text="Dashboard"
-            android:textColor="#38BDF8"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp" />
+            android:text="3 of 7 completed"
+            android:textColor="#94A3B8"
+            android:textSize="10.5sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btn_launch_tasks"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="2dp"
-            android:layout_marginEnd="2dp"
             android:background="@drawable/di_action_btn_bg"
-            android:text="Tasks"
-            android:textColor="#A78BFA"
+            android:text="View All  ›"
+            android:textColor="#FFFFFF"
             android:textSize="10sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp" />
-
-        <TextView
-            android:id="@+id/btn_launch_approvals"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="2dp"
-            android:layout_marginEnd="2dp"
-            android:background="@drawable/di_action_btn_bg"
-            android:text="Approvals"
-            android:textColor="#FBBF24"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp" />
-
-        <TextView
-            android:id="@+id/btn_refresh_widget"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="2dp"
-            android:background="@drawable/di_action_btn_bg"
-            android:text="↻ Sync"
-            android:textColor="#10B981"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:gravity="center"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp" />
     </LinearLayout>

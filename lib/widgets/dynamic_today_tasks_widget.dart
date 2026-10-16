@@ -38,7 +38,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF212529),
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
@@ -46,16 +46,16 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF5F5),
+                color: const Color(0xFF3D1414),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.block_rounded, color: Color(0xFFE03131), size: 20),
+              child: const Icon(Icons.block_rounded, color: Color(0xFFFF8787), size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Report Task Blocker',
-                style: GoogleFonts.instrumentSans(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF212529)),
+                style: GoogleFonts.instrumentSans(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
               ),
             ),
           ],
@@ -66,21 +66,22 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
           children: [
             Text(
               'Specify the obstacle preventing progress on "${task.title}". The project manager and department lead will be alerted immediately.',
-              style: GoogleFonts.instrumentSans(fontSize: 12.5, color: const Color(0xFF495057), height: 1.4),
+              style: GoogleFonts.instrumentSans(fontSize: 12.5, color: const Color(0xFFCED4DA), height: 1.4),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: blockerController,
               maxLines: 3,
-              style: GoogleFonts.instrumentSans(fontSize: 13, color: const Color(0xFF212529)),
+              style: GoogleFonts.instrumentSans(fontSize: 13, color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'e.g. Waiting on API credentials, missing client design assets...',
-                hintStyle: GoogleFonts.instrumentSans(fontSize: 12, color: const Color(0xFFADB5BD)),
+                hintStyle: GoogleFonts.instrumentSans(fontSize: 12, color: const Color(0xFF6C757D)),
                 filled: true,
-                fillColor: const Color(0xFFF5F6F7),
+                fillColor: const Color(0xFF14171A),
                 contentPadding: const EdgeInsets.all(12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE9ECEF))),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF343A40))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF343A40))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFF495057))),
               ),
             ),
           ],
@@ -88,7 +89,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: GoogleFonts.instrumentSans(color: const Color(0xFF6C757D), fontWeight: FontWeight.w600)),
+            child: Text('Cancel', style: GoogleFonts.instrumentSans(color: const Color(0xFFADB5BD), fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -99,7 +100,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   backgroundColor: const Color(0xFF212529),
-                  content: Text('Blocker logged. Department lead has been notified.', style: GoogleFonts.instrumentSans()),
+                  content: Text('Blocker logged. Department lead has been notified.', style: GoogleFonts.instrumentSans(color: Colors.white)),
                 ),
               );
             },
@@ -139,7 +140,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
       return tDate.year == todayStart.year && tDate.month == todayStart.month && tDate.day == todayStart.day;
     }).toList();
 
-    // If no explicit today tasks exist, pull the first 3 active uncompleted tasks
+    // If no explicit today tasks exist, pull the active uncompleted tasks
     final activeDisplayTasks = todayTasks.isNotEmpty
         ? todayTasks
         : sourceList.where((t) => !t.isCompleted && !overdueTasks.contains(t)).take(4).toList();
@@ -158,12 +159,12 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
     return Container(
       padding: EdgeInsets.all(isMobile ? 14 : 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1E2124),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE9ECEF), width: 1.2),
+        border: Border.all(color: const Color(0xFF343A40), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -183,7 +184,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF212529),
+                      color: Colors.white.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 16),
@@ -195,7 +196,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                       style: GoogleFonts.instrumentSans(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF212529),
+                        color: Colors.white,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -204,13 +205,13 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5F6F7),
+                      color: const Color(0xFF2B3035),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE9ECEF)),
+                      border: Border.all(color: const Color(0xFF3E444B)),
                     ),
                     child: Text(
                       '${activeDisplayTasks.length + overdueTasks.length}',
-                      style: GoogleFonts.instrumentSans(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF212529)),
+                      style: GoogleFonts.instrumentSans(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
                   ),
                 ],
@@ -230,7 +231,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                           style: GoogleFonts.instrumentSans(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF495057),
+                            color: Colors.white70,
                             decoration: TextDecoration.underline,
                           ),
                         ),
@@ -248,10 +249,10 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                           children: [
                             Text(
                               'View all',
-                              style: GoogleFonts.instrumentSans(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFF212529)),
+                              style: GoogleFonts.instrumentSans(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white),
                             ),
                             const SizedBox(width: 2),
-                            const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF212529)),
+                            const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Colors.white),
                           ],
                         ),
                       ),
@@ -276,21 +277,21 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF5F5),
+                color: const Color(0xFF2D1515),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFFC9C9)),
+                border: Border.all(color: const Color(0xFF5C1D1D)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFE03131)),
+                      const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFFF6B6B)),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           'Overdue Work Requiring Attention (${overdueTasks.length})',
-                          style: GoogleFonts.instrumentSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFFE03131)),
+                          style: GoogleFonts.instrumentSans(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFFFF6B6B)),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -311,15 +312,16 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.task_alt_rounded, size: 36, color: Color(0xFF2F9E44)),
+                    const Icon(Icons.task_alt_rounded, size: 36, color: Color(0xFF51CF66)),
                     const SizedBox(height: 8),
                     Text(
                       'No pending tasks for today',
-                      style: GoogleFonts.instrumentSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF212529)),
+                      style: GoogleFonts.instrumentSans(fontSize: 13.5, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       'You are completely caught up on scheduled deliverables.',
-                      style: GoogleFonts.instrumentSans(fontSize: 12, color: const Color(0xFF6C757D)),
+                      style: GoogleFonts.instrumentSans(fontSize: 12, color: const Color(0xFFADB5BD)),
                     ),
                   ],
                 ),
@@ -341,12 +343,12 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                     Icon(
                       _showCompleted ? Icons.keyboard_arrow_down_rounded : Icons.keyboard_arrow_right_rounded,
                       size: 18,
-                      color: const Color(0xFF6C757D),
+                      color: Colors.white70,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'Completed Today (${completedTodayTasks.length})',
-                      style: GoogleFonts.instrumentSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6C757D)),
+                      style: GoogleFonts.instrumentSans(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -381,9 +383,9 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isOverdue ? Colors.white : const Color(0xFFFFFFFF),
+        color: isOverdue ? const Color(0xFF262A2E) : const Color(0xFF212529),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isOverdue ? const Color(0xFFFFD8D8) : const Color(0xFFE9ECEF)),
+        border: Border.all(color: isOverdue ? const Color(0xFF742A2A) : const Color(0xFF343A40)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -407,7 +409,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                   icon: Icon(
                     task.isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                     size: 20,
-                    color: task.isCompleted ? const Color(0xFF2F9E44) : const Color(0xFFADB5BD),
+                    color: task.isCompleted ? const Color(0xFF40C057) : const Color(0xFFADB5BD),
                   ),
                   onPressed: () => erp.toggleTaskCompletion(task.id),
                 ),
@@ -428,8 +430,9 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF212529),
+                                color: Colors.white,
                                 decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                                decorationColor: const Color(0xFFADB5BD),
                               ),
                             ),
                           ),
@@ -441,12 +444,12 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                       // Project & Department
                       Row(
                         children: [
-                          Icon(Icons.folder_outlined, size: 12, color: const Color(0xFF6C757D)),
+                          const Icon(Icons.folder_outlined, size: 12, color: Color(0xFFCED4DA)),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               '${task.projectName ?? "General Task"} • ${task.department}',
-                              style: GoogleFonts.instrumentSans(fontSize: 11.5, color: const Color(0xFF6C757D)),
+                              style: GoogleFonts.instrumentSans(fontSize: 11.5, color: const Color(0xFFCED4DA)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -463,7 +466,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                               Icon(
                                 isOverdue ? Icons.alarm_on_rounded : Icons.schedule_rounded,
                                 size: 12,
-                                color: isOverdue ? const Color(0xFFE03131) : const Color(0xFF6C757D),
+                                color: isOverdue ? const Color(0xFFFF8787) : const Color(0xFFADB5BD),
                               ),
                               const SizedBox(width: 4),
                               Expanded(
@@ -472,7 +475,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                                   style: GoogleFonts.instrumentSans(
                                     fontSize: 11.5,
                                     fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w500,
-                                    color: isOverdue ? const Color(0xFFE03131) : const Color(0xFF6C757D),
+                                    color: isOverdue ? const Color(0xFFFF8787) : const Color(0xFFADB5BD),
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -507,12 +510,12 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF5F5),
+                            color: const Color(0xFF3D1414),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             'Blocker: ${task.blockerReason}',
-                            style: GoogleFonts.instrumentSans(fontSize: 11, color: const Color(0xFFE03131), fontWeight: FontWeight.w600),
+                            style: GoogleFonts.instrumentSans(fontSize: 11, color: const Color(0xFFFF8787), fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
@@ -522,7 +525,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
 
                 // Action Menu
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFF6C757D)),
+                  icon: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFFADB5BD)),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onSelected: (val) {
@@ -559,15 +562,16 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
+        color: const Color(0xFF212529),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF343A40)),
       ),
       child: Row(
         children: [
           IconButton(
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            icon: const Icon(Icons.check_circle_rounded, size: 18, color: Color(0xFF2F9E44)),
+            icon: const Icon(Icons.check_circle_rounded, size: 18, color: Color(0xFF40C057)),
             onPressed: () => erp.toggleTaskCompletion(task.id),
           ),
           const SizedBox(width: 10),
@@ -576,7 +580,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
               task.title,
               style: GoogleFonts.instrumentSans(
                 fontSize: 12.5,
-                color: const Color(0xFF6C757D),
+                color: const Color(0xFFADB5BD),
                 decoration: TextDecoration.lineThrough,
               ),
               overflow: TextOverflow.ellipsis,
@@ -586,7 +590,7 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
           Flexible(
             child: Text(
               task.projectName ?? 'Task',
-              style: GoogleFonts.instrumentSans(fontSize: 11, color: const Color(0xFFADB5BD)),
+              style: GoogleFonts.instrumentSans(fontSize: 11, color: const Color(0xFF868E96)),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -603,18 +607,18 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
     switch (priority) {
       case TaskPriority.urgent:
       case TaskPriority.high:
-        bg = const Color(0xFFFFF5F5);
-        fg = const Color(0xFFE03131);
+        bg = const Color(0xFF3D1414);
+        fg = const Color(0xFFFF8787);
         label = 'High';
         break;
       case TaskPriority.medium:
-        bg = const Color(0xFFFFF9DB);
-        fg = const Color(0xFFF59F00);
+        bg = const Color(0xFF3B2D0C);
+        fg = const Color(0xFFFFD43B);
         label = 'Medium';
         break;
       case TaskPriority.low:
-        bg = const Color(0xFFF1F3F5);
-        fg = const Color(0xFF495057);
+        bg = const Color(0xFF2B3035);
+        fg = const Color(0xFFCED4DA);
         label = 'Low';
         break;
     }
@@ -627,19 +631,19 @@ class _DynamicTodayTasksWidgetState extends State<DynamicTodayTasksWidget> {
   }
 
   Widget _buildStatusChip(TaskStatus status) {
-    Color bg = const Color(0xFFF1F3F5);
-    Color fg = const Color(0xFF495057);
+    Color bg = const Color(0xFF2B3035);
+    Color fg = const Color(0xFFCED4DA);
     String label = status.label;
 
     if (status == TaskStatus.done || status == TaskStatus.approved) {
-      bg = const Color(0xFFEBFBEE);
-      fg = const Color(0xFF2F9E44);
+      bg = const Color(0xFF13361E);
+      fg = const Color(0xFF51CF66);
     } else if (status == TaskStatus.inProgress) {
-      bg = const Color(0xFFFFF9DB);
-      fg = const Color(0xFFF59F00);
+      bg = const Color(0xFF3B2D0C);
+      fg = const Color(0xFFFFD43B);
     } else if (status == TaskStatus.blocked) {
-      bg = const Color(0xFFFFF5F5);
-      fg = const Color(0xFFE03131);
+      bg = const Color(0xFF3D1414);
+      fg = const Color(0xFFFF8787);
     }
 
     return Container(

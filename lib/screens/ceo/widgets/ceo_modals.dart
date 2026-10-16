@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../providers/erp_provider.dart';
 import '../../../models/approval.dart';
 import '../../../models/task.dart';
@@ -1407,6 +1408,7 @@ Prepared For: ${erp.currentUserName} (CEO)
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
+              context.read<ErpProvider>().logout();
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
                 (route) => false,

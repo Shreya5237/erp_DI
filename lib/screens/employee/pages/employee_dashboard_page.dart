@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/erp_provider.dart';
+import '../../../models/user_role.dart';
 import '../../../models/project.dart';
 import '../../../models/task.dart';
 import '../../../models/meeting.dart';
@@ -31,9 +32,9 @@ class EmployeeDashboardPage extends StatelessWidget {
     final employee = erp.currentEmployee;
 
     // Determine user name and initial
-    final fullName = erp.currentUserName.isNotEmpty ? erp.currentUserName : 'Shreya';
+    final fullName = erp.currentUserName.isNotEmpty ? erp.currentUserName : 'Employee';
     final firstName = fullName.split(' ').first;
-    final initial = firstName.isNotEmpty ? firstName[0].toUpperCase() : 'S';
+    final initial = firstName.isNotEmpty ? firstName[0].toUpperCase() : 'E';
 
     // Unread alerts count
     final unreadAlerts = erp.unreadEmployeeAlertsCount;
@@ -43,17 +44,14 @@ class EmployeeDashboardPage extends StatelessWidget {
     final myProjects = erp.myEmployeeProjects;
 
     // Featured tasks for Today's Tasks
-    final todayTasks = myTasks.where((t) => !t.isCompleted).take(3).toList();
-    if (todayTasks.isEmpty && myTasks.isNotEmpty) {
-      todayTasks.addAll(myTasks.take(3));
-    }
+    final todayTasks = myTasks.where((t) => !t.isCompleted).toList();
 
-    // Reporting manager (defaults to Rajesh Kumar matching hand-drawn sketch specification)
+    // Reporting manager
     final reportingMgr = (employee?.reportingManager.isNotEmpty == true &&
             !employee!.reportingManager.contains('CEO') &&
             !employee.reportingManager.contains('Laven'))
         ? employee.reportingManager
-        : 'Rajesh Kumar';
+        : (erp.currentRole == UserRole.ceo ? 'Executive Board' : 'Department Lead');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6F7),
@@ -224,7 +222,35 @@ class EmployeeDashboardPage extends StatelessWidget {
 
   // 2. Quick Overview Widget (2x3 Hand-Drawn Sketch Layout)
   // User Requirement: "each of this sub widgets in black bg and the text in white"
+// Professional 3x2 Overview Widget synchronized with backend state
   Widget _buildQuickOverview(BuildContext context, ErpProvider erp, String reportingMgr) {
+    // Dynamically calculate active projects count from backend
+    final activeProjectsCount = erp.myEmployeeProjects
+        .where((p) => p.status != ProjectStatus.completed)
+        .length
+        .toString()
+        .padLeft(2, '0');
+
+    // Dynamically find the nearest upcoming deadline from backend tasks
+    final pendingTasks = erp.myEmployeeTasks
+        .where((t) => !t.isCompleted)
+        .toList()
+      ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+    
+    final urgentTask = pendingTasks.isNotEmpty ? pendingTasks.first : null;
+    final deadlineDate = urgentTask != null ? urgentTask.dueDate : DateTime.now();
+    final projectName = urgentTask != null
+        ? (urgentTask.projectName ?? urgentTask.title.split(' ').take(2).join(' '))
+        : 'No Urgent Task';
+    final shortProject = projectName.length > 14 ? '${projectName.substring(0, 12)}..' : projectName;
+    final deadlineLabel = DateFormat('MMM d').format(deadlineDate);
+
+    // Leave balance synchronized from employee profile data
+    final leaveBalance = erp.currentEmployee?.leaveBalance ?? 0;
+
+    // Target goal percentage from backend
+    final targetGoal = erp.employeeTargetGoalPercent;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -233,219 +259,182 @@ class EmployeeDashboardPage extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE9ECEF), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF212529).withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: const Color(0xFF212529).withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Title Row
+          // Professional Section Title: Overview
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF212529)),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        'Quick Metrics Overview',
-                        style: TextStyle(
-                          fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF212529),
-                          letterSpacing: 0.6,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F9FA),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE9ECEF)),
                     ),
-                  ],
-                ),
+                    child: const Icon(Icons.dashboard_rounded, size: 16, color: Color(0xFF212529)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Overview',
+                    style: TextStyle(
+                      fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF212529),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F3F5),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: const Color(0xFFDEE2E6)),
-                ),
-                child: Text(
-                  'Q4 Active',
-                  style: TextStyle(
-                    fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF495057),
-                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
 
-          // 2x3 Grid of Sub-Widgets in Black Background (#212529) and White Text
+          // 3x2 Grid of Sub-Widgets (Black Background #212529 with dynamic data)
           GridView.count(
-            crossAxisCount: 2,
+            crossAxisCount: 3,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.55,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 1.05,
             children: [
-              // Card 1: DATE & TIME (with shortcut jump straight to Calendar View)
+              // 1. DATE & TIME
               _buildBlackOverviewTile(
                 title: 'DATE & TIME',
                 icon: Icons.calendar_month_outlined,
                 value: DateFormat('EEE, MMM d').format(DateTime.now()),
                 subtitle: '${DateFormat('hh:mm a').format(DateTime.now())} IST',
-                subtitleColor: const Color(0xFF34D399), // crisp emerald
+                subtitleColor: const Color(0xFF34D399),
                 actionIcon: Icons.arrow_outward_rounded,
                 onTap: onNavigateToCalendar,
               ),
 
-              // Card 2: REPORTING MGR (Quick reference to lead Rajesh Kumar)
+              // 2. REPORTING MGR (Backend Synchronized)
               _buildBlackOverviewTile(
                 title: 'REPORTING MGR',
                 icon: Icons.person_outline_rounded,
-                value: reportingMgr,
+                value: reportingMgr.isNotEmpty ? reportingMgr : 'Assigned Lead',
                 subtitle: 'Team Lead',
                 subtitleColor: const Color(0xFFADB5BD),
               ),
 
-              // Card 3: LEAVE BALANCE (Clean metric e.g. 14 Days)
+              // 3. LEAVE BALANCE (Backend Synchronized)
               _buildBlackOverviewTile(
                 title: 'LEAVE BALANCE',
                 icon: Icons.beach_access_outlined,
-                value: '${erp.currentEmployee?.leaveBalance ?? 14} Days',
+                value: '$leaveBalance Days',
                 subtitle: 'Available Balance',
                 subtitleColor: const Color(0xFFCED4DA),
                 onTap: onNavigateToProfile,
               ),
 
-              // Card 4: ACTIVE PROJECTS (Total involved count e.g. 04 Projs)
+              // 4. ACTIVE PROJECTS (Backend Synchronized)
               _buildBlackOverviewTile(
-                title: 'ACTIVE PROJECTS',
+                title: 'ACTIVE PROJS',
                 icon: Icons.folder_open_outlined,
-                value: '${erp.myEmployeeProjects.where((p) => p.status != ProjectStatus.completed).length.toString().padLeft(2, '0')} Projs',
+                value: '$activeProjectsCount Projs',
                 subtitle: 'Active Involved',
                 subtitleColor: const Color(0xFFCED4DA),
                 actionIcon: Icons.arrow_outward_rounded,
                 onTap: onNavigateToProjects,
               ),
 
-              // Card 5: UPCOMING DEADLINE (Prominent highlight e.g. Oct 18 with warning dot)
-              Builder(
-                builder: (context) {
-                  final pendingTasks = erp.myEmployeeTasks.where((t) => !t.isCompleted).toList()
-                    ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
-                  final urgentTask = pendingTasks.isNotEmpty ? pendingTasks.first : null;
-                  final deadlineDate = urgentTask != null ? urgentTask.dueDate : DateTime(2026, 10, 18);
-                  final projectName = urgentTask != null
-                      ? (urgentTask.projectName ?? urgentTask.title.split(' ').take(2).join(' '))
-                      : 'Rebrand Delivery';
-                  final shortProject = projectName.length > 14 ? '${projectName.substring(0, 12)}..' : projectName;
-                  final deadlineLabel = DateFormat('MMM d').format(deadlineDate);
-
-                  return InkWell(
-                    onTap: onNavigateToCalendar,
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF212529),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFF343A40), width: 1.1),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF212529).withOpacity(0.08),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'DEADLINE',
-                                style: TextStyle(
-                                  fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFFFDA4AF),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              // Accent Color Warning Indicator Dot
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFF43F5E),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            deadlineLabel,
-                            style: TextStyle(
-                              fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: -0.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            shortProject,
-                            style: TextStyle(
-                              fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFFFDA4AF),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              // Card 6: TARGET (Visual completion progress e.g. 92% Met, Tap to Edit)
+              // 5. UPCOMING DEADLINE (Backend Synchronized Task Data)
               InkWell(
-                onTap: () => _showEditTargetDialog(context, erp),
+                onTap: onNavigateToCalendar,
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: const Color(0xFF212529),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: const Color(0xFF343A40), width: 1.1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF212529).withOpacity(0.08),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'DEADLINE',
+                            style: TextStyle(
+                              fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFFDA4AF),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF43F5E),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        deadlineLabel,
+                        style: TextStyle(
+                          fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        shortProject,
+                        style: TextStyle(
+                          fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFFDA4AF),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                  ),
+                ),
+              ),
+
+              // 6. TARGET (Backend Synchronized Goal Percentage)
+              InkWell(
+                onTap: () => _showEditTargetDialog(context, erp),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF212529),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFF343A40), width: 1.1),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,24 +447,23 @@ class EmployeeDashboardPage extends StatelessWidget {
                             'TARGET',
                             style: TextStyle(
                               fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                              fontSize: 10,
+                              fontSize: 9,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFFCED4DA),
                               letterSpacing: 0.5,
                             ),
                           ),
-                          const Icon(Icons.edit_outlined, size: 13, color: Color(0xFFADB5BD)),
+                          const Icon(Icons.edit_outlined, size: 12, color: Color(0xFFADB5BD)),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${erp.employeeTargetGoalPercent}% Met',
+                        '$targetGoal% Met',
                         style: TextStyle(
                           fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
-                          letterSpacing: -0.2,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -485,7 +473,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                         'Tap to Edit',
                         style: TextStyle(
                           fontFamily: GoogleFonts.instrumentSans().fontFamily,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFFADB5BD),
                         ),
@@ -625,20 +613,38 @@ class EmployeeDashboardPage extends StatelessWidget {
         // Horizontally scrolling cards (Heading, Timing, Manager)
         SizedBox(
           height: 128,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: tasks.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (ctx, idx) {
-              final task = tasks[idx];
-              String timeStr = '10:30 AM';
-              if (idx == 1) timeStr = '01:15 PM';
-              if (idx == 2) timeStr = '03:45 PM';
-
-              return _buildTodayTaskCard(context, task, timeStr, reportingMgr);
-            },
-          ),
+          child: tasks.isEmpty
+              ? Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF212529),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFF343A40)),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'No tasks assigned for today',
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.instrumentSans().fontFamily,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: tasks.length,
+                  separatorBuilder: (context, index) => const SizedBox(width: 12),
+                  itemBuilder: (ctx, idx) {
+                    final task = tasks[idx];
+                    final timeStr = DateFormat('hh:mm a').format(task.dueDate);
+                    return _buildTodayTaskCard(context, task, timeStr, reportingMgr);
+                  },
+                ),
         ),
       ],
     );
@@ -654,12 +660,12 @@ class EmployeeDashboardPage extends StatelessWidget {
         width: 215,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF212529),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE9ECEF), width: 1.2),
+          border: Border.all(color: const Color(0xFF343A40), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF212529).withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -676,7 +682,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFECFDF5),
+                    color: const Color(0xFF13361E),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -685,7 +691,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                         width: 5,
                         height: 5,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF10B981),
+                          color: Color(0xFF51CF66),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -696,7 +702,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                           fontFamily: GoogleFonts.instrumentSans().fontFamily,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF065F46),
+                          color: const Color(0xFF51CF66),
                         ),
                       ),
                     ],
@@ -714,7 +720,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                 fontFamily: GoogleFonts.instrumentSans().fontFamily,
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF212529),
+                color: Colors.white,
                 height: 1.25,
               ),
               maxLines: 2,
@@ -727,12 +733,12 @@ class EmployeeDashboardPage extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    task.projectName ?? 'Design System',
+                    task.projectName ?? 'Assigned Project',
                     style: TextStyle(
                       fontFamily: GoogleFonts.instrumentSans().fontFamily,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF6C757D),
+                      color: const Color(0xFFCED4DA),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -740,12 +746,12 @@ class EmployeeDashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Lead: ${taskLead.split(" ").first}',
+                  'Lead: ${taskLead.isNotEmpty ? taskLead.split(" ").first : "Lead"}',
                   style: TextStyle(
                     fontFamily: GoogleFonts.instrumentSans().fontFamily,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF495057),
+                    color: const Color(0xFFCED4DA),
                   ),
                 ),
               ],
@@ -798,7 +804,7 @@ class EmployeeDashboardPage extends StatelessWidget {
           children: displayProjects.asMap().entries.map((entry) {
             final idx = entry.key;
             final project = entry.value;
-            final dateBadge = idx == 0 ? 'Oct 24' : 'Nov 12';
+            final dateBadge = DateFormat('MMM d').format(project.deadline);
 
             return Expanded(
               child: Container(
@@ -826,12 +832,12 @@ class EmployeeDashboardPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF212529),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE9ECEF), width: 1.2),
+          border: Border.all(color: const Color(0xFF343A40), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF212529).withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -852,7 +858,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                       fontFamily: GoogleFonts.instrumentSans().fontFamily,
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF212529),
+                      color: Colors.white,
                       height: 1.2,
                     ),
                     maxLines: 2,
@@ -863,7 +869,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF1F2),
+                    color: const Color(0xFF3D1414),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -872,7 +878,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                       fontFamily: GoogleFonts.instrumentSans().fontFamily,
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFFE11D48),
+                      color: const Color(0xFFFF8787),
                     ),
                   ),
                 ),
@@ -886,7 +892,7 @@ class EmployeeDashboardPage extends StatelessWidget {
               style: TextStyle(
                 fontFamily: GoogleFonts.instrumentSans().fontFamily,
                 fontSize: 10.5,
-                color: const Color(0xFF6C757D),
+                color: const Color(0xFFCED4DA),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -903,7 +909,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                     fontFamily: GoogleFonts.instrumentSans().fontFamily,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF6C757D),
+                    color: const Color(0xFFCED4DA),
                   ),
                 ),
                 Text(
@@ -912,7 +918,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                     fontFamily: GoogleFonts.instrumentSans().fontFamily,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF212529),
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -924,8 +930,8 @@ class EmployeeDashboardPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: project.progress,
-                backgroundColor: const Color(0xFFE9ECEF),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF212529)),
+                backgroundColor: const Color(0xFF343A40),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 minHeight: 5,
               ),
             ),
@@ -990,12 +996,12 @@ class EmployeeDashboardPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF212529),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE9ECEF), width: 1.2),
+            border: Border.all(color: const Color(0xFF343A40), width: 1.2),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF212529).withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1008,13 +1014,13 @@ class EmployeeDashboardPage extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3F5),
+                  color: const Color(0xFF2C3036),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE9ECEF)),
+                  border: Border.all(color: const Color(0xFF3E444B)),
                 ),
                 child: const Icon(
                   Icons.videocam_rounded,
-                  color: Color(0xFF212529),
+                  color: Colors.white,
                   size: 20,
                 ),
               ),
@@ -1031,25 +1037,25 @@ class EmployeeDashboardPage extends StatelessWidget {
                         fontFamily: GoogleFonts.instrumentSans().fontFamily,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF212529),
+                        color: Colors.white,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Oct 14 • ${meeting.startTime} • ${meeting.organizerName.split(" ").first} K.',
+                      '${DateFormat('MMM d').format(meeting.date)} • ${meeting.startTime} • ${meeting.organizerName}',
                       style: TextStyle(
                         fontFamily: GoogleFonts.instrumentSans().fontFamily,
                         fontSize: 11,
-                        color: const Color(0xFF6C757D),
+                        color: const Color(0xFFCED4DA),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Black Pill Button: Join
+              // White Pill Button: Join
               ElevatedButton(
                 onPressed: () {
                   showDialog(
@@ -1058,8 +1064,8 @@ class EmployeeDashboardPage extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF212529),
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF212529),
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                   minimumSize: const Size(60, 34),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1071,7 +1077,7 @@ class EmployeeDashboardPage extends StatelessWidget {
                     fontFamily: GoogleFonts.instrumentSans().fontFamily,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: const Color(0xFF212529),
                   ),
                 ),
               ),

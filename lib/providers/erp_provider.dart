@@ -15,6 +15,7 @@ import '../models/sales_call.dart';
 import '../models/finance_models.dart';
 import '../models/hr_models.dart';
 import '../services/api_service.dart';
+import '../services/native_home_widget_service.dart';
 
 /// Central State Provider for Digital Inertia CEO ERP
 /// Implements configurable roles hierarchy, dynamic threshold alerts,
@@ -37,11 +38,11 @@ class ErpProvider extends ChangeNotifier {
   // Unique ID Counter to guarantee collision-free IDs across fast operations
   static int _idCounter = 0;
 
-  // Current user session
-  UserRole _currentRole = UserRole.ceo;
-  String _currentUserName = 'Laven Lokesh';
-  String _currentUserEmail = 'laven@digitalinertia.com';
-  String _currentUserId = 'EMP-001';
+  // Current user session (strictly unauthenticated until evaluated on LoginScreen)
+  UserRole _currentRole = UserRole.employee;
+  String _currentUserName = '';
+  String _currentUserEmail = '';
+  String _currentUserId = '';
 
   // Configurable Roles
   List<CompanyRole> _roles = [];
@@ -75,48 +76,8 @@ class ErpProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  final List<Map<String, dynamic>> _employeeAlerts = [
-    {
-      'id': 'ALT-01',
-      'title': 'New task assigned by Rajesh Kumar',
-      'subtitle': 'Client Pitch Deck Finalization (DI Rebrand & Strategy)',
-      'time': '10m ago',
-      'type': 'task',
-      'lead': 'Rajesh Kumar',
-      'isRead': false,
-      'isUrgent': true,
-    },
-    {
-      'id': 'ALT-02',
-      'title': 'Strategy review meeting scheduled',
-      'subtitle': 'Q4 Strategic Alignment with Rajesh K. at 11:00 AM',
-      'time': '45m ago',
-      'type': 'meeting',
-      'lead': 'Rajesh Kumar',
-      'isRead': false,
-      'isUrgent': false,
-    },
-    {
-      'id': 'ALT-03',
-      'title': 'Approaching deadline reminder',
-      'subtitle': 'Oct 18 • Rebrand (5 Days Remaining)',
-      'time': '2h ago',
-      'type': 'deadline',
-      'lead': 'System',
-      'isRead': false,
-      'isUrgent': true,
-    },
-    {
-      'id': 'ALT-04',
-      'title': 'Code review approved by Priya Nair',
-      'subtitle': 'PR #104 merged into master for Sprint 4',
-      'time': 'Yesterday',
-      'type': 'update',
-      'lead': 'Priya Nair',
-      'isRead': true,
-      'isUrgent': false,
-    },
-  ];
+  // Live real-time notification alerts dispatched dynamically
+  final List<Map<String, dynamic>> _employeeAlerts = [];
 
   final Set<String> _readAlertIds = {};
 
@@ -634,8 +595,6 @@ class ErpProvider extends ChangeNotifier {
     final idLower = _currentUserId.toLowerCase();
     final nameLower = _currentUserName.toLowerCase();
     final firstName = nameLower.split(' ').first;
-    final isDigitalMarketing = _currentRole == UserRole.digitalMarketing ||
-        (_employees.any((e) => e.id.toLowerCase() == idLower && (e.departmentId == 'DEPT-DM' || e.department == 'Digital Marketing')));
 
     final list = _tasks.where((t) =>
       t.assignedToId.toLowerCase() == idLower ||
@@ -644,12 +603,6 @@ class ErpProvider extends ChangeNotifier {
       t.assignedById.toLowerCase() == idLower
     ).toList();
 
-    if (list.isEmpty) {
-      if (isDigitalMarketing) {
-        return _tasks.where((t) => t.department == 'Digital Marketing' || t.projectId == 'PRJ-401').toList();
-      }
-      return _tasks.take(6).toList();
-    }
     return list;
   }
 
@@ -1521,11 +1474,13 @@ class ErpProvider extends ChangeNotifier {
     _apiService.clearSession();
     _authError = null;
     _leadsError = null;
-    _currentRole = UserRole.ceo;
-    _currentUserName = 'Laven Lokesh';
-    _currentUserEmail = 'laven@digitalinertia.com';
-    _currentUserId = 'EMP-001';
-    _initSeedData();
+    _currentRole = UserRole.employee;
+    _currentUserName = '';
+    _currentUserEmail = '';
+    _currentUserId = '';
+    _employeeAlerts.clear();
+    _readAlertIds.clear();
+    NativeHomeWidgetService.clearWidgetData();
     notifyListeners();
   }
 
@@ -1577,6 +1532,11 @@ class ErpProvider extends ChangeNotifier {
         // Leads error is stored in _leadsError without failing login
       }
 
+      // Fetch live tasks from backend database
+      try {
+        await fetchLiveTasks();
+      } catch (_) {}
+
       _isAuthenticating = false;
       notifyListeners();
       return true;
@@ -1587,6 +1547,18 @@ class ErpProvider extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  /// Fetches live tasks from backend database
+  Future<void> fetchLiveTasks() async {
+    if (!_isLiveMode) return;
+    try {
+      final liveTasks = await _apiService.getTasks();
+      if (liveTasks.isNotEmpty) {
+        _tasks = liveTasks;
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 
   /// Unified authentication method that:
@@ -1936,6 +1908,20 @@ class ErpProvider extends ChangeNotifier {
         progressPercent: status == TaskStatus.done ? 100 : (status == TaskStatus.inProgress ? 50 : 0),
         completedAt: status == TaskStatus.done ? DateTime.now() : null,
       );
+
+      if (_isLiveMode) {
+        String statusStr = 'todo';
+        if (status == TaskStatus.done || status == TaskStatus.approved) {
+          statusStr = 'completed';
+        } else if (status == TaskStatus.inProgress) {
+          statusStr = 'in_progress';
+        } else if (status == TaskStatus.inReview || status == TaskStatus.submitted) {
+          statusStr = 'in_review';
+        } else if (status == TaskStatus.blocked) {
+          statusStr = 'blocked';
+        }
+        _apiService.updateTaskStatus(taskId, statusStr).catchError((_) => t);
+      }
 
       // Recalculate Project Progress if tied to a project (Section 4.D Specification)
       if (t.projectName != null && t.projectName!.isNotEmpty) {

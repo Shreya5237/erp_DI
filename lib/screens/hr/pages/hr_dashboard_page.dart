@@ -132,6 +132,10 @@ class HrDashboardPage extends StatelessWidget {
 
   // Welcome Greeting
   Widget _buildWelcomeBanner(BuildContext context, ErpProvider erp) {
+    final userName = erp.currentUserName.isNotEmpty ? erp.currentUserName : 'HR Lead';
+    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'H';
+    final userEmpId = erp.currentUserId.isNotEmpty ? erp.currentUserId : 'EMP-401';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -167,24 +171,24 @@ class HrDashboardPage extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white30, width: 1.5),
                       ),
-                      child: const Center(
-                        child: Text('MJ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: Center(
+                        child: Text(userInitial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Meera Joshi',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
+                            userName,
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            'Head of HR & People Operations • EMP-111',
-                            style: TextStyle(color: Color(0xFFDDD6FE), fontSize: 11),
+                            'Head of HR & People Operations • $userEmpId',
+                            style: const TextStyle(color: Color(0xFFDDD6FE), fontSize: 11),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

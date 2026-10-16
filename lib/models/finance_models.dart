@@ -311,3 +311,81 @@ class ResourceRequest {
     allocatedBudget: (json['allocatedBudget'] as num?)?.toDouble(),
   );
 }
+
+/// Model representing recorded company expense in Finance Management
+class FinanceExpenseRecord {
+  final String id;
+  final String title;
+  final String category;
+  final String projectId;
+  final String projectName;
+  final double amount;
+  final DateTime date;
+  final String status;
+  final String recordedBy;
+  final String vendorName;
+
+  const FinanceExpenseRecord({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.projectId,
+    required this.projectName,
+    required this.amount,
+    required this.date,
+    this.status = 'Approved',
+    required this.recordedBy,
+    required this.vendorName,
+  });
+}
+
+/// Model representing client invoices in Finance Management
+class FinanceInvoiceRecord {
+  final String id;
+  final String invoiceNumber;
+  final String clientName;
+  final String projectName;
+  final double amount;
+  final DateTime issueDate;
+  final DateTime dueDate;
+  final String status;
+  final double paidAmount;
+
+  const FinanceInvoiceRecord({
+    required this.id,
+    required this.invoiceNumber,
+    required this.clientName,
+    required this.projectName,
+    required this.amount,
+    required this.issueDate,
+    required this.dueDate,
+    this.status = 'Paid',
+    required this.paidAmount,
+  });
+
+  double get outstandingBalance => (amount - paidAmount).clamp(0.0, amount);
+}
+
+/// Model representing vendor bills and payable transactions
+class FinanceVendorBill {
+  final String id;
+  final String billNumber;
+  final String vendorName;
+  final String category;
+  final double amount;
+  final DateTime dueDate;
+  final String status;
+  final String paymentMethod;
+
+  const FinanceVendorBill({
+    required this.id,
+    required this.billNumber,
+    required this.vendorName,
+    required this.category,
+    required this.amount,
+    required this.dueDate,
+    required this.status,
+    this.paymentMethod = 'Bank NEFT/RTGS',
+  });
+}
+

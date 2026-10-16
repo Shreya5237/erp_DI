@@ -320,4 +320,6 @@ class InternBatch {
   int get interviewedCount => candidatesInterviewed;
   int get selectedCount => internsSelected;
   int get activeCount => activeEvaluationCount;
+  String get batchName => title.isNotEmpty ? title : code;
+  int get internCount => internsSelected;
 }

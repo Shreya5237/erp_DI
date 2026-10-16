@@ -123,8 +123,8 @@ class _HrTasksCalendarPageState extends State<HrTasksCalendarPage> with SingleTi
           _buildTasksTab(context, erp, displayedTasks, todayTasks.length, next7DaysTasks.length, overdueTasks.length, completedTasks.length),
 
           // Tab 2: Calendar View (Unified with Technical Employee Portal UI)
-          const EmployeeCalendarPage(
-            employeeId: 'EMP-111',
+          EmployeeCalendarPage(
+            employeeId: erp.currentUserId.isNotEmpty ? erp.currentUserId : 'EMP-401',
             showAppBar: false,
             allowEmployeeSwitching: true,
           ),

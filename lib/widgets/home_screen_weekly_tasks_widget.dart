@@ -577,14 +577,14 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F6F7),
+          color: const Color(0xFF212529),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: task.isCompleted
-                ? const Color(0xFFA7F3D0)
+                ? const Color(0xFF2F9E44)
                 : (deadlineInfo.category == DeadlineCategory.overdue
-                    ? const Color(0xFFFECACA)
-                    : const Color(0xFFE2E8F0)),
+                    ? const Color(0xFFE03131)
+                    : const Color(0xFF343A40)),
           ),
         ),
         child: Row(
@@ -604,9 +604,9 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                 height: 22,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: task.isCompleted ? const Color(0xFF10B981) : Colors.white,
+                  color: task.isCompleted ? const Color(0xFF10B981) : Colors.transparent,
                   border: Border.all(
-                    color: task.isCompleted ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                    color: task.isCompleted ? const Color(0xFF10B981) : const Color(0xFFADB5BD),
                     width: 1.8,
                   ),
                 ),
@@ -631,8 +631,9 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                           style: GoogleFonts.instrumentSans(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: task.isCompleted ? const Color(0xFF94A3B8) : const Color(0xFF212529),
+                            color: task.isCompleted ? const Color(0xFF868E96) : Colors.white,
                             decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                            decorationColor: const Color(0xFFADB5BD),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -649,7 +650,7 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                       task.description,
                       style: GoogleFonts.instrumentSans(
                         fontSize: 11.5,
-                        color: const Color(0xFF64748B),
+                        color: const Color(0xFFCED4DA),
                         decoration: task.isCompleted ? TextDecoration.lineThrough : null,
                       ),
                       maxLines: 1,
@@ -669,21 +670,21 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF14171A),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: const Color(0xFF343A40)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.calendar_today_rounded, size: 11, color: Color(0xFF64748B)),
+                            const Icon(Icons.calendar_today_rounded, size: 11, color: Color(0xFFCED4DA)),
                             const SizedBox(width: 4),
                             Text(
                               dateFmt.format(task.dueDate),
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF334155),
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -719,16 +720,16 @@ class _HomeScreenWeeklyTasksWidgetState extends State<HomeScreenWeeklyTasksWidge
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF14171A),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: const Color(0xFF343A40)),
                         ),
                         child: Text(
                           task.status.label,
                           style: GoogleFonts.instrumentSans(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF475569),
+                            color: Colors.white,
                           ),
                         ),
                       ),

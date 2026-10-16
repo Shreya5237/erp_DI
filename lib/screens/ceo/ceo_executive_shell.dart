@@ -263,38 +263,42 @@ class _CeoExecutiveShellScreenState extends State<CeoExecutiveShellScreen> {
                 ),
               ),
             ),
-      body: Row(
-        children: [
-          // Persistent Sidebar for Desktop
-          if (isDesktop)
-            CeoSidebar(
-              currentIndex: _currentModuleIndex,
-              onSelectModule: _onSelectModule,
-              isCollapsed: _isSidebarCollapsed,
-              onToggleCollapse: () => setState(() => _isSidebarCollapsed = !_isSidebarCollapsed),
-            ),
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: Row(
+          children: [
+            // Persistent Sidebar for Desktop
+            if (isDesktop)
+              CeoSidebar(
+                currentIndex: _currentModuleIndex,
+                onSelectModule: _onSelectModule,
+                isCollapsed: _isSidebarCollapsed,
+                onToggleCollapse: () => setState(() => _isSidebarCollapsed = !_isSidebarCollapsed),
+              ),
 
-          // Main Workspace Area
-          Expanded(
-            child: Column(
-              children: [
-                // Executive Header
-                CeoHeader(
-                  currentModuleName: _currentModuleIndex < _moduleTitles.length
-                      ? _moduleTitles[_currentModuleIndex]
-                      : 'Executive Workspace',
-                  onToggleSidebar: () => _scaffoldKey.currentState?.openDrawer(),
-                  onNavigateModule: _onSelectModule,
-                ),
+            // Main Workspace Area
+            Expanded(
+              child: Column(
+                children: [
+                  // Executive Header
+                  CeoHeader(
+                    currentModuleName: _currentModuleIndex < _moduleTitles.length
+                        ? _moduleTitles[_currentModuleIndex]
+                        : 'Executive Workspace',
+                    onToggleSidebar: () => _scaffoldKey.currentState?.openDrawer(),
+                    onNavigateModule: _onSelectModule,
+                  ),
 
-                // Active Module Content
-                Expanded(
-                  child: activePage,
-                ),
-              ],
+                  // Active Module Content
+                  Expanded(
+                    child: activePage,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

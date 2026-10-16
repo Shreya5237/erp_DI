@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/lead.dart';
 import '../models/department.dart';
+import '../models/task.dart';
 
 /// Structured exceptions for Digital Inertia API interactions
 class ApiException implements Exception {
@@ -87,15 +88,21 @@ class LoginResult {
 
 /// Client service managing REST API communication with Spring Boot backend
 class ApiService {
-  // Dynamic default host: 10.0.2.2 on Android emulator, localhost on Desktop/Web
+  // Custom server host configured by user (e.g. for testing from physical phone via LAN IP)
+  static String? customBaseUrlOverride;
+
+  // Dynamic default host: custom override, 10.0.2.2 on Android emulator, localhost on Desktop/Web
   static String get defaultBaseUrl {
+    if (customBaseUrlOverride != null && customBaseUrlOverride!.isNotEmpty) {
+      return customBaseUrlOverride!;
+    }
     if (!kIsWeb && Platform.isAndroid) {
       return 'http://10.0.2.2:8080/api/v1';
     }
     return 'http://localhost:8080/api/v1';
   }
 
-  final String _baseUrl;
+  String _baseUrl;
   final http.Client _client;
   final Duration timeout;
 
@@ -114,6 +121,15 @@ class ApiService {
   String get baseUrl => _baseUrl;
   String? get token => _token;
   bool get isAuthenticated => _token != null && _token!.isNotEmpty;
+
+  void updateBaseUrl(String newUrl) {
+    String clean = newUrl.trim();
+    if (clean.endsWith('/')) {
+      clean = clean.substring(0, clean.length - 1);
+    }
+    _baseUrl = clean;
+    customBaseUrlOverride = clean;
+  }
 
   void setToken(String? token) {
     _token = token;
@@ -348,6 +364,91 @@ class ApiService {
       throw NetworkException('Network error connecting to $_baseUrl: ${e.message}');
     } on TimeoutException {
       throw const NetworkException('Connection timed out while fetching subcategories.');
+    }
+  }
+
+  /// Fetch tasks from Spring Boot GET /api/v1/tasks
+  Future<List<CompanyTask>> getTasks({String? assignedToId, String? status}) async {
+    final queryParams = <String, String>{};
+    if (assignedToId != null && assignedToId.isNotEmpty) {
+      queryParams['assignedToId'] = assignedToId;
+    }
+    if (status != null && status.isNotEmpty) {
+      queryParams['status'] = status;
+    }
+
+    final baseUri = Uri.parse('$_baseUrl/tasks');
+    final uri = queryParams.isEmpty ? baseUri : baseUri.replace(queryParameters: queryParams);
+
+    try {
+      final response = await _client
+          .get(uri, headers: _buildHeaders(requireAuth: false))
+          .timeout(timeout);
+
+      final Map<String, dynamic> jsonBody = _decodeResponseBody(response);
+
+      if (response.statusCode == 200) {
+        final data = jsonBody['data'] as List<dynamic>? ?? [];
+        return data.map((item) => CompanyTask.fromJson(item as Map<String, dynamic>)).toList();
+      } else {
+        final msg = jsonBody['message'] as String? ?? 'Failed to retrieve tasks';
+        throw ApiException(msg, statusCode: response.statusCode);
+      }
+    } on SocketException catch (e) {
+      throw NetworkException('Network error connecting to $_baseUrl: ${e.message}');
+    } on TimeoutException {
+      throw const NetworkException('Connection timed out while fetching tasks.');
+    }
+  }
+
+  /// Update task status via Spring Boot PATCH /api/v1/tasks/{id}/status?status={status}
+  Future<CompanyTask> updateTaskStatus(String id, String newStatus) async {
+    final uri = Uri.parse('$_baseUrl/tasks/$id/status').replace(
+      queryParameters: {'status': newStatus},
+    );
+
+    try {
+      final response = await _client
+          .patch(uri, headers: _buildHeaders(requireAuth: true))
+          .timeout(timeout);
+
+      final Map<String, dynamic> jsonBody = _decodeResponseBody(response);
+
+      if (response.statusCode == 200) {
+        final data = jsonBody['data'] as Map<String, dynamic>?;
+        if (data == null) {
+          throw const ApiException('Invalid task update response');
+        }
+        return CompanyTask.fromJson(data);
+      } else {
+        final msg = jsonBody['message'] as String? ?? 'Failed to update task status';
+        throw ApiException(msg, statusCode: response.statusCode);
+      }
+    } on SocketException catch (e) {
+      throw NetworkException('Network error connecting to $_baseUrl: ${e.message}');
+    } on TimeoutException {
+      throw const NetworkException('Connection timed out while updating task status.');
+    }
+  }
+
+  /// Fetch active alerts from GET /api/v1/dashboard/alerts
+  Future<List<Map<String, dynamic>>> getDashboardAlerts() async {
+    final uri = Uri.parse('$_baseUrl/dashboard/alerts');
+    try {
+      final response = await _client
+          .get(uri, headers: _buildHeaders(requireAuth: false))
+          .timeout(timeout);
+
+      final Map<String, dynamic> jsonBody = _decodeResponseBody(response);
+
+      if (response.statusCode == 200) {
+        final data = jsonBody['data'] as List<dynamic>? ?? [];
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        return [];
+      }
+    } catch (_) {
+      return [];
     }
   }
 

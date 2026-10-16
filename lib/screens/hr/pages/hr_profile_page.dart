@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../models/user_role.dart';
 import '../../../providers/erp_provider.dart';
 import '../../auth/login_screen.dart';
 
@@ -91,11 +90,11 @@ class _HrProfilePageState extends State<HrProfilePage> {
                 ),
               ],
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                'MJ',
-                style: TextStyle(
-                  color: Color(0xFF212529),
+                erp.currentUserName.isNotEmpty ? erp.currentUserName[0].toUpperCase() : 'H',
+                style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -416,16 +415,48 @@ class _HrProfilePageState extends State<HrProfilePage> {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: () {
-          erp.setRole(UserRole.ceo);
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-            (route) => false,
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('Sign Out', style: TextStyle(color: Color(0xFF212529), fontWeight: FontWeight.w800)),
+              content: const Text(
+                'Are you sure you want to sign out from the HR Workspace?',
+                style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    erp.logout();
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF212529),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
           );
         },
-        icon: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 18),
-        label: const Text('Sign Out / Switch Role', style: TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.logout_rounded, color: Color(0xFF212529), size: 18),
+        label: const Text(
+          'Sign Out / Switch Role',
+          style: TextStyle(color: Color(0xFF212529), fontSize: 13, fontWeight: FontWeight.bold),
+        ),
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFEF4444)),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),

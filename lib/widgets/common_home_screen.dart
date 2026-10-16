@@ -325,16 +325,23 @@ class RoleHomeScreen extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: const Color(0xFF212529),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isAlert ? const Color(0xFFFFC9C9) : const Color(0xFFE9ECEF),
-            width: isAlert ? 1.4 : 1.2,
+            color: isAlert ? const Color(0xFFE03131) : const Color(0xFF343A40),
+            width: isAlert ? 1.4 : 1.1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF212529).withOpacity(0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,24 +352,38 @@ class RoleHomeScreen extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: GoogleFonts.instrumentSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF6C757D)),
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFCED4DA),
+                      letterSpacing: 0.2,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Icon(
-                  icon,
-                  size: 18,
-                  color: isAlert ? const Color(0xFFE03131) : const Color(0xFF212529),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isAlert
+                        ? const Color(0xFFE03131).withOpacity(0.18)
+                        : Colors.white.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 16,
+                    color: isAlert ? const Color(0xFFFF6B6B) : Colors.white,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
               value,
               style: GoogleFonts.instrumentSans(
                 fontSize: value.length > 8 ? 16 : 22,
                 fontWeight: FontWeight.w800,
-                color: isAlert ? const Color(0xFFE03131) : const Color(0xFF212529),
+                color: isAlert ? const Color(0xFFFF8787) : Colors.white,
                 letterSpacing: -0.5,
               ),
               overflow: TextOverflow.ellipsis,
@@ -370,7 +391,11 @@ class RoleHomeScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               sub,
-              style: GoogleFonts.instrumentSans(fontSize: 11, color: const Color(0xFFADB5BD)),
+              style: GoogleFonts.instrumentSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFADB5BD),
+              ),
             ),
           ],
         ),

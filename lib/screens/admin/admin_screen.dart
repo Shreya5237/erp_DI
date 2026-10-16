@@ -1,8 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/hierarchy.dart';
-import '../../models/user_role.dart';
 import '../../providers/erp_provider.dart';
 
 /// Admin & Settings Screen with Configurable Roles and Thresholds
@@ -260,30 +259,22 @@ class AdminScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF212529)),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: UserRole.values.map((role) {
-                      final isSelected = erp.currentRole == role;
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: ChoiceChip(
-                            label: Center(
-                              child: Text(
-                                role == UserRole.ceo ? 'CEO' : (role == UserRole.poc ? 'POC' : 'Intern'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: isSelected ? Colors.white : const Color(0xFF212529),
-                                ),
-                              ),
-                            ),
-                            selected: isSelected,
-                            selectedColor: const Color(0xFF212529),
-                            onSelected: (_) => erp.setRole(role),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F6F7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE9ECEF)),
+                    ),
+                    child: Text(
+                      'Authenticated as: ${erp.currentRole.label}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF212529),
+                      ),
+                    ),
                   ),
                 ],
               ),

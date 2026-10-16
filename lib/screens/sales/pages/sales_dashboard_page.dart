@@ -462,7 +462,7 @@ class SalesDashboardPage extends StatelessWidget {
     );
   }
 
-  /// White overview grid card with clean typography
+  /// Overview grid card with black background and white text per handsketch
   Widget _buildOverviewWhiteCard({
     required String title,
     IconData? icon,
@@ -475,12 +475,12 @@ class SalesDashboardPage extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 102),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF212529),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE9ECEF)),
+        border: Border.all(color: const Color(0xFF343A40)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF212529).withOpacity(0.02),
+            color: Colors.black.withOpacity(0.12),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -497,7 +497,7 @@ class SalesDashboardPage extends StatelessWidget {
                 child: Text(
                   title,
                   style: GoogleFonts.instrumentSans(
-                    color: const Color(0xFF6C757D),
+                    color: const Color(0xFFCED4DA),
                     fontSize: 9.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -507,7 +507,7 @@ class SalesDashboardPage extends StatelessWidget {
               ),
               if (icon != null) ...[
                 const SizedBox(width: 2),
-                Icon(icon, size: 12, color: const Color(0xFF868E96)),
+                Icon(icon, size: 12, color: const Color(0xFFADB5BD)),
               ],
             ],
           ),
@@ -516,7 +516,7 @@ class SalesDashboardPage extends StatelessWidget {
               Text(
                 mainValue,
                 style: GoogleFonts.instrumentSans(
-                  color: const Color(0xFF212529),
+                  color: Colors.white,
                   fontSize: 14.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
@@ -528,7 +528,7 @@ class SalesDashboardPage extends StatelessWidget {
               Text(
                 subValue,
                 style: GoogleFonts.instrumentSans(
-                  color: const Color(0xFF6C757D),
+                  color: const Color(0xFFADB5BD),
                   fontSize: 9.5,
                   fontWeight: FontWeight.w500,
                 ),
@@ -542,8 +542,8 @@ class SalesDashboardPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: progressValue.clamp(0.0, 1.0),
-                backgroundColor: const Color(0xFFE9ECEF),
-                valueColor: const AlwaysStoppedAnimation(Color(0xFF212529)),
+                backgroundColor: const Color(0xFF343A40),
+                valueColor: const AlwaysStoppedAnimation(Colors.white),
                 minHeight: 3.5,
               ),
             )

@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
@@ -18,59 +19,86 @@ class DiErpAppWidgetProvider : HomeWidgetProvider() {
     ) {
         appWidgetIds.forEach { widgetId ->
             val views = RemoteViews(context.packageName, R.layout.di_erp_appwidget).apply {
-                // Header / Subtitle
+                // 1. Employee & Header Info
+                val firstName = widgetData.getString("first_name", "") ?: ""
+                val todayDate = widgetData.getString("today_date", "Today") ?: "Today"
+                val progressSummary = widgetData.getString("progress_summary", "Assigned Tasks") ?: "Assigned Tasks"
                 val lastUpdated = widgetData.getString("last_updated", "Just now") ?: "Just now"
-                val subtitle = "Executive Overview • Updated $lastUpdated"
+
+                val subtitle = if (firstName.isNotEmpty()) {
+                    "$firstName's Tasks • $todayDate"
+                } else {
+                    "Today's Tasks • $todayDate"
+                }
                 setTextViewText(R.id.tv_widget_subtitle, subtitle)
+                setTextViewText(R.id.tv_progress_summary, progressSummary)
 
-                // Key metrics
-                val projects = widgetData.getString("active_projects", "12") ?: "12"
-                val tasks = widgetData.getString("pending_tasks", "28") ?: "28"
-                val approvals = widgetData.getString("pending_approvals", "5") ?: "5"
-                val alerts = widgetData.getString("critical_alerts", "3") ?: "3"
+                // 2. Task Row 1
+                val t1Title = widgetData.getString("task_1_title", "No pending tasks") ?: "No pending tasks"
+                val t1Project = widgetData.getString("task_1_project", "Digital Inertia ERP") ?: "Digital Inertia ERP"
+                val t1Badge = widgetData.getString("task_1_badge", "All Clear") ?: "All Clear"
+                val t1Done = widgetData.getString("task_1_done", "false") == "true"
 
-                setTextViewText(R.id.tv_projects_count, projects)
-                setTextViewText(R.id.tv_tasks_count, tasks)
-                setTextViewText(R.id.tv_approvals_count, approvals)
-                setTextViewText(R.id.tv_alerts_count, alerts)
-
-                // Priority Tasks
-                val task1Title = widgetData.getString("task_1_title", "Review Q4 Plant Automation Plan") ?: "Review Q4 Plant Automation Plan"
-                val task1Badge = widgetData.getString("task_1_badge", "Due Today") ?: "Due Today"
-                val task2Title = widgetData.getString("task_2_title", "Approve Vendor Invoice #4128") ?: "Approve Vendor Invoice #4128"
-                val task2Badge = widgetData.getString("task_2_badge", "High Priority") ?: "High Priority"
-
-                setTextViewText(R.id.tv_task_1_title, task1Title)
-                setTextViewText(R.id.tv_task_1_badge, task1Badge)
-                setTextViewText(R.id.tv_task_2_title, task2Title)
-                setTextViewText(R.id.tv_task_2_badge, task2Badge)
-
-                // Click Actions (Open App / Deep Links)
-                val defaultLaunchIntent = HomeWidgetLaunchIntent.getActivity(
-                    context,
-                    MainActivity::class.java,
-                    Uri.parse("dierp://dashboard")
+                setTextViewText(R.id.tv_task_1_title, t1Title)
+                setTextViewText(R.id.tv_task_1_project, t1Project)
+                setTextViewText(R.id.tv_task_1_badge, t1Badge)
+                setInt(
+                    R.id.iv_task_1_check,
+                    "setBackgroundResource",
+                    if (t1Done) R.drawable.di_circle_check_done else R.drawable.di_circle_check_pending
                 )
-                setOnClickPendingIntent(R.id.widget_container, defaultLaunchIntent)
-                setOnClickPendingIntent(R.id.btn_launch_app, defaultLaunchIntent)
 
+                // 3. Task Row 2
+                val t2Title = widgetData.getString("task_2_title", "") ?: ""
+                val t2Project = widgetData.getString("task_2_project", "") ?: ""
+                val t2Badge = widgetData.getString("task_2_badge", "") ?: ""
+                val t2Done = widgetData.getString("task_2_done", "false") == "true"
+
+                if (t2Title.isNotEmpty()) {
+                    setViewVisibility(R.id.row_task_2, View.VISIBLE)
+                    setTextViewText(R.id.tv_task_2_title, t2Title)
+                    setTextViewText(R.id.tv_task_2_project, t2Project)
+                    setTextViewText(R.id.tv_task_2_badge, t2Badge)
+                    setInt(
+                        R.id.iv_task_2_check,
+                        "setBackgroundResource",
+                        if (t2Done) R.drawable.di_circle_check_done else R.drawable.di_circle_check_pending
+                    )
+                } else {
+                    setViewVisibility(R.id.row_task_2, View.GONE)
+                }
+
+                // 4. Task Row 3
+                val t3Title = widgetData.getString("task_3_title", "") ?: ""
+                val t3Project = widgetData.getString("task_3_project", "") ?: ""
+                val t3Badge = widgetData.getString("task_3_badge", "") ?: ""
+                val t3Done = widgetData.getString("task_3_done", "false") == "true"
+
+                if (t3Title.isNotEmpty()) {
+                    setViewVisibility(R.id.row_task_3, View.VISIBLE)
+                    setTextViewText(R.id.tv_task_3_title, t3Title)
+                    setTextViewText(R.id.tv_task_3_project, t3Project)
+                    setTextViewText(R.id.tv_task_3_badge, t3Badge)
+                    setInt(
+                        R.id.iv_task_3_check,
+                        "setBackgroundResource",
+                        if (t3Done) R.drawable.di_circle_check_done else R.drawable.di_circle_check_pending
+                    )
+                } else {
+                    setViewVisibility(R.id.row_task_3, View.GONE)
+                }
+
+                // 5. Deep Link Intents
                 val tasksLaunchIntent = HomeWidgetLaunchIntent.getActivity(
                     context,
                     MainActivity::class.java,
                     Uri.parse("dierp://tasks")
                 )
-                setOnClickPendingIntent(R.id.card_tasks, tasksLaunchIntent)
+                setOnClickPendingIntent(R.id.widget_container, tasksLaunchIntent)
                 setOnClickPendingIntent(R.id.btn_launch_tasks, tasksLaunchIntent)
                 setOnClickPendingIntent(R.id.row_task_1, tasksLaunchIntent)
                 setOnClickPendingIntent(R.id.row_task_2, tasksLaunchIntent)
-
-                val approvalsLaunchIntent = HomeWidgetLaunchIntent.getActivity(
-                    context,
-                    MainActivity::class.java,
-                    Uri.parse("dierp://approvals")
-                )
-                setOnClickPendingIntent(R.id.card_approvals, approvalsLaunchIntent)
-                setOnClickPendingIntent(R.id.btn_launch_approvals, approvalsLaunchIntent)
+                setOnClickPendingIntent(R.id.row_task_3, tasksLaunchIntent)
 
                 val syncLaunchIntent = HomeWidgetLaunchIntent.getActivity(
                     context,

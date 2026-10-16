@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/erp_provider.dart';
-import '../../models/user_role.dart';
 import '../screens/auth/login_screen.dart';
 
 /// Digital Inertia ERP — Universal App Navigation Drawer / Desktop Sidebar
@@ -155,45 +154,7 @@ class AppDrawer extends StatelessWidget {
             ),
             const Divider(color: Color(0xFF343A40), height: 1),
 
-            // 2. DEMO PERSONA SWITCHER RIBBON
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SWITCH DEMO ROLE',
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 9,
-                      color: const Color(0xFFADB5BD),
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    children: [
-                      _buildQuickRoleChip('CEO', UserRole.ceo, erp),
-                      _buildQuickRoleChip('Tech Lead', UserRole.technical, erp),
-                      _buildQuickRoleChip('Sales BD', UserRole.sales, erp),
-                      _buildQuickRoleChip('Finance', UserRole.finance, erp),
-                      _buildQuickRoleChip('HR', UserRole.hr, erp),
-                      _buildQuickRoleChip('Intern', UserRole.intern, erp),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // 3. NAVIGATION MODULES (All Connected Modules)
+            // Navigation Modules
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -258,12 +219,6 @@ class AppDrawer extends StatelessWidget {
                     onTap: () => _handleItemTap(context, 9),
                   ),
                   _buildDrawerItem(
-                    label: 'Task Widget Studio',
-                    icon: Icons.widgets_outlined,
-                    isSelected: currentIndex == 10,
-                    onTap: () => _handleItemTap(context, 10),
-                  ),
-                  _buildDrawerItem(
                     label: 'Threshold Alerts',
                     icon: Icons.notifications_none_rounded,
                     badgeCount: erp.thresholdAlerts.isNotEmpty ? erp.thresholdAlerts.length : null,
@@ -321,30 +276,7 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickRoleChip(String label, UserRole role, ErpProvider erp) {
-    final isSelected = erp.currentRole == role;
-    return GestureDetector(
-      onTap: () {
-        erp.switchToDemoMode();
-        erp.setRole(role);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.instrumentSans(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w700,
-            color: isSelected ? const Color(0xFF212529) : Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildDrawerItem({
     required String label,
